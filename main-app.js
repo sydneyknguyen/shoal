@@ -146,7 +146,7 @@ const whyOf = (t, p) => t.why || (p.remote || t.remote ? "Can do it from anywher
 const gem = (state, { dark = false, size = "", cls = "", style = "" } = {}) =>
   `<span class="gem ${state} ${dark ? "dark" : ""} ${size} ${cls}" ${style ? `style="${style}"` : ""} aria-hidden="true"></span>`;
 const gemOf = (t, opts = {}) => gem(stateOf(t), { dark: t.kind === "repeat", ...opts });
-const toggle = (on, act, id = "") => `<button class="switch ${on ? "on" : ""}" role="switch" aria-checked="${on}" data-act="${act}" data-id="${id}"><i></i></button>`;
+const toggle = (on, act, id = "", label = "") => `<button class="switch ${on ? "on" : ""}" role="switch" aria-checked="${on}" ${label ? `aria-label="${label}"` : ""} data-act="${act}" data-id="${id}"><i></i></button>`;
 const chev = `<img class="chev" src="${A("chevron.svg")}" alt="">`;
 
 const ICONS = {
@@ -158,11 +158,11 @@ const ICONS = {
   kit: `<rect x="3" y="17.5" width="18" height="3.5" rx="1.75"/><path d="M5.5 17.5V10a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v7.5M12.5 17.5V10a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v7.5M7 5.5h3M14 5.5h3"/>`,
   glow: `<path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.7.6 1.1 1.4 1.1 2.2h5c0-.8.4-1.6 1.1-2.2A6 6 0 0 0 12 3z"/>`,
 };
-const icon = (k) => `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${ICONS[k]}</svg>`;
+const icon = (k) => `<svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${ICONS[k]}</svg>`;
 
 function tabbar() {
   const tab = S.screen === "person" || S.screen === "stones" ? "" : S.screen;
-  return `<nav class="tabbar">${TABS.map(([id, l]) => `<button class="${tab === id ? "on" : ""}" data-act="tab" data-to="${id}">${icon(id)}<span>${l}</span></button>`).join("")}</nav>`;
+  return `<nav class="tabbar">${TABS.map(([id, l]) => `<button class="${tab === id ? "on" : ""}" ${tab === id ? 'aria-current="page"' : ""} data-act="tab" data-to="${id}">${icon(id)}<span>${l}</span></button>`).join("")}</nav>`;
 }
 function navtop(label, right = "") {
   return `<div class="navtop"><button class="navback" data-act="back"><img src="${A("back.svg")}" alt="">${esc(label)}</button>${right}</div>`;
@@ -214,7 +214,7 @@ function taskLine(t, { meta, trail = "", act = "openTask", showWho = true } = {}
   const p = t.who && person(t.who);
   const m = meta ?? `${showWho && p ? `${avatar(p, "s20")} ${esc(p.name)} · ` : showWho && !p ? "Unassigned · " : ""}${dueLabel(t)}${t.time ? ` · ${fmtTime(t.time)}` : ""}${t.remote ? " · remote" : ""}`;
   return `<div class="tline ${t.done ? "is-done" : ""}">
-    <button class="tl-main" data-act="${act}" data-id="${t.id}">${gemOf(t)}
+    <button class="tl-main" data-act="${act}" data-id="${t.id}">${gemOf(t)}<span class="sr-only">${STATE[stateOf(t)][0]}:</span>
       <span class="tl-txt"><span class="n">${esc(t.n)}</span><span class="m">${m}</span></span></button>${trail}
   </div>`;
 }
@@ -381,13 +381,13 @@ SCREENS.home = () => {
         ${urgent.length > 1 ? `<span class="count">+${urgent.length - 1}</span>` : chev}
       </button>` : ""}
     ${finished ? `<div class="finished">${avatar(person(finished.who), "s20")}<span class="fin-txt"><b>${esc(person(finished.who).name)}</b> finished “${esc(finished.n)}”</span>
-      <button class="linkish" data-act="sayThanks" data-id="${finished.id}">Thank</button><button class="x-btn" data-act="dismissThanks" data-id="${finished.id}" aria-label="Dismiss">×</button></div>` : ""}
+      <button class="linkish" data-act="sayThanks" data-id="${finished.id}">Thank</button><button class="x-btn" data-act="dismissThanks" data-id="${finished.id}" aria-label="Dismiss"><span aria-hidden="true">×</span></button></div>` : ""}
     <div class="card shelf">${familyJars()}</div>
     <div class="card week">
       <div class="day-strip">${DAYS.map((d, i) => {
         const date = fromIso(shift(week, i)), id = iso(date);
         const has = active().some((t) => occurs(t, date));
-        return `<button class="${id === S.app.day ? "on" : ""} ${id === iso(TODAY) ? "today" : ""}" data-act="homeDay" data-id="${id}"><small>${d[0]}</small>${date.getDate()}<i class="${has ? "has" : ""}"></i></button>`;
+        return `<button class="${id === S.app.day ? "on" : ""} ${id === iso(TODAY) ? "today" : ""}" data-act="homeDay" data-id="${id}" aria-pressed="${id === S.app.day}" aria-label="${DAY_FULL[dayKey(date)]} ${date.getDate()}${has ? ", has tasks" : ""}"><small>${d[0]}</small>${date.getDate()}<i class="${has ? "has" : ""}"></i></button>`;
       }).join("")}</div>
       <div class="tlist flat">${today.length ? today.map((t) => taskLine(t)).join("") : `<p class="small empty">Nothing on ${DAY_FULL[dayKey(day)]}.</p>`}</div>
     </div>
@@ -411,7 +411,7 @@ SCREENS.myjar = () => {
       <div class="jh-txt"><h1 class="title">Your jar</h1><p class="small">${live.length} active · ${done.length} done</p></div>
       <button class="round-btn" data-act="newTask" aria-label="Add a task"><img src="${A("plus.svg")}" alt=""></button>
     </div>
-    <div class="tabs">${[["all", "All"], ["once", "One-time"], ["repeat", "Ongoing"]].map(([id, l]) => `<button class="${tab === id ? "on" : ""}" data-act="jarTab" data-id="${id}">${l}</button>`).join("")}</div>
+    <div class="tabs">${[["all", "All"], ["once", "One-time"], ["repeat", "Ongoing"]].map(([id, l]) => `<button class="${tab === id ? "on" : ""}" aria-pressed="${tab === id}" data-act="jarTab" data-id="${id}">${l}</button>`).join("")}</div>
     ${S.app.requests.map((r) => `<div class="card request"><span class="tl-txt"><span class="eyebrow">Request from ${esc(nameOf(r.from))}</span><span class="n">${esc(r.n)}</span></span><button class="pill-btn" data-act="review" data-id="${r.id}">Review</button></div>`).join("")}
     ${tab !== "repeat" ? group("One-time", shown.filter((t) => t.kind === "once")) : ""}
     ${tab !== "once" ? group("Ongoing", shown.filter((t) => t.kind === "repeat")) : ""}
@@ -495,7 +495,7 @@ SCREENS.newTask = () => {
   <div class="content">
     <h1 class="title">New task</h1>
     <label class="card field"><span class="eyebrow grey">What needs doing</span><input data-input="draftName" value="${esc(t.n)}" placeholder="Pick up shower chair" ${t.n ? "" : "autofocus"}></label>
-    <div class="seg big">${[["once", "One-time"], ["repeat", "Ongoing"]].map(([k, l]) => `<button class="${t.kind === k ? "on" : ""}" data-act="draftKind" data-id="${k}">${l}</button>`).join("")}</div>
+    <div class="seg big">${[["once", "One-time"], ["repeat", "Ongoing"]].map(([k, l]) => `<button class="${t.kind === k ? "on" : ""}" aria-pressed="${t.kind === k}" data-act="draftKind" data-id="${k}">${l}</button>`).join("")}</div>
     <button class="card field-row" data-act="editDraftDate"><span>${t.kind === "once" ? "Due date" : "Repeats"} <em>Required</em></span><b>${t.kind === "once" ? fmtDate(t.date) : repeatLabel(t.days)}${t.time ? ` · ${fmtTime(t.time)}` : ""}</b>${chev}</button>
     <p class="section-h">Who takes it</p>
     <div class="card who-card"><div class="pickers wrap">
@@ -503,7 +503,7 @@ SCREENS.newTask = () => {
         <span class="ringwrap">${avatar(p, "s36")}<img class="ring" src="${A("selected-ring.svg")}" alt=""></span>${esc(p.name)}</button>`).join("")}
       <button class="pick ${!t.who ? "on" : ""}" data-act="draftWho" data-who=""><span class="ringwrap"><img class="none" src="${A("none.svg")}" alt=""><img class="ring" src="${A("selected-ring.svg")}" alt=""></span>Open</button>
     </div></div>
-    <div class="card toggle-row"><span class="tl-txt"><span class="n">Remote OK</span><span class="m">Can be done from anywhere</span></span>${toggle(t.remote, "draftRemote")}</div>
+    <div class="card toggle-row"><span class="tl-txt"><span class="n">Remote OK</span><span class="m">Can be done from anywhere</span></span>${toggle(t.remote, "draftRemote", "", "Remote OK")}</div>
     <p class="section-h">Notes</p>
     <textarea class="note-input" data-input="draftNote" placeholder="Add a note (optional)">${esc(t.notes)}</textarea>
   </div>
@@ -554,7 +554,7 @@ SCREENS.peopleTab = () => {
         <span class="tl-txt"><span class="n">Trusted circle</span><span class="m"><span class="stack">${circle.slice(0, 4).map((p) => avatar(p, "s20")).join("")}</span>${circle.length ? `${esc(circle[0].name)}${circle.length > 1 ? ` + ${circle.length - 1} other${circle.length > 2 ? "s" : ""}` : ""} · ` : "No one yet · "}${((n) => `${n} task${n === 1 ? "" : "s"}`)(circle.reduce((n, p) => n + mine(p.id).length, 0))}</span></span>
         <span class="badge">On</span>${chev}</button>
       ${S.conditions.includes("hospice") || S.app.demo ? `<button class="prow" data-act="toast" data-msg="The hospice nurse sees care tasks only"><span class="avatar s36">A</span><span class="tl-txt"><span class="n">Hospice nurse</span><span class="m">Ana · sees care tasks only</span></span>${chev}</button>` : ""}
-      <div class="prow"><span class="circle-ico"><img src="${A("lock.svg")}" alt=""></span><span class="tl-txt"><span class="n">Public code</span><span class="m">Remote tasks for volunteers</span></span>${toggle(S.app.prefs.publicCode, "pref", "publicCode")}</div>
+      <div class="prow"><span class="circle-ico"><img src="${A("lock.svg")}" alt=""></span><span class="tl-txt"><span class="n">Public code</span><span class="m">Remote tasks for volunteers</span></span>${toggle(S.app.prefs.publicCode, "pref", "publicCode", "Public code")}</div>
     </div>
   </div>
   ${tabbar()}`;
@@ -615,8 +615,8 @@ SCREENS.kit = () => {
       <span class="tl-txt"><span class="n">Stone ${String(st.id).padStart(2, "0")} is ${outLabel(st)}</span><span class="m">${st.battery}% and not charging. Put it back in a jar or on the base.</span></span><span class="pill-btn">Find</span></button>`).join("")}
     <p class="section-h">Glow</p>
     <div class="card kit-glow">
-      <div class="seg big">${[["on", "On"], ["dim", "Dim"], ["off", "Off"]].map(([k, l]) => `<button class="${g === k ? "on" : ""}" data-act="setGlow" data-id="${k}">${l}</button>`).join("")}</div>
-      <div class="srow"><span class="tl-txt"><span class="n">Night hours</span><span class="m">${P.night ? `Off ${fmtTime(P.nightFrom)} – ${fmtTime(P.nightTo)}` : "Glows all night"}</span></span>${toggle(P.night, "pref", "night")}</div>
+      <div class="seg big">${[["on", "On"], ["dim", "Dim"], ["off", "Off"]].map(([k, l]) => `<button class="${g === k ? "on" : ""}" aria-pressed="${g === k}" data-act="setGlow" data-id="${k}">${l}</button>`).join("")}</div>
+      <div class="srow"><span class="tl-txt"><span class="n">Night hours</span><span class="m">${P.night ? `Off ${fmtTime(P.nightFrom)} – ${fmtTime(P.nightTo)}` : "Glows all night"}</span></span>${toggle(P.night, "pref", "night", "Night hours")}</div>
       ${P.night ? `<button class="srow" data-act="nightSheet"><span class="tl-txt"><span class="n">Change hours</span></span>${chev}</button>` : ""}
       ${legend()}
     </div>
@@ -718,7 +718,7 @@ SCREENS.thanks = () => {
     <div class="card tlist left">${opts.map((o, i) => `<button class="radio-row" data-act="thankPick" data-id="${i}"><span class="tl-txt"><span class="n">${esc(o)}</span></span>${check(S.app.thankPick === i)}</button>`).join("")}</div>
     <div class="card tlist left">
       <label class="srow"><img src="${A("plus.svg")}" alt=""><input class="bare" data-input="thanksNote" value="${esc(S.app.thanksNote)}" placeholder="Add a short note (optional)"></label>
-      <div class="srow"><span class="tl-txt"><span class="n">Share with the family</span></span>${toggle(S.app.shareThanks, "shareThanks")}</div>
+      <div class="srow"><span class="tl-txt"><span class="n">Share with the family</span></span>${toggle(S.app.shareThanks, "shareThanks", "", "Share with the family")}</div>
     </div>
   </div>
   <p class="small center">${esc(p.name)}'s jar gives a soft glow. No reply needed.</p>
@@ -798,7 +798,7 @@ SCREENS.notifications = () => {
 
 SCREENS.recapSettings = () => {
   const P = S.app.prefs;
-  const row = (k, t, d) => `<div class="srow"><span class="tl-txt"><span class="n">${t}</span><span class="m">${d}</span></span>${toggle(P[k], "pref", k)}</div>`;
+  const row = (k, t, d) => `<div class="srow"><span class="tl-txt"><span class="n">${t}</span><span class="m">${d}</span></span>${toggle(P[k], "pref", k, t)}</div>`;
   return `${navtop("Settings")}
   <div class="content">
     <h1 class="title">Thank-yous and recaps</h1>

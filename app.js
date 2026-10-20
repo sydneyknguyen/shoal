@@ -381,6 +381,7 @@ SCREENS.welcome = () => {
       <img class="chev" src="${A("chevron.svg")}" alt="">
     </button>
     <p class="small foot-note">Pebble is an AI helper. You review every suggestion,<br>and nothing is shared until everyone says yes.</p>
+    <button class="skip-onboarding" data-act="skipToApp">Skip onboarding (testing) →</button>
   </div>`;
 };
 

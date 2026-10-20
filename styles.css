@@ -280,6 +280,7 @@ input { font: inherit; color: inherit; }
 .path .chev { position: absolute; right: 22px; top: 47px; width: 7px; height: 12px; }
 .path-badge { position: absolute; left: 20px; top: -11px; z-index: 1; background: var(--blue); color: #fff; padding: 5px 10px; box-shadow: 0 2px 6px rgba(32, 112, 217, 0.25); }
 .foot-note { text-align: center; margin-top: 44px; }
+.skip-onboarding { display: block; margin: 10px auto 0; padding: 6px 12px; font-size: 12px; font-weight: 500; color: #a3a7ae; text-decoration: underline; text-underline-offset: 2px; }
 
 /* ---------- Task checklist ---------- */
 .list { padding: 0 16px 0 15px; }

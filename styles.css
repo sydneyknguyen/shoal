@@ -1128,3 +1128,16 @@ button, input, textarea { touch-action: manipulation; -webkit-tap-highlight-colo
 @media (hover: hover) { .lc-day:not(.on):hover .lc-bar { background: rgba(65, 142, 243, 0.35); } }
 .ring-mid b.none { font-family: "Figtree", sans-serif; font-weight: 400; font-size: 56px; color: #418ef3; }
 .lc-day.heavy:not(.on) .lc-bar { background: rgba(65, 142, 243, 0.3); }
+
+/* My jar header: jar left, ring right */
+.jar-hero { display: flex; align-items: center; justify-content: space-around; gap: 8px; padding: 18px 12px 14px; margin: 4px 0 10px; }
+.jh-jar .shelf-jars { zoom: 1.2; }
+.jh-jar .who { display: none; }
+.jh-ring { position: relative; width: 150px; height: 150px; flex: none; }
+.jh-ring .ring-mid b { font-family: "Figtree", sans-serif; font-weight: 600; font-size: 40px; letter-spacing: -1px; }
+.jh-ring .ring-mid b small { font-size: 20px; font-weight: 500; color: var(--muted); letter-spacing: 0; margin-left: 1px; }
+.jh-ring .ring-mid span { font-size: 15px; font-weight: 500; color: var(--ink); margin-top: 2px; }
+.jh-stats { display: grid; grid-template-columns: repeat(3, 1fr); text-align: center; margin: 0 0 18px; }
+.jh-stats span { font-size: 14px; color: var(--muted); }
+.jh-stats span + span { border-left: 1px solid var(--line); }
+.jh-stats b { display: block; font-size: 22px; font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums; }

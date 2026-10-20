@@ -439,19 +439,21 @@ SCREENS.myjar = () => {
   const urgent = live.filter(isUrgent);
   // "Today" counts what happens today plus anything urgent that needs attention now.
   const today = live.filter((t) => occurs(t, TODAY) || isUrgent(t)).length;
-  const fam = S.tasks.filter((t) => t.on && t.who);
-  const famDone = fam.filter((t) => t.done).length;
   const tab = S.app.jarTab;
   const shown = live.filter((t) => tab === "all" || t.kind === tab).sort((a, b) => jarOrder(a) - jarOrder(b) || (a.date || "").localeCompare(b.date || ""));
   const count = (k) => live.filter((t) => k === "all" || t.kind === k).length;
   return `<div class="content app">
     <div class="apphead"><h1 class="title">Your jar</h1><button class="round-btn" data-act="newTask" aria-label="Add a task"><img src="${A("plus.svg")}" alt=""></button></div>
-    <div class="ring-hero" role="img" aria-label="${done.length} of ${all.length} of your tasks done, ${urgent.length} urgent, ${today} for today">
-      ${ring([{ v: done.length, color: "#418ef3" }, { v: urgent.length, color: "#e2ad47" }, { v: live.length - urgent.length, color: "transparent" }])}
-      <div class="ring-mid">${today ? `<b>${today}</b><span>${today === 1 ? "thing" : "things"} for you today</span>` : `<b class="none">✓</b><span>Nothing for you today</span>`}</div>
+    <div class="card jar-hero">
+      <div class="jh-jar">${familyJars({ only: "you", act: false })}</div>
+      <div class="jh-ring" role="img" aria-label="${done.length} of ${all.length} done, ${urgent.length} urgent, ${today} for today">
+        ${ring([{ v: done.length, color: "#418ef3" }, { v: urgent.length, color: "#e2ad47" }, { v: live.length - urgent.length, color: "transparent" }], { size: 150, stroke: 10 })}
+        <div class="ring-mid"><b>${done.length}<small>/${all.length}</small></b><span>done</span></div>
+      </div>
     </div>
-    <p class="ring-cap">${done.length} of ${all.length} yours done · ${famDone} of ${fam.length} together</p>
-    <div class="ring-key"><span><i style="background:#418ef3"></i>Done</span><span><i style="background:#e2ad47"></i>Urgent</span><span><i></i>To do</span></div>
+    <div class="jh-stats">
+      <span><b>${today}</b> today</span><span><b class="st-urgent">${urgent.length}</b> urgent</span><span><b>${live.length}</b> left</span>
+    </div>
     <div class="card jar-list">
       <div class="utabs" role="tablist">${[["all", "All"], ["once", "One-time"], ["repeat", "Ongoing"]].map(([id, l]) => `<button role="tab" class="${tab === id ? "on" : ""}" aria-selected="${tab === id}" data-act="jarTab" data-id="${id}">${l}<small>${count(id)}</small></button>`).join("")}</div>
       ${tab !== "repeat" ? S.app.requests.map((r) => `<div class="jl-req"><span class="tl-txt"><span class="eyebrow">Request from ${esc(nameOf(r.from))}</span><span class="n">${esc(r.n)}</span></span><button class="linkish" data-act="review" data-id="${r.id}">Review</button></div>`).join("") : ""}
@@ -864,7 +866,7 @@ Object.assign(NOTES, {
   charge: ["Charging", ["The base powers the jars, so stones charge in a jar or on the base. No moving stones around to charge.", "Only a stone left out (on a table, in a bag) runs down, and the app warns you."]],
   pairRest: ["Pair the rest", ["Optional. Anyone can pair their own stones later."]],
   home: ["Home", ["Urgent first, then the family jars and this week. No section labels, so it reads at a glance.", "The week is a bar chart of how much the family has each day. Tap a bar to see that day's tasks.", "Top right: the jar icon opens the home kit (glow, batteries, jars), the bell opens notifications."]],
-  myjar: ["My jar", ["The ring shows how much of yours is done (blue) and urgent (honey). The middle is what's on for today.", "One list with All, One-time and Ongoing tabs. Urgent tasks sit on top. Tick to mark done."]],
+  myjar: ["My jar", ["Your jar on the left, your ring on the right: blue is done, honey is urgent. Only your own tasks count here.", "One list with All, One-time and Ongoing tabs. Urgent tasks sit on top. Tick to mark done."]],
   task: ["A task", ["Shows who has it, its stone, steps, and notes. Hand off or mark done from here.", "Every task has a stone. Linking a real stone at home is optional."]],
   handoff: ["Hand off", ["Sends a request. Trusted circle and kids are limited to the tasks they can take."]],
   newTask: ["Add a task", ["Name, one-time or ongoing, due date, who, remote OK, notes. Saving adds its stone to that person's jar."]],

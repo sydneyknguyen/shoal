@@ -142,7 +142,7 @@ const SLIDES = [
     eyebrow: "Welcome to Shoal",
     title: "Share caregiving with your family",
     sub: "Shoal is a shared to-do list for taking care of someone. Everyone can see what needs to be done and who is doing it.",
-    visual: () => `<div class="iv-rings">${brandRings("ivr")}
+    visual: () => `<div class="iv-rings">
       <div class="iv-circle">${shoalMark(72, "float")}
         ${[["avatar-you.png", "You"], ["avatar-nora.png", "Nora"], ["avatar-bill.png", "Bill"], ["avatar-sam.png", "Sam"]].map(([img, n], k) =>
           `<span class="orb o${k}"><span class="avatar"><img src="${A(img)}" alt=""></span><b>${n}</b></span>`).join("")}
@@ -173,7 +173,7 @@ const SLIDES = [
     eyebrow: "At home",
     title: "Real stones light up at home",
     sub: "You can link a real stone to a task and keep it in a jar at home. It lights up in the same colors, so anyone can check without a phone.",
-    visual: () => `<div class="iv-hold"><div class="rings"><i></i><i></i><i></i>${gem("progress", { size: "xl", cls: "breathe" })}</div>
+    visual: () => `<div class="iv-hold">${gem("progress", { size: "xl", cls: "breathe" })}
       <span class="status-pill">Blue · someone is doing it</span></div>`,
   },
   {

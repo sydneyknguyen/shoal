@@ -198,7 +198,7 @@ function familyJars({ empty = false, only = null, act = true } = {}) {
     const pos = jarSlots(ts.length);
     const tag = act ? "button" : "div";
     return `<${tag} class="rjar" ${act ? `data-act="openPerson" data-id="${p.id}"` : ""}>
-      <div class="glassbox"><img class="glass" src="${A("jar.png")}" alt=""><div class="plate"></div>
+      <div class="glassbox"><img class="glass" src="${A("jar.png")}" alt="">
         ${ts.map((t, i) => gemOf(t, { size: "s", cls: `${S.app?.blink === t.id ? "blink" : ""} ${dropped.has(`${p.id}:${t.id}`) ? "still" : ""}`, style: `left:${pos[i].x}px;top:${pos[i].y}px` })).join("")}
       </div><span class="who">${esc(p.name)}</span></${tag}>`;
   }).join("")}</div>`;

@@ -351,13 +351,11 @@ SCREENS.welcome = () => {
     { f: "rocks-3.svg", x: 6.46, y: 60.02, w: 69.74, h: 34.69, i: [17.27, 2.12, 7.47, 2.12] },
     { f: "rocks-4.svg", x: 6.46, y: 78.06, w: 69.74, h: 16.65, i: [2.22, 2.12, 15.56, 2.12] },
   ];
-  const plates = [[105.66], [105.66, 95.76, 85.7], [105.66, 95.76], [105.66]];
   const jars = rocks.map((r, j) => {
     const [t, rt, b, l] = r.i;
     const img = `left:${-l / 100 * r.w}px;top:${-t / 100 * r.h}px;width:${r.w * (1 + (l + rt) / 100)}px;height:${r.h * (1 + (t + b) / 100)}px`;
     return `<div class="jar" style="left:${j * 85.93}px">
       <img class="glass" src="${A("jar.png")}" alt="">
-      ${plates[j].map((y) => `<div class="plate" style="top:${y}px"></div>`).join("")}
       <div class="rocks" style="left:${r.x}px;top:${r.y}px;width:${r.w}px;height:${r.h}px"><img src="${A(r.f)}" alt="" style="${img}"></div>
     </div>`;
   }).join("");
@@ -733,7 +731,7 @@ SCREENS.review = () => {
       <div class="shelf-jars">${main.map((p) => {
         const mine = picked().filter((t) => t.who === p.id);
         const pos = slots(mine.length);
-        return `<div class="rjar"><div class="glassbox"><img class="glass" src="${A("jar.png")}" alt=""><div class="plate"></div>${mine.map((t, i) => peb(t, pos[i])).join("")}</div>
+        return `<div class="rjar"><div class="glassbox"><img class="glass" src="${A("jar.png")}" alt="">${mine.map((t, i) => peb(t, pos[i])).join("")}</div>
           <span class="who">${esc(p.name)}</span><span class="cnt">${mine.length} task${mine.length === 1 ? "" : "s"}</span></div>`;
       }).join("")}</div>
       ${trustedTasks.length ? `<div class="loose">Trusted &amp; kids ${trustedTasks.map((t) => peb(t)).join("")}</div>` : ""}

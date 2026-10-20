@@ -125,7 +125,7 @@ function signedIn(msg) {
 
 const introJar = (name, states) => {
   const pos = jarSlots(states.length);
-  return `<div class="rjar"><div class="glassbox"><img class="glass" src="${A("jar.png")}" alt=""><div class="plate"></div>
+  return `<div class="rjar"><div class="glassbox"><img class="glass" src="${A("jar.png")}" alt="">
     ${states.map((s, i) => gem(s.replace("*", ""), { size: "s", dark: s.endsWith("*"), style: `left:${pos[i].x}px;top:${pos[i].y}px` })).join("")}
   </div><span class="who">${name}</span></div>`;
 };

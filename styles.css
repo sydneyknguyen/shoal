@@ -266,7 +266,6 @@ input { font: inherit; color: inherit; }
 .jars-illus { position: relative; width: 342px; height: 139px; margin: 0 auto; }
 .jars-illus .jar { position: absolute; top: 0; width: 84.26px; height: 122.38px; }
 .jars-illus .jar > img.glass { position: absolute; inset: 0; width: 100%; height: 100%; object-position: bottom; }
-.jars-illus .plate { position: absolute; left: 6.35px; width: 71.56px; height: 10.03px; border-radius: 2.96px; background: rgba(141, 138, 130, 0.22); border: 0.093px solid #0f4c93; }
 .jars-illus .rocks { position: absolute; }
 .jars-illus .rocks img { position: absolute; display: block; }
 
@@ -441,7 +440,6 @@ input { font: inherit; color: inherit; }
 .rjar { position: relative; width: 84.26px; display: flex; flex-direction: column; align-items: center; }
 .rjar .glassbox { position: relative; width: 84.26px; height: 122.38px; }
 .rjar .glassbox > img.glass { position: absolute; inset: 0; width: 100%; height: 100%; object-position: bottom; pointer-events: none; }
-.rjar .plate { position: absolute; left: 6.35px; top: 105.66px; width: 71.56px; height: 10.03px; border-radius: 2.96px; background: rgba(141, 138, 130, 0.22); border: 0.093px solid #0f4c93; }
 .rjar .who { font-size: 13px; font-weight: 600; margin-top: 4px; }
 .rjar .cnt { font-size: 12px; color: var(--muted); }
 .pebble-btn { position: absolute; width: 36px; height: 28px; padding: 0; animation: drop 0.5s cubic-bezier(.3, 1.4, .5, 1) backwards; }

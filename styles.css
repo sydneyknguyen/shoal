@@ -812,3 +812,28 @@ input { font: inherit; color: inherit; }
 .privacy-hero { display: flex; align-items: center; gap: 12px; margin: 0 4px 12px; }
 .privacy-hero img { flex: none; width: 68px; height: auto; }
 .privacy-hero p { margin: 0; font-size: 13px; line-height: 18px; color: var(--muted); }
+.path-pebble { flex: none; width: 48px; height: auto; margin: -2px -2px 0; filter: drop-shadow(0 4px 6px rgba(90, 60, 40, 0.16)); }
+
+/* What's Pebble: roomier spacing */
+.pebble-page { padding-bottom: 28px; }
+.pebble-page .pebble-hero { margin-bottom: 28px; }
+.pebble-page .eyebrow { margin-bottom: 8px; }
+.pebble-page > .sub { margin: 12px 0 0; }
+.pebble-page .section-h { margin: 36px 4px 12px; }
+.pebble-page .steps-list { padding: 6px 18px; }
+.pebble-page .step { gap: 14px; padding: 16px 0; align-items: flex-start; }
+.pebble-page .step + .step::before { left: 60px; }
+.pebble-page .step b { line-height: 20px; }
+.pebble-page .step small { font-size: 13px; line-height: 18px; margin-top: 4px; }
+.pebble-page .step-pebble { align-self: flex-start; width: 44px; }
+.pebble-page .can-grid { gap: 12px; margin-top: 16px; }
+.pebble-page .can { padding: 18px 16px 8px; }
+.pebble-page .can .eyebrow { margin-bottom: 12px; }
+.pebble-page .ci { margin-bottom: 12px; }
+.pebble-page .privacy-hero { margin: 0 4px 16px; gap: 14px; }
+.pebble-page .tlist { padding: 4px 18px; margin-bottom: 16px; }
+.pebble-page .tline { align-items: flex-start; gap: 14px; padding: 16px 0; }
+.pebble-page .tline .circle-ico { margin-top: 1px; }
+.pebble-page .tl-txt .n { line-height: 20px; }
+.pebble-page .tl-txt .m { line-height: 18px; margin-top: 4px; }
+.pebble-page .caution { padding: 16px 18px; gap: 14px; align-items: center; }

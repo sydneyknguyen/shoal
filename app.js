@@ -370,7 +370,7 @@ SCREENS.welcome = () => {
     <div style="position:relative">
       <span class="badge caps path-badge">Recommended</span>
       <button class="path rec" data-act="start" data-path="pebble">
-        <img src="${A("pebble-icon.svg")}" width="44" height="44" alt="">
+        <img class="path-pebble" src="${A("pebble/pebble_base_front.png")}" alt="Pebble">
         <span><span class="t">Get help from Pebble</span><span class="d">Answer a few short questions. Pebble suggests tasks and a fair split.</span></span>
         <img class="chev" src="${A("chevron.svg")}" alt="">
       </button>
@@ -401,7 +401,7 @@ SCREENS.pebbleInfo = () => {
     ["Off anytime", "Turn Pebble off and set things up by hand. You can clear its suggestions in Settings."],
   ];
   return `${navtop("Back")}
-  <div class="content">
+  <div class="content pebble-page">
     <div class="card pebble-hero" aria-label="Pebble, a little stone character, suggesting a task">
       <div class="ph-glow"></div>
       <img class="ph-pebble" src="${A("pebble/pebble_offer_open_hands.png")}" alt="">

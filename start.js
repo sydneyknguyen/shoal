@@ -27,7 +27,7 @@ SCREENS.splash = () => `<div class="splash" data-act="splashDone">
   <div class="sp-center">
     ${shoalMark(104, "assemble")}
     <p class="sp-word">shoal</p>
-    <p class="sp-tag">Caregiving, shared.</p>
+    <p class="sp-tag">Share caregiving with your family</p>
   </div>
 </div>`;
 
@@ -48,8 +48,8 @@ SCREENS.signin = () => {
   const busy = a.via && a.via !== "phone";
   return `<div class="content signin ${S._fromSplash ? "from-splash" : ""}">
     <div class="si-hero">${brandRings("si")}${lockup(40)}</div>
-    <h1 class="title rise" style="--d:1">Care is lighter when it's shared</h1>
-    <p class="sub rise" style="--d:2">Sign in with your phone number. We'll text you a code, so there's no password to remember.</p>
+    <h1 class="title rise" style="--d:1">Sign in to get started</h1>
+    <p class="sub rise" style="--d:2">Enter your phone number and we'll text you a code. You don't need a password.</p>
     <label class="phone-field rise" style="--d:3">
       <span class="cc">🇺🇸 +1</span>
       <input type="tel" inputmode="numeric" autocomplete="tel-national" placeholder="(555) 123-4567" data-input="phone" value="${fmtPhone(a.phone)}" aria-label="Phone number">
@@ -60,7 +60,7 @@ SCREENS.signin = () => {
       <button class="btn-social" data-act="social" data-via="Google" ${busy ? "disabled" : ""}>${a.via === "Google" ? `<i class="spin"></i>Connecting…` : `${GOOGLE_G}Continue with Google`}</button>
       <button class="btn-social" data-act="social" data-via="Facebook" ${busy ? "disabled" : ""}>${a.via === "Facebook" ? `<i class="spin"></i>Connecting…` : `${FACEBOOK_F}Continue with Facebook`}</button>
     </div>
-    <p class="fine rise" style="--d:7">By continuing, you agree to Shoal's Terms and Privacy Policy. Message and data rates may apply.</p>
+    <p class="fine rise" style="--d:7">By continuing, you agree to Shoal's Terms and Privacy Policy. Your carrier may charge for texts.</p>
     <button class="skip-onboarding rise" style="--d:7" data-act="skipSignin">Skip sign-in (testing) →</button>
   </div>`;
 };
@@ -91,7 +91,7 @@ SCREENS.verify = () => {
 const RESEND_S = 30;
 function resendLabel() {
   const left = Math.max(0, RESEND_S - Math.floor((Date.now() - auth().sentAt) / 1000));
-  return left ? `Didn't get it? Resend in 0:${String(left).padStart(2, "0")}` : `Didn't get it? <button class="linkish" data-act="resend">Resend code</button>`;
+  return left ? `No text yet? You can resend in 0:${String(left).padStart(2, "0")}` : `No text yet? <button class="linkish" data-act="resend">Resend code</button>`;
 }
 let smsTimer, resendTimer;
 function startCodeTimers() {
@@ -130,11 +130,18 @@ const introJar = (name, states) => {
   </div><span class="who">${name}</span></div>`;
 };
 
+const PRIVACY = [
+  ["Only people you invite can see your plan", "Not other users, and not advertisers."],
+  ["Calendars only show when you're busy", "Shoal never sees what your events are."],
+  ["Sign-in uses a code sent to your phone", "No password to guess or steal."],
+  ["You can delete your data anytime", "Your account and plan are removed for good."],
+];
+
 const SLIDES = [
   {
     eyebrow: "Welcome to Shoal",
-    title: "Care for someone you love, together",
-    sub: "Shoal helps your family share the work of caregiving, from rides and refills to calls and paperwork, so no one carries it all alone.",
+    title: "Share caregiving with your family",
+    sub: "Shoal is a shared to-do list for taking care of someone. Everyone can see what needs to be done and who is doing it.",
     visual: () => `<div class="iv-rings">${brandRings("ivr")}
       <div class="iv-circle">${shoalMark(72, "float")}
         ${[["avatar-you.png", "You"], ["avatar-nora.png", "Nora"], ["avatar-bill.png", "Bill"], ["avatar-sam.png", "Sam"]].map(([img, n], k) =>
@@ -142,20 +149,20 @@ const SLIDES = [
       </div></div>`,
   },
   {
-    eyebrow: "How it works",
-    title: "Every care task becomes a stone",
-    sub: "Rides, refills, calls, paperwork. A stone's glow shows where its task stands, so no one has to ask.",
+    eyebrow: "Tasks",
+    title: "Each task is a stone",
+    sub: "Every task, like a ride or a refill, gets a stone. Its color tells you if it's urgent, someone is doing it, it's open, or it's done.",
     visual: () => `<div class="iv-stones">
-      <div class="st s1">${gem("urgent", { size: "l", cls: "breathe" })}<span class="tag"><i class="d urgent"></i>Refill prescription · due soon</span></div>
-      <div class="st s2">${gem("progress", { size: "l", cls: "breathe" })}<span class="tag"><i class="d progress"></i>Drive to PT · Bill's on it</span></div>
+      <div class="st s1">${gem("urgent", { size: "l", cls: "breathe" })}<span class="tag"><i class="d urgent"></i>Refill prescription · urgent</span></div>
+      <div class="st s2">${gem("progress", { size: "l", cls: "breathe" })}<span class="tag"><i class="d progress"></i>Drive to PT · Bill is doing it</span></div>
       <div class="st s3">${gem("open", { size: "l" })}<span class="tag"><i class="d open"></i>Weekly groceries · open</span></div>
       <div class="st s4">${gem("done", { size: "l" })}<span class="tag"><i class="d done"></i>Call hospice · done</span></div>
     </div>`,
   },
   {
-    eyebrow: "How it works",
-    title: "Everyone gets a jar",
-    sub: "See who's carrying what at a glance. The load stays fair, and no one has to keep score.",
+    eyebrow: "Your family",
+    title: "Each person has a jar",
+    sub: "Your jar holds the tasks you've taken on. You can see who has a lot and who has room for more.",
     visual: () => `<div class="iv-jars"><div class="shelf-jars">
       ${introJar("You", ["done", "done*", "progress", "open*", "urgent"])}
       ${introJar("Nora", ["done", "done", "done*", "progress*", "progress", "open"])}
@@ -164,18 +171,17 @@ const SLIDES = [
   },
   {
     eyebrow: "At home",
-    title: "A stone you can hold",
-    sub: "Pair a real stone to a task and keep it in your jar. It glows at home, so the whole family knows what needs a hand without opening the app.",
+    title: "Real stones light up at home",
+    sub: "You can link a real stone to a task and keep it in a jar at home. It lights up in the same colors, so anyone can check without a phone.",
     visual: () => `<div class="iv-hold"><div class="rings"><i></i><i></i><i></i>${gem("progress", { size: "xl", cls: "breathe" })}</div>
-      <span class="status-pill">Glowing ice blue · someone's on it</span></div>`,
+      <span class="status-pill">Blue · someone is doing it</span></div>`,
   },
   {
-    eyebrow: "Meet Pebble",
-    title: "Pebble helps you plan",
-    sub: "Answer a few questions, and our AI helper drafts tasks and a fair split. You review everything before anyone sees it.",
-    visual: () => `<div class="iv-pebble">
-      <div class="ph-bubble b1"><span>Want me to draft a fair split for your family?</span></div>
-      <img class="pb" src="${A("pebble/pebble_offer_open_hands.png")}" alt="Pebble, a small stone character">
+    eyebrow: "Privacy and security",
+    title: "Your family's info stays private",
+    sub: "We only use what you share to run your family's plan. We never sell it.",
+    visual: () => `<div class="iv-privacy"><div class="lock-badge"><img src="${A("lock.svg")}" alt=""></div>
+      <div class="card priv-list">${PRIVACY.map(([t, d]) => `<div class="priv-row"><span class="pr-check"><img src="${A("check.svg")}" alt=""></span><span><b>${t}</b><small>${d}</small></span></div>`).join("")}</div>
     </div>`,
   },
 ];
@@ -299,7 +305,7 @@ Object.assign(NOTES, {
   splash: ["Logo splash", ["The five stones of the mark circle into place, the lit stone glows, then the wordmark fades in.", "Moves on by itself after about 3 seconds. Tap to skip."]],
   signin: ["Sign in", ["Phone number first: no password, just a texted code.", "Google and Facebook as the two other options. Both are simulated here."]],
   verify: ["Text code", ["Six boxes that fill as you type, with the phone's one-time-code autofill.", "A fake text slides in after a moment; tap it to fill the code. Resend unlocks after 30 seconds."]],
-  intro: ["Meet Shoal", ["Five swipeable slides before setup: what Shoal is for, stones, jars, the physical stone, and Pebble.", "Skip goes straight to setup."]],
+  intro: ["Meet Shoal", ["Five swipeable slides before setup: what Shoal is, stones, jars, real stones at home, and privacy and security.", "Pebble isn't introduced here, since it's optional. It's offered on the next screen."]],
 });
 
 fit();

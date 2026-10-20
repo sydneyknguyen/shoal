@@ -15,7 +15,7 @@ const CONDITIONS = [
 
 // w = weight (1 light, 2 medium, 3 heavy). k = skill tag. r = repeats by default.
 // c = only suggested for these conditions (none = everyone). p = Pebble pre-picks it.
-// wishes / far = Pebble pre-picks it when those answers are chosen.
+// wishes / far = Pebble pre-picks it when those answers are chosen. y = kid-friendly.
 const TASK_LIBRARY = {
   Medical: [
     { n: "Refill prescriptions", w: 1, k: "meds", p: 1 },
@@ -31,51 +31,49 @@ const TASK_LIBRARY = {
     { n: "Neurologist visits", w: 2, k: "drive", c: ["dementia"] },
     { n: "Rides to chemo", w: 2, k: "drive", p: 1, r: "Tue", c: ["cancer"] },
     { n: "Track side effects", w: 1, k: "meds", r: "Daily", c: ["cancer"] },
+    { n: "Wound or port care", w: 2, k: "meds", c: ["cancer", "other"] },
     { n: "Physical therapy exercises", w: 1, k: "there", r: "Mon", c: ["aging", "other"] },
     { n: "Hearing and vision checkups", w: 1, k: "drive", c: ["aging"] },
   ],
-  "Daily care": [
-    { n: "Morning check-in", w: 1, k: "phone", r: "Daily" },
+  "Care & visits": [
     { n: "Help getting dressed", w: 1, k: "there", r: "Daily" },
     { n: "Help with bathing", w: 2, k: "there", r: "Wed" },
     { n: "Bedtime routine", w: 1, k: "there", r: "Daily" },
-    { n: "Toileting and incontinence supplies", w: 2, k: "there" },
     { n: "Help moving around the house", w: 2, k: "there" },
-    { n: "Hair, nails, and shaving", w: 1, k: "there", r: "Sun" },
     { n: "Overnight stays", w: 3, k: "there", r: "Fri" },
     { n: "Give the main caregiver a night off", w: 3, k: "there", p: 1, r: "Fri" },
+    { n: "Visit and keep them company", w: 1, k: "there", r: "Sun" },
+    { n: "Phone or video calls", w: 1, k: "phone", r: "Wed", y: 1 },
+    { n: "Music, reading, old photos", w: 1, k: "there", y: 1 },
+    { n: "Games and puzzles", w: 1, k: "there", y: 1 },
+    { n: "A walk or outing", w: 2, k: "there", r: "Sat" },
+    { n: "Keep family updated", w: 1, k: "phone", r: "Fri", far: 1 },
     { n: "Repositioning for comfort", w: 2, k: "there", r: "Daily", c: ["hospice"] },
+    { n: "Record stories and memories", w: 1, k: "there", c: ["hospice"], y: 1 },
     { n: "Watch for wandering", w: 2, k: "there", c: ["dementia"] },
-    { n: "Wound or port care", w: 2, k: "meds", c: ["cancer", "other"] },
+    { n: "Memory activities", w: 1, k: "there", c: ["dementia"], y: 1 },
+    { n: "Chemo day company", w: 2, k: "there", c: ["cancer"] },
   ],
-  Meals: [
+  "Home & meals": [
     { n: "Weekly grocery run", w: 1, k: "drive", p: 1, r: "Sat" },
     { n: "Cook dinners", w: 2, k: "cook", r: "Daily" },
-    { n: "Plan the week’s meals", w: 1, k: "cook", r: "Sun" },
-    { n: "Batch-cook freezer meals", w: 2, k: "cook" },
     { n: "Set up a meal train", w: 1, k: "phone" },
     { n: "Order meal delivery", w: 1, k: "phone", far: 1 },
-    { n: "Clear out old food in the fridge", w: 1, k: "there", r: "Thu" },
-    { n: "Help with eating", w: 2, k: "there" },
-    { n: "Keep snacks and water nearby", w: 1, k: "cook" },
-    { n: "Easy-on-the-stomach meals", w: 2, k: "cook", p: 1, c: ["cancer"] },
-    { n: "Soft foods and thickened drinks", w: 1, k: "cook", c: ["hospice", "dementia"] },
-  ],
-  Home: [
     { n: "Cleaning", w: 2, k: "there", r: "Thu" },
     { n: "Laundry", w: 1, k: "there", r: "Mon" },
-    { n: "Trash and recycling", w: 1, k: "there", r: "Tue" },
-    { n: "Yard work and snow", w: 2, k: "there" },
-    { n: "Home repairs", w: 2, k: "there" },
+    { n: "Trash and recycling", w: 1, k: "there", r: "Tue", y: 1 },
+    { n: "Yard work and snow", w: 2, k: "there", y: 1 },
     { n: "Safety check: rails, rugs, lights", w: 2, k: "there" },
-    { n: "Pet care", w: 1, k: "there", r: "Daily" },
-    { n: "Get the mail and water plants", w: 1, k: "there", r: "Wed" },
+    { n: "Pet care", w: 1, k: "there", r: "Daily", y: 1 },
+    { n: "Get the mail and water plants", w: 1, k: "there", r: "Wed", y: 1 },
+    { n: "Keep snacks and water nearby", w: 1, k: "cook", y: 1 },
+    { n: "Easy-on-the-stomach meals", w: 2, k: "cook", p: 1, c: ["cancer"] },
+    { n: "Soft foods and thickened drinks", w: 1, k: "cook", c: ["hospice", "dementia"] },
     { n: "Set up a hospital bed or equipment", w: 3, k: "there", c: ["hospice", "other"] },
     { n: "Lock up meds and sharp tools", w: 1, k: "there", c: ["dementia"] },
-    { n: "Wipe down surfaces to avoid germs", w: 1, k: "there", c: ["cancer"] },
     { n: "Install grab bars", w: 2, k: "there", c: ["aging"] },
   ],
-  "Getting around": [
+  "Rides & errands": [
     { n: "Rides to appointments", w: 2, k: "drive", p: 1 },
     { n: "Pharmacy pickups", w: 1, k: "drive" },
     { n: "Errands and post office", w: 1, k: "drive", r: "Sat" },
@@ -84,7 +82,7 @@ const TASK_LIBRARY = {
     { n: "Get a disability parking placard", w: 1, k: "paper" },
     { n: "Car upkeep", w: 1, k: "drive" },
     { n: "Pick up visiting family", w: 2, k: "drive" },
-    { n: "Bring the wheelchair or walker", w: 1, k: "drive" },
+    { n: "Come along to carry bags", w: 1, k: "there", y: 1 },
     { n: "Day program pickups", w: 2, k: "drive", r: "Tue", c: ["dementia"] },
     { n: "Take over the car keys", w: 2, k: "there", c: ["dementia", "aging"] },
   ],
@@ -101,20 +99,6 @@ const TASK_LIBRARY = {
     { n: "Will and estate papers", w: 3, k: "paper", c: ["hospice", "aging"] },
     { n: "Memorial plans", w: 3, k: "paper", c: ["hospice"] },
     { n: "Medical leave paperwork for work", w: 2, k: "paper", c: ["cancer", "other"] },
-  ],
-  Company: [
-    { n: "Visits", w: 1, k: "there", r: "Sun" },
-    { n: "Phone or video calls", w: 1, k: "phone", r: "Wed" },
-    { n: "Check-in texts", w: 1, k: "phone", r: "Daily" },
-    { n: "Music, reading, old photos", w: 1, k: "there" },
-    { n: "A walk or outing", w: 2, k: "there", r: "Sat" },
-    { n: "Keep family updated", w: 1, k: "phone", r: "Fri", far: 1 },
-    { n: "Line up visits from friends", w: 1, k: "phone" },
-    { n: "Faith or spiritual visits", w: 1, k: "there" },
-    { n: "Games and puzzles", w: 1, k: "there" },
-    { n: "Record stories and memories", w: 1, k: "there", c: ["hospice"] },
-    { n: "Memory activities", w: 1, k: "there", c: ["dementia"] },
-    { n: "Chemo day company", w: 2, k: "there", c: ["cancer"] },
   ],
 };
 
@@ -159,6 +143,10 @@ function repeatLabel(days) {
   if (set.join() === "Sat,Sun") return "Weekends";
   return set.length === 1 ? `Every ${set[0]}` : set.join(", ");
 }
+const dayKey = (date) => DAYS[(date.getDay() + 6) % 7];
+const occurs = (t, date) => (t.kind === "once" ? t.date === iso(date) : t.days.includes(dayKey(date)));
+const shift = (s, n) => { const d = fromIso(s); d.setDate(d.getDate() + n); return iso(d); };
+const mondayOf = (s) => shift(s, -((fromIso(s).getDay() + 6) % 7));
 const whenLabel = (t) => `${t.kind === "once" ? fmtDate(t.date) : repeatLabel(t.days)}${t.time ? ` · ${fmtTime(t.time)}` : ""}`;
 function spokenWhen(t) {
   const day = t.kind === "once"
@@ -205,10 +193,12 @@ const initialState = () => ({
   you: [],
   tasks: [], // {id, n, w, k, cat, on, pebble, kind:"once"|"repeat", days, date, time, who}
   taskTab: null,
+  dv: { view: "week", week: mondayOf(iso(TODAY)), month: [TODAY.getFullYear(), TODAY.getMonth()], sel: iso(TODAY) },
   people: [
     { id: "you", name: "You", img: "avatar-you.png", tier: "main", note: "Main caregiver · your jar", cap: null },
   ],
   cals: [], // connected calendar names
+  availDay: 0,
   busy: weekOf({}),
   free: weekOf({}),
   strengths: [],
@@ -263,7 +253,7 @@ function seedTasks() {
       const pick = S.path === "pebble"
         && (!!t.p || (t.wishes && S.them.includes("wishes")) || (t.far && S.you.includes("far")));
       S.tasks.push({
-        id: `t${id++}`, n: t.n, w: t.w, k: t.k, cat, on: pick, pebble: pick,
+        id: `t${id++}`, n: t.n, w: t.w, k: t.k, y: !!t.y, cat, on: pick, pebble: pick,
         kind: t.r ? "repeat" : "once",
         days: t.r === "Daily" ? [...DAYS] : [t.r || "Sat"],
         date: addDays(1 + (id % 9)),
@@ -291,6 +281,10 @@ function hoursOf(t) {
   return base * (0.6 + 0.4 * t.days.length);
 }
 
+// Trusted circle only gets light tasks; kids and teens only get kid-friendly ones.
+const canTake = (p, t) => (p.tier === "trusted" ? t.w === 1 : p.tier === "kid" ? t.y : true);
+const TIER_NOTE = { main: "Invite sent by text", trusted: "Invite sent by text", kid: "Kid-friendly tasks only" };
+
 // Greedy fair split: heaviest first, to whoever has the most room left. Strengths nudge "You".
 function suggestSplit() {
   const load = {};
@@ -299,7 +293,7 @@ function suggestSplit() {
   tasks.forEach((t) => {
     let best = null, bestScore = Infinity;
     S.people.forEach((p) => {
-      if (p.tier === "trusted" && t.w > 1) return; // trusted circle only gets light, offloaded tasks
+      if (!canTake(p, t)) return;
       const cap = capOf(p) || 0.1;
       let score = (load[p.id] + hoursOf(t)) / cap;
       if (p.id === "you" && S.strengths.includes(t.k)) score -= 0.25;
@@ -457,7 +451,7 @@ SCREENS.tasks = () => {
     }).join("")}</div>
     <div class="group-head"><p class="eyebrow grey">${esc(tab)}</p><span class="count">${items.filter((t) => t.on).length} of ${items.length} picked</span></div>
     <div class="card r20"><div class="list">${items.map((t) => `<div class="row ${t.on ? "on" : ""}">
-        <button data-act="toggleTask" data-id="${t.id}" style="display:flex;align-items:center;gap:12px;flex:1;text-align:left">${check(t.on)}<span class="name">${esc(t.n)}${t.pebble ? `<span class="tag">Suggested by Pebble</span>` : ""}</span></button>
+        <button data-act="toggleTask" data-id="${t.id}" style="display:flex;align-items:center;gap:12px;flex:1;text-align:left">${check(t.on)}<span class="name">${esc(t.n)}${t.pebble ? `<span class="tag">Suggested by Pebble</span>` : ""}${t.y ? `<span class="tag kid">Kid-friendly</span>` : ""}</span></button>
         <button data-act="weight" data-id="${t.id}" aria-label="Change size">${weightPill(t.w)}</button>
       </div>`).join("")}</div></div>
     <form class="write-own" data-form="task"><img src="${A("plus.svg")}" alt=""><input name="v" placeholder="Add your own to ${esc(tab)}"><button class="go">Add</button></form>
@@ -466,21 +460,51 @@ SCREENS.tasks = () => {
   ${footer(picked().length ? `Next · ${picked().length} task${picked().length > 1 ? "s" : ""}` : "Pick at least one task", { disabled: !picked().length })}`;
 };
 
+const taskPill = (t) => `<button class="tpill ${t.kind}" data-act="editDate" data-id="${t.id}">${esc(t.n)}${t.time ? `<small>${fmtTime(t.time)}</small>` : ""}</button>`;
+
 SCREENS.dates = () => {
-  const once = picked().filter((t) => t.kind === "once");
-  const rep = picked().filter((t) => t.kind === "repeat");
-  const row = (t) => `<button class="date-row" data-act="editDate" data-id="${t.id}">
-      <span class="main"><span class="n">${esc(t.n)}</span><span class="m">${weightPill(t.w)} ${t.kind === "once" ? "Happens once" : "Repeats"}</span></span>
-      <span class="badge wrap">${whenLabel(t)}</span>
-      <img class="chev" src="${A("chevron.svg")}" alt="">
-    </button>`;
+  const dv = S.dv;
+  const tasks = picked();
+  const on = (date) => (date < TODAY ? [] : tasks.filter((t) => occurs(t, date)));
+  let body;
+  if (dv.view === "week") {
+    const days = DAYS.map((_, i) => fromIso(shift(dv.week, i)));
+    const end = days[6];
+    body = `<div class="cal-head"><button data-act="dvMove" data-id="-1" ${dv.week <= mondayOf(iso(TODAY)) ? "disabled" : ""} aria-label="Previous week"><img src="${A("chevron.svg")}" alt="" style="transform:scaleX(-1)"></button>
+        <b>${days[0].toLocaleDateString("en-US", { month: "short", day: "numeric" })} – ${end.toLocaleDateString("en-US", { month: days[0].getMonth() === end.getMonth() ? undefined : "short", day: "numeric" })}</b>
+        <button data-act="dvMove" data-id="1" aria-label="Next week"><img src="${A("chevron.svg")}" alt=""></button></div>
+      <div class="card r20 week-list">${days.map((d) => {
+        const items = on(d);
+        return `<div class="wl-day ${iso(d) === iso(TODAY) ? "today" : ""}"><span class="wl-date"><b>${dayKey(d)}</b>${d.getDate()}</span>
+          <span class="wl-items">${items.map(taskPill).join("") || `<span class="small">Nothing yet</span>`}</span></div>`;
+      }).join("")}</div>`;
+  } else {
+    const [y, m] = dv.month;
+    const first = new Date(y, m, 1), count = new Date(y, m + 1, 0).getDate();
+    const cells = Array.from({ length: (first.getDay() + 6) % 7 }, () => `<span></span>`);
+    for (let n = 1; n <= count; n++) {
+      const d = new Date(y, m, n), id = iso(d), k = on(d).length;
+      const cls = [id === dv.sel && "on", id === iso(TODAY) && "today", d < TODAY && "past"].filter(Boolean).join(" ");
+      cells.push(`<button class="${cls}" data-act="dvSel" data-id="${id}">${n}<span class="dots">${"<i></i>".repeat(Math.min(k, 3))}</span></button>`);
+    }
+    const sel = fromIso(dv.sel), items = on(sel);
+    body = `<div class="card r20 month">
+        <div class="cal-head"><button data-act="dvMove" data-id="-1" ${y === TODAY.getFullYear() && m === TODAY.getMonth() ? "disabled" : ""} aria-label="Previous month"><img src="${A("chevron.svg")}" alt="" style="transform:scaleX(-1)"></button>
+          <b>${first.toLocaleDateString("en-US", { month: "long", year: "numeric" })}</b>
+          <button data-act="dvMove" data-id="1" aria-label="Next month"><img src="${A("chevron.svg")}" alt=""></button></div>
+        <div class="cal-grid month-grid">${["M", "T", "W", "T", "F", "S", "S"].map((d) => `<i>${d}</i>`).join("")}${cells.join("")}</div>
+      </div>
+      <p class="eyebrow grey" style="margin:18px 0 10px">${fmtDate(dv.sel)}</p>
+      <div class="wl-items">${items.map(taskPill).join("") || `<span class="small">Nothing on this day.</span>`}</div>`;
+  }
   return `${topbar({ skip: false })}
   <div class="content">
     ${eyebrow("Tasks")}
     <h1 class="title">When is each due?</h1>
-    <p class="sub">One-time tasks happen once; ongoing ones repeat. Pebble uses this to match tasks to free time.</p>
-    ${once.length ? `<p class="eyebrow grey" style="margin:4px 0 10px">One-time</p><div class="card r20" style="margin-bottom:20px">${once.map(row).join("")}</div>` : ""}
-    ${rep.length ? `<p class="eyebrow grey" style="margin:4px 0 10px">Ongoing</p><div class="card r20">${rep.map(row).join("")}</div>` : ""}
+    <p class="sub">Tap a task to set its date, repeats, or time. Pebble uses this to match tasks to free time.</p>
+    <div class="dv-bar"><span class="seg"><button class="${dv.view === "week" ? "on" : ""}" data-act="dvView" data-id="week">Week</button><button class="${dv.view === "month" ? "on" : ""}" data-act="dvView" data-id="month">Month</button></span>
+      <span class="legend-mini"><i class="once"></i>Once <i class="repeat"></i>Repeats</span></div>
+    ${body}
   </div>
   ${footer("Next: who's helping")}`;
 };
@@ -488,6 +512,7 @@ SCREENS.dates = () => {
 SCREENS.people = () => {
   const main = S.people.filter((p) => p.tier === "main");
   const trusted = S.people.filter((p) => p.tier === "trusted");
+  const kids = S.people.filter((p) => p.tier === "kid");
   const line = (p) => `<div class="person">${avatar(p)}
       <span class="main"><span class="n">${esc(p.name)}</span><span class="m">${esc(p.note)}</span></span>
       ${p.id === "you" || p.joined ? stone(true) : `<span class="badge">Invited</span>`}
@@ -501,9 +526,11 @@ SCREENS.people = () => {
     <div class="card">${main.map(line).join("")}</div>
     <p class="eyebrow grey" style="margin:22px 0 10px">Trusted circle · helps with light tasks</p>
     <div class="card">${trusted.map(line).join("") || `<div class="person"><span class="small">No one yet</span></div>`}</div>
+    <p class="eyebrow grey" style="margin:22px 0 10px">Kids &amp; teens · kid-friendly tasks</p>
+    <div class="card">${kids.map(line).join("") || `<div class="person"><span class="small">Grandkids can help too: calls, games, pets, the mail.</span></div>`}</div>
     ${S._adding ? `<form class="write-own editing" data-form="person" style="height:auto;padding:10px 12px 10px 17px;flex-wrap:wrap;gap:10px">
         <input name="v" placeholder="Name or phone number" autofocus style="min-width:150px">
-        <span class="seg"><button type="button" class="${S._addTier !== "trusted" ? "on" : ""}" data-act="addTier" data-tier="main">Main</button><button type="button" class="${S._addTier === "trusted" ? "on" : ""}" data-act="addTier" data-tier="trusted">Trusted</button></span>
+        <span class="seg">${[["main", "Main"], ["trusted", "Trusted"], ["kid", "Kid or teen"]].map(([k, l]) => `<button type="button" class="${S._addTier === k ? "on" : ""}" data-act="addTier" data-tier="${k}">${l}</button>`).join("")}</span>
         <button class="go">Invite</button></form>`
       : `<button class="write-own" data-act="addPerson"><img src="${A("plus.svg")}" alt="">Add a person</button>`}
     <p class="small" style="margin-top:16px">Anyone else can help through a public link later: wishlists, meal trains, donations.</p>
@@ -535,65 +562,47 @@ SCREENS.calendar = () => `${topbar({ skip: false })}
   </div>
   ${footer(S.cals.length ? "Next: add free time" : "Skip, I’ll fill it in")}`;
 
-const TIME_PRESETS = [["Morning", 8, 12], ["Afternoon", 12, 17], ["Evening", 17, 21]];
+const DAY_PARTS = [["Morning", 6, 12], ["Afternoon", 12, 17], ["Evening", 17, 22]];
+const hourLabel = (h) => `${hour12(h)} ${meridiem(h)}`;
 
-// One day's 6 AM–10 PM strip: free in blue, busy striped.
-function dayStrip(i) {
-  const segs = [];
-  for (let h = HOURS.from; h < HOURS.to; h++) segs.push(`<i class="${S.busy[i][h] ? "busy" : S.free[i][h] ? "on" : ""}"></i>`);
-  return `<div class="strip">${segs.join("")}</div><div class="strip-axis"><span>6a</span><span>12p</span><span>6p</span><span>10p</span></div>`;
-}
-
-SCREENS.avail = () => `${topbar({ skip: false })}
+SCREENS.avail = () => {
+  const i = S.availDay, day = DAYS[i];
+  const hrs = (k) => S.free[k].filter(Boolean).length;
+  return `${topbar({ skip: false })}
   <div class="content">
     ${eyebrow("Your week")}
     <h1 class="title">When are you free?</h1>
-    <p class="sub">Add the times each day you could help.${S.cals.length ? " Striped times are busy on your calendar." : ""}</p>
-    ${DAYS.map((d, i) => {
-      const free = blocksOf(S.free[i]), busy = blocksOf(S.busy[i]);
-      const hrs = S.free[i].filter(Boolean).length;
-      return `<div class="card day-card">
-        <div class="dc-head"><b class="${i > 4 ? "weekend" : ""}">${DAY_FULL[d]}</b><span class="small">${hrs ? `${hrs}h free` : ""}</span><button class="add-time" data-act="addTime" data-id="${i}"><img src="${A("plus.svg")}" alt="">Add time</button></div>
-        ${dayStrip(i)}
-        ${free.length || busy.length ? `<div class="blocks">
-          ${free.map(([a, b]) => `<span class="block">${fmtRange(a, b)}<button data-act="removeBlock" data-id="${i}" data-a="${a}" data-b="${b}" aria-label="Remove">×</button></span>`).join("")}
-          ${busy.map(([a, b]) => `<span class="block busy">Busy ${fmtRange(a, b)}</span>`).join("")}
-        </div>` : ""}
-      </div>`;
-    }).join("")}
-    <div class="week-total"><button class="linkish" data-act="copyMon">Copy Monday to weekdays</button><b>${yourCap()}h / week</b></div>
-    <p class="sub lock" style="margin-top:6px"><img src="${A("lock.svg")}" width="14" height="14" alt="">Private. Everyone sets their own when they join.</p>
+    <p class="sub">Pick a day, then tap the hours you could help.</p>
+    <div class="day-tabs">${DAYS.map((d, k) => `<button class="${k === i ? "on" : ""} ${hrs(k) ? "has" : ""}" data-act="availDay" data-id="${k}">${d}<small>${hrs(k) ? `${hrs(k)}h` : "–"}</small></button>`).join("")}</div>
+    <div class="card r20 focus-day">
+      <div class="fd-head"><b>${DAY_FULL[day]}</b><span class="small">${hrs(i) ? `${hrs(i)}h free` : "No time yet"}</span></div>
+      ${DAY_PARTS.map(([label, a, b]) => {
+        const open = [];
+        for (let h = a; h < b; h++) if (!S.busy[i][h]) open.push(h);
+        const all = open.length && open.every((h) => S.free[i][h]);
+        const slots = [];
+        for (let h = a; h < b; h++) {
+          const busy = S.busy[i][h];
+          slots.push(`<button class="slot ${busy ? "busy" : S.free[i][h] ? "on" : ""}" data-act="toggleHour" data-id="${h}" ${busy ? "disabled" : ""}>${hourLabel(h)}${busy ? "<small>Busy</small>" : ""}</button>`);
+        }
+        return `<div class="fd-part"><div class="fd-part-head"><span>${label}</span>${open.length ? `<button class="linkish" data-act="togglePart" data-id="${a}-${b}">${all ? "Clear" : "Select all"}</button>` : ""}</div>
+          <div class="slots">${slots.join("")}</div></div>`;
+      }).join("")}
+      <div class="fd-copy"><span class="small">Same hours on</span><button class="chip" data-act="copyDay" data-id="weekdays">Weekdays</button><button class="chip" data-act="copyDay" data-id="all">Every day</button></div>
+    </div>
+    <p class="eyebrow grey" style="margin:20px 0 10px">Your week · ${yourCap()}h</p>
+    <div class="card r20 ranges">${DAYS.map((d, k) => {
+      const bl = blocksOf(S.free[k]);
+      return `<button data-act="availDay" data-id="${k}"><b>${d}</b><span class="${bl.length ? "" : "none"}">${bl.length ? bl.map(([a, b]) => fmtRange(a, b)).join(", ") : "Not set"}</span></button>`;
+    }).join("")}</div>
+    ${S.cals.length ? `<p class="small" style="margin-top:10px">Hours marked busy come from your connected calendar${S.cals.length > 1 ? "s" : ""}.</p>` : ""}
+    <p class="sub lock" style="margin-top:12px"><img src="${A("lock.svg")}" width="14" height="14" alt="">Private. Everyone sets their own when they join.</p>
     <p class="label">What you’re good at</p>
     <div class="chips">${STRENGTHS.map((s) => chip(s.t, S.strengths.includes(s.id), "strength", s.id)).join("")}</div>
     <p class="small" style="margin-top:18px">Pebble uses this to keep the split fair. Others only see the plan.</p>
   </div>
   ${footer(S.path === "pebble" ? "See Pebble's split" : "Next: split it up")}`;
-
-function timeSheet(i) {
-  S._day = i;
-  const d = DAY_FULL[DAYS[i]];
-  const hourOpts = (sel, from, to) => { let o = ""; for (let h = from; h <= to; h++) o += `<option value="${h}" ${h === sel ? "selected" : ""}>${hour12(h)} ${meridiem(h)}</option>`; return o; };
-  const free = blocksOf(S.free[i]);
-  openSheet(`<h3>${d}</h3>
-    <p class="small">Tap a part of the day, or set exact hours.</p>
-    <div class="row-opts">${TIME_PRESETS.map(([l, a, b]) => chip(`${l} · ${fmtRange(a, b)}`, covered(i, a, b), "presetTime", `${a}-${b}`)).join("")}</div>
-    <p class="label" style="margin-top:16px">Exact hours</p>
-    <div class="range-pick">
-      <select id="tFrom" aria-label="From">${hourOpts(13, 6, 22)}</select><span>to</span>
-      <select id="tTo" aria-label="To">${hourOpts(17, 7, 23)}</select>
-      <button class="btn-soft" data-act="customTime">Add</button>
-    </div>
-    ${free.length ? `<p class="label" style="margin-top:16px">Free on ${d}</p><div class="blocks">${free.map(([a, b]) => `<span class="block">${fmtRange(a, b)}<button data-act="removeBlock" data-id="${i}" data-a="${a}" data-b="${b}" aria-label="Remove">×</button></span>`).join("")}</div>` : ""}
-    <button class="btn-primary" data-act="closeSheet">Done</button>`);
-}
-// True when every hour of [a, b) you aren't busy for is already free (and at least one is).
-const covered = (i, a, b) => S.free[i].slice(a, b).some(Boolean) && S.free[i].slice(a, b).every((on, k) => on || S.busy[i][a + k]);
-// Marks [a, b) free on the sheet's day, skipping busy hours. Returns how many hours were busy.
-function setFree(i, a, b, on) {
-  let skipped = 0;
-  for (let h = a; h < b; h++) { if (S.busy[i][h]) skipped++; else S.free[i][h] = on; }
-  return skipped;
-}
+};
 
 const chip = (label, on, act, id) => `<button class="chip ${on ? "on" : ""}" data-act="${act}" data-id="${esc(id)}">${on ? `<img src="${A("chip-check.svg")}" alt="">` : ""}${esc(label)}</button>`;
 
@@ -624,8 +633,8 @@ SCREENS.split = () => {
       <p class="meta">${t.kind === "once" ? "Once · " : ""}${whenLabel(t)} · ${t.who ? esc(person(t.who).name) : "Unassigned"}</p>
       <div class="pickers">
         ${helpers.map((p) => {
-          const blocked = p.tier === "trusted" && t.w > 1;
-          return `<button class="pick ${t.who === p.id ? "on" : ""}" data-act="assign" data-id="${t.id}" data-who="${p.id}" ${blocked ? `disabled style="opacity:.35" title="Trusted circle gets light tasks only"` : ""}>
+          const blocked = !canTake(p, t);
+          return `<button class="pick ${t.who === p.id ? "on" : ""}" data-act="assign" data-id="${t.id}" data-who="${p.id}" ${blocked ? `disabled style="opacity:.35" title="${p.tier === "kid" ? "Kids and teens get kid-friendly tasks only" : "Trusted circle gets light tasks only"}"` : ""}>
             <span class="ringwrap">${avatar(p, "s36")}<img class="ring" src="${A("selected-ring.svg")}" alt=""></span>${esc(p.name)}</button>`;
         }).join("")}
         <button class="pick ${!t.who ? "on" : ""}" data-act="assign" data-id="${t.id}" data-who="">
@@ -648,7 +657,7 @@ SCREENS.review = () => {
     }
     return out;
   };
-  const trustedTasks = picked().filter((t) => t.who && person(t.who).tier === "trusted");
+  const trustedTasks = picked().filter((t) => t.who && person(t.who).tier !== "main");
   const loose = picked().filter((t) => !t.who);
   let delay = 0;
   const peb = (t, pos) => `<button class="pebble-btn" data-act="stone" data-id="${t.id}" style="${pos ? `left:${pos.x}px;top:${pos.y}px;` : ""}animation-delay:${(delay += 0.07)}s" aria-label="${esc(t.n)}"><img src="${A(t.who ? "stone-progress.svg" : "stone-unassigned.svg")}" alt=""></button>`;
@@ -665,7 +674,7 @@ SCREENS.review = () => {
         return `<div class="rjar"><div class="glassbox"><img class="glass" src="${A("jar.png")}" alt=""><div class="plate"></div>${mine.map((t, i) => peb(t, pos[i])).join("")}</div>
           <span class="who">${esc(p.name)}</span><span class="cnt">${mine.length} task${mine.length === 1 ? "" : "s"}</span></div>`;
       }).join("")}</div>
-      ${trustedTasks.length ? `<div class="loose">Trusted circle ${trustedTasks.map((t) => peb(t)).join("")}</div>` : ""}
+      ${trustedTasks.length ? `<div class="loose">Trusted &amp; kids ${trustedTasks.map((t) => peb(t)).join("")}</div>` : ""}
       ${loose.length ? `<div class="loose">Unassigned ${loose.map((t) => peb(t)).join("")}</div>` : ""}
       <div class="legend"><span><img src="${A("stone-progress.svg")}" alt="">Assigned</span><span><img src="${A("stone-unassigned.svg")}" alt="">Needs someone</span></div>
     </div>
@@ -759,12 +768,12 @@ const NOTES = {
   about: ["Care situation", ["Starts blank: no name or condition filled in.", "Pick more than one condition; general tasks are always suggested, plus ones for each condition."]],
   them: ["What matters to them", ["Pebble path only. Starts blank. Answers pre-pick tasks (e.g. “Their wishes in order” adds the advance-directive task)."]],
   you: ["What matters to you", ["Pebble path only. “Helping from far away” leans Pebble toward phone and paperwork tasks."]],
-  tasks: ["Tasks before people", ["Each category is its own tab, so no one scrolls a giant list.", "About 10 suggestions per tab to jog memory, plus a write-in.", "Each task has a size (light, medium, heavy) that feeds the fair split."]],
-  dates: ["Dates and repeats", ["Moved up, before people. Knowing when tasks happen lets the split match them to free time.", "One-time tasks pick a due date from a calendar. Repeating tasks can fall on several days.", "Either can have a time, or stay “any time”."]],
+  tasks: ["Tasks before people", ["Five category tabs: Medical, Care & visits, Home & meals, Rides & errands, Money & paperwork. “Company” folded into Care & visits.", "About 10–15 suggestions per tab, plus a write-in. Kid-friendly tasks are tagged.", "Each task has a size (light, medium, heavy) that feeds the fair split."]],
+  dates: ["Dates on a calendar", ["Week or month view instead of a list. Repeating tasks show on each of their days.", "Tap a task to pick a date, repeat days, or a time."]],
   calendar: ["Calendar sync", ["Optional. Connect any mix of Google, Apple, and Outlook; busy times merge.", "Only busy/free is read, never event details. Connecting here is simulated."]],
-  people: ["Who's helping", ["Starts with just you. Each main caregiver gets the app and a link by text.", "Trusted circle is a separate list, light tasks only."]],
-  avail: ["Free time per day", ["One card per day instead of a week grid. Add a part of the day or exact hours.", "Starts blank. Busy calendar times show striped and are skipped.", "Dropped “Anything else on your plate?”, which interviewees didn’t like."]],
-  split: ["The split, last", ["Load bars count heavier tasks as more hours.", "Pebble path arrives pre-split. Manual path can ask Pebble.", "If no one has room, it suggests the trusted circle or paid help instead of overloading someone."]],
+  people: ["Who's helping", ["Starts with just you. Each main caregiver gets the app and a link by text.", "Trusted circle: light tasks only.", "New: kids & teens, who only get kid-friendly tasks (calls, games, pets, the mail)."]],
+  avail: ["Free time, one day at a time", ["Pick a day, then tap big hour buttons, grouped into morning, afternoon, and evening.", "Copy a day to weekdays or every day. A summary shows the whole week.", "Starts blank. Busy calendar hours can’t be picked."]],
+  split: ["The split, last", ["Totals stay pinned at the top while the tasks scroll.", "Load bars count heavier tasks as more hours. Pebble path arrives pre-split.", "If no one has room, it suggests the trusted circle or paid help instead of overloading someone."]],
   review: ["Jars, now earned", ["Jars fill with the tasks you just made.", "Tap a stone: voice playback and “make it glow” (locate) are shown up front, so the jar works without the app."]],
 };
 
@@ -831,6 +840,14 @@ const ACTIONS = {
   editOwn: () => { S._editing = true; render(); },
   toggleTask: (d) => { const t = S.tasks.find((x) => x.id === d.id); t.on = !t.on; if (!t.on) t.who = null; render(); },
   weight: (d) => { const t = S.tasks.find((x) => x.id === d.id); t.w = (t.w % 3) + 1; render(); },
+  dvView: (d) => { S.dv.view = d.id; render(); },
+  dvSel: (d) => { S.dv.sel = d.id; render(); },
+  dvMove: (d) => {
+    const n = +d.id;
+    if (S.dv.view === "week") S.dv.week = shift(S.dv.week, 7 * n);
+    else { const [y, m] = S.dv.month; const x = new Date(y, m + n, 1); S.dv.month = [x.getFullYear(), x.getMonth()]; }
+    render();
+  },
   taskTab: (d) => {
     S.taskTab = d.id;
     render();
@@ -863,32 +880,24 @@ const ACTIONS = {
     render();
     toast(`${d.id} ${i >= 0 ? "disconnected" : "connected"}`);
   },
-  addTime: (d) => timeSheet(+d.id),
-  presetTime: (d) => {
-    const [a, b] = d.id.split("-").map(Number);
-    const on = !covered(S._day, a, b);
-    const skipped = setFree(S._day, a, b, on);
-    render(); timeSheet(S._day);
-    if (on && skipped === b - a) toast("You're busy that whole time");
-    else if (on && skipped) toast("Skipped the hours you're busy");
-  },
-  customTime: () => {
-    const a = +document.getElementById("tFrom").value, b = +document.getElementById("tTo").value;
-    if (b <= a) { toast("End time needs to be after the start"); return; }
-    const skipped = setFree(S._day, a, b, true);
-    render(); timeSheet(S._day);
-    if (skipped) toast("Skipped the hours you're busy");
-  },
-  removeBlock: (d) => {
-    setFree(+d.id, +d.a, +d.b, false);
+  availDay: (d) => { S.availDay = +d.id; render(); },
+  toggleHour: (d) => { const row = S.free[S.availDay]; row[+d.id] = !row[+d.id]; render(); },
+  togglePart: (d) => {
+    const [a, b] = d.id.split("-").map(Number), i = S.availDay;
+    const open = [];
+    for (let h = a; h < b; h++) if (!S.busy[i][h]) open.push(h);
+    const on = !open.every((h) => S.free[i][h]);
+    open.forEach((h) => (S.free[i][h] = on));
     render();
-    if (document.querySelector("#sheet.open")) timeSheet(+d.id);
   },
-  copyMon: () => {
-    for (let i = 1; i < 5; i++) S.free[i] = S.free[0].map((on, h) => on && !S.busy[i][h]);
+  copyDay: (d) => {
+    const from = S.availDay, targets = d.id === "weekdays" ? [0, 1, 2, 3, 4] : [0, 1, 2, 3, 4, 5, 6];
+    let skipped = false;
+    targets.filter((k) => k !== from).forEach((k) => {
+      S.free[k] = S.free[from].map((on, h) => { if (on && S.busy[k][h]) skipped = true; return on && !S.busy[k][h]; });
+    });
     render();
-    const clash = S.free[0].some((on, h) => on && [1, 2, 3, 4].some((i) => S.busy[i][h]));
-    toast(clash ? "Copied, skipping times you're busy" : "Copied Monday to Tue–Fri");
+    toast(`Copied ${DAY_FULL[DAYS[from]]} to ${d.id === "weekdays" ? "weekdays" : "every day"}${skipped ? ", skipping busy hours" : ""}`);
   },
   strength: (d) => { const i = S.strengths.indexOf(d.id); i >= 0 ? S.strengths.splice(i, 1) : S.strengths.push(d.id); render(); },
   assign: (d) => { const t = S.tasks.find((x) => x.id === d.id); t.who = d.who || null; S.splitTouched = true; render(); },
@@ -942,7 +951,7 @@ document.addEventListener("submit", (e) => {
   }
   if (kind === "person") {
     const tier = S._addTier || "main";
-    S.people.push({ id: `p${Date.now()}`, name: v, tier, note: "Invite sent by text", cap: tier === "main" ? 5 : 2, invited: true });
+    S.people.push({ id: `p${Date.now()}`, name: v, tier, note: TIER_NOTE[tier], cap: tier === "main" ? 5 : 2, invited: true });
     S._adding = false;
     render();
     toast(`Invite sent to ${v}`);

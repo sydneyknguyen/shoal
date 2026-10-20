@@ -257,14 +257,13 @@ input { font: inherit; color: inherit; }
 .stone { display: block; width: 28px; height: 22px; margin: -5px -5px; }
 
 /* ---------- Welcome ---------- */
-.hero { padding: 19px 6px 0; height: 206px; margin: 26px 0 28px; position: relative; }
+.hero { padding: 12px 6px 30px; margin: 26px 0 30px; position: relative; }
 .jars-illus { position: relative; width: 342px; height: 139px; margin: 0 auto; }
 .jars-illus .jar { position: absolute; top: 0; width: 84.26px; height: 122.38px; }
 .jars-illus .jar > img.glass { position: absolute; inset: 0; width: 100%; height: 100%; object-position: bottom; }
 .jars-illus .plate { position: absolute; left: 6.35px; width: 71.56px; height: 10.03px; border-radius: 2.96px; background: rgba(141, 138, 130, 0.22); border: 0.093px solid #0f4c93; }
 .jars-illus .rocks { position: absolute; }
 .jars-illus .rocks img { position: absolute; display: block; }
-.hero .cap { position: absolute; left: 20px; right: 20px; top: 165px; margin: 0; text-align: center; }
 
 .path {
   position: relative; display: flex; align-items: flex-start; gap: 16px;
@@ -279,7 +278,7 @@ input { font: inherit; color: inherit; }
 .path .t { font-weight: 600; font-size: 17px; display: block; }
 .path .d { font-size: 13.5px; line-height: 19px; color: var(--muted); display: block; margin-top: 6px; width: 230px; }
 .path .chev { position: absolute; right: 22px; top: 47px; width: 7px; height: 12px; }
-.path-badge { position: absolute; left: 78px; top: -12px; z-index: 1; }
+.path-badge { position: absolute; left: 20px; top: -11px; z-index: 1; background: var(--blue); color: #fff; padding: 5px 10px; box-shadow: 0 2px 6px rgba(32, 112, 217, 0.25); }
 .foot-note { text-align: center; margin-top: 44px; }
 
 /* ---------- Task checklist ---------- */
@@ -332,37 +331,48 @@ input { font: inherit; color: inherit; }
 /* ---------- Calendar connect ---------- */
 .cal-opt { display: flex; align-items: center; gap: 14px; width: 100%; text-align: left; padding: 15px 18px; position: relative; }
 .cal-opt + .cal-opt::before { content: ""; position: absolute; left: 18px; right: 18px; top: 0; height: 1px; background: var(--line); }
-.cal-opt .ic { flex: none; width: 36px; height: 36px; border-radius: 10px; background: var(--blue-tint); display: grid; place-items: center; }
+.cal-opt .ic { flex: none; width: 40px; height: 40px; border-radius: 10px; background: #fff; box-shadow: 0 1px 3px rgba(33, 38, 46, 0.12); display: grid; place-items: center; }
+.cal-opt .ic img { width: 26px; height: 26px; object-fit: contain; }
 .cal-opt .main { flex: 1; }
 .cal-opt .n { font-weight: 600; font-size: 15.5px; display: block; }
 .cal-opt .m { font-size: 13px; color: var(--muted); display: block; margin-top: 3px; }
 .cal-opt .go { font-weight: 600; font-size: 14px; color: var(--blue); }
 .cal-opt.on .go { color: var(--blue-label); display: inline-flex; align-items: center; gap: 4px; }
 
-/* ---------- Availability (week grid) ---------- */
-.wk { padding: 12px 10px 8px 4px; }
-.wk-grid { display: grid; grid-template-columns: 30px repeat(7, 1fr); column-gap: 3px; touch-action: none; user-select: none; -webkit-user-select: none; }
-.wk-grid .dh { text-align: center; font-weight: 600; font-size: 12.5px; padding-bottom: 6px; }
-.wk-grid .dh.weekend { color: var(--blue-label); }
-.wk-grid .hl { font-size: 10.5px; color: var(--muted); text-align: right; padding-right: 5px; transform: translateY(-6px); font-variant-numeric: tabular-nums; }
-.wk-cell { height: 19px; background: rgba(110, 115, 124, 0.07); border-top: 1px solid rgba(255, 255, 255, 0.9); cursor: pointer; }
-.wk-cell.top { border-radius: 6px 6px 0 0; }
-.wk-cell.bot { border-radius: 0 0 6px 6px; }
-.wk-cell.on { background: var(--blue); }
-.wk-cell.on + .wk-cell.on, .wk-cell.on.join { border-top-color: rgba(255, 255, 255, 0.25); }
-.wk-cell.busy { cursor: not-allowed; background: repeating-linear-gradient(135deg, rgba(110, 115, 124, 0.16) 0 3px, rgba(110, 115, 124, 0.05) 3px 7px); }
-.wk-legend { display: flex; gap: 14px; padding: 10px 0 0 34px; font-size: 12px; color: var(--muted); }
-.wk-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; background: var(--blue); }
-.wk-legend i.busy { background: repeating-linear-gradient(135deg, rgba(110, 115, 124, 0.3) 0 2px, rgba(110, 115, 124, 0.08) 2px 4px); }
-.ranges { padding: 4px 16px 4px; }
-.ranges div { display: flex; gap: 12px; padding: 7px 0; font-size: 13.5px; }
-.ranges div + div { border-top: 1px solid var(--line); }
-.ranges b { width: 34px; flex: none; font-weight: 600; }
-.ranges span { color: var(--ink); }
-.ranges span.none { color: var(--muted); }
-.week-total { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 12px 16px; border-top: 1px solid var(--line); }
+/* ---------- Availability (per-day cards) ---------- */
+.day-card { padding: 14px 16px; margin-bottom: 10px; }
+.dc-head { display: flex; align-items: center; gap: 10px; }
+.dc-head b { font-weight: 600; font-size: 15.5px; }
+.dc-head b.weekend { color: var(--blue-label); }
+.dc-head .small { flex: 1; }
+.add-time { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; font-size: 13.5px; color: var(--blue); padding: 6px 2px; }
+.add-time img { width: 11px; height: 11px; }
+.strip { display: flex; gap: 2px; margin-top: 10px; height: 10px; }
+.strip i { flex: 1; border-radius: 2px; background: rgba(110, 115, 124, 0.1); }
+.strip i.on { background: var(--blue); }
+.strip i.busy { background: repeating-linear-gradient(135deg, rgba(110, 115, 124, 0.32) 0 2px, rgba(110, 115, 124, 0.08) 2px 4px); }
+.strip-axis { display: flex; justify-content: space-between; font-size: 10.5px; color: var(--muted); margin-top: 3px; }
+.blocks { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.block { display: inline-flex; align-items: center; gap: 4px; padding: 5px 6px 5px 11px; border-radius: 14px; background: var(--blue-tint); color: var(--blue-label); font-weight: 600; font-size: 13px; }
+.block button { width: 20px; height: 20px; border-radius: 10px; font-size: 15px; line-height: 1; color: var(--blue-label); }
+.block.busy { background: rgba(110, 115, 124, 0.1); color: var(--muted); font-weight: 500; padding-right: 11px; }
+.range-pick { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+.range-pick select { flex: 1; height: 40px; border-radius: 12px; border: 1.2px solid var(--line); background: #fff; font: inherit; font-size: 14.5px; padding: 0 8px; color: var(--ink); }
+.range-pick span { color: var(--muted); font-size: 13px; }
+.range-pick .btn-soft { flex: none; }
+
+/* ---------- Task tabs ---------- */
+.tabs { display: flex; gap: 8px; overflow-x: auto; margin: 6px -20px 0; padding: 8px 20px 10px; scrollbar-width: none; position: sticky; top: -1px; z-index: 2; background: rgba(248, 249, 250, 0.82); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
+.tabs::-webkit-scrollbar { display: none; }
+.tabs button { flex: none; display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 14px; border-radius: 18px; background: rgba(255, 255, 255, 0.6); box-shadow: var(--chip-shadow); font-weight: 500; font-size: 14px; color: var(--ink); white-space: nowrap; }
+.tabs button b { min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: var(--blue-tint); color: var(--blue-label); font-size: 11.5px; font-weight: 700; display: grid; place-items: center; }
+.tabs button.on { background: var(--navy); color: #fff; font-weight: 600; box-shadow: none; }
+.tabs button.on b { background: rgba(255, 255, 255, 0.22); color: #fff; }
+.next-tab { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; margin-top: 14px; height: 44px; font-weight: 600; font-size: 14.5px; color: var(--blue); }
+.next-tab img { width: 7px; height: 12px; }
+
+.week-total { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 6px 4px 4px; }
 .week-total b { font-size: 15px; white-space: nowrap; }
-.week-total .acts { display: flex; gap: 14px; }
 
 /* ---------- Date sheet ---------- */
 .badge.wrap { white-space: normal; text-align: right; max-width: 132px; line-height: 17px; }

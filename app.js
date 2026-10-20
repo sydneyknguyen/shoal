@@ -13,119 +13,116 @@ const CONDITIONS = [
   { id: "other", t: "Something else", d: "Surgery recovery, stroke, other" },
 ];
 
-// w = weight (1 light, 2 medium, 3 heavy). k = skill tag. p = Pebble pre-picks it. r = repeats by default.
-const PRESETS = {
-  hospice: {
-    Medical: [
-      { n: "Refill prescriptions", w: 1, k: "meds", p: 1 },
-      { n: "Be there for hospice visits", w: 2, k: "there", p: 1, r: "Thu" },
-      { n: "Track symptoms for the nurse", w: 1, k: "meds", r: "Daily" },
-      { n: "Comfort meds schedule", w: 2, k: "meds" },
-    ],
-    Home: [
-      { n: "Groceries", w: 1, k: "drive", p: 1, r: "Sat" },
-      { n: "Meals", w: 2, k: "cook", r: "Daily" },
-      { n: "Rides to appointments", w: 2, k: "drive" },
-      { n: "Overnight stays", w: 3, k: "there", r: "Fri" },
-    ],
-    "Money & paperwork": [
-      { n: "Insurance calls", w: 2, k: "phone", p: 1 },
-      { n: "Pay bills", w: 1, k: "paper", r: "Mon" },
-      { n: "His wishes and advance directive", w: 3, k: "paper", wishes: 1 },
-    ],
-    Company: [
-      { n: "Visits and calls", w: 1, k: "phone", r: "Wed" },
-      { n: "Music, reading, old photos", w: 1, k: "there", r: "Sun" },
-    ],
-  },
-  dementia: {
-    Medical: [
-      { n: "Neurologist appointments", w: 2, k: "drive", p: 1 },
-      { n: "Daily meds and pill box", w: 2, k: "meds", p: 1, r: "Sun" },
-      { n: "Track changes for the doctor", w: 1, k: "meds" },
-    ],
-    Home: [
-      { n: "Groceries", w: 1, k: "drive", p: 1, r: "Sat" },
-      { n: "Home safety check", w: 2, k: "there" },
-      { n: "Day program pickups", w: 2, k: "drive", r: "Tue" },
-      { n: "Give Mom a night off", w: 3, k: "there", p: 1, r: "Fri" },
-    ],
-    "Money & paperwork": [
-      { n: "Power of attorney", w: 3, k: "paper", wishes: 1 },
-      { n: "Pay bills", w: 1, k: "paper", r: "Mon" },
-      { n: "Insurance calls", w: 2, k: "phone" },
-    ],
-    Company: [
-      { n: "Daily check-in call", w: 1, k: "phone", r: "Daily" },
-      { n: "Memory activities", w: 1, k: "there", r: "Wed" },
-    ],
-  },
-  cancer: {
-    Medical: [
-      { n: "Rides to chemo", w: 2, k: "drive", p: 1, r: "Tue" },
-      { n: "Pick up prescriptions", w: 1, k: "meds", p: 1 },
-      { n: "Track side effects", w: 1, k: "meds", r: "Daily" },
-      { n: "Sit in on appointments", w: 2, k: "there" },
-    ],
-    Home: [
-      { n: "Easy-on-the-stomach meals", w: 2, k: "cook", p: 1, r: "Daily" },
-      { n: "Groceries", w: 1, k: "drive", r: "Sat" },
-      { n: "Cleaning and laundry", w: 2, k: "there", r: "Thu" },
-    ],
-    "Money & paperwork": [
-      { n: "Insurance claims", w: 2, k: "phone", p: 1 },
-      { n: "Medical leave paperwork", w: 2, k: "paper" },
-      { n: "Pay bills", w: 1, k: "paper", r: "Mon" },
-    ],
-    Company: [
-      { n: "Chemo day company", w: 2, k: "there", r: "Tue" },
-      { n: "Check-in texts", w: 1, k: "phone", r: "Daily" },
-    ],
-  },
-  aging: {
-    Medical: [
-      { n: "Doctor appointments", w: 2, k: "drive", p: 1 },
-      { n: "Refill prescriptions", w: 1, k: "meds", p: 1 },
-      { n: "Fill the weekly pill box", w: 1, k: "meds", r: "Sun" },
-    ],
-    Home: [
-      { n: "Groceries", w: 1, k: "drive", p: 1, r: "Sat" },
-      { n: "Yard and repairs", w: 2, k: "there" },
-      { n: "Cleaning", w: 2, k: "there", r: "Thu" },
-    ],
-    "Money & paperwork": [
-      { n: "Pay bills", w: 1, k: "paper", p: 1, r: "Mon" },
-      { n: "Medicare and insurance", w: 2, k: "phone" },
-      { n: "Will and wishes", w: 3, k: "paper", wishes: 1 },
-    ],
-    Company: [
-      { n: "Weekly visit", w: 1, k: "there", r: "Sun" },
-      { n: "Daily call", w: 1, k: "phone", r: "Daily" },
-    ],
-  },
-  other: {
-    Medical: [
-      { n: "Appointments", w: 2, k: "drive", p: 1 },
-      { n: "Refill prescriptions", w: 1, k: "meds", p: 1 },
-    ],
-    Home: [
-      { n: "Groceries", w: 1, k: "drive", p: 1, r: "Sat" },
-      { n: "Meals", w: 2, k: "cook", r: "Daily" },
-      { n: "Cleaning", w: 2, k: "there" },
-    ],
-    "Money & paperwork": [
-      { n: "Pay bills", w: 1, k: "paper", r: "Mon" },
-      { n: "Insurance calls", w: 2, k: "phone" },
-    ],
-    Company: [{ n: "Visits and calls", w: 1, k: "phone", r: "Wed" }],
-  },
+// w = weight (1 light, 2 medium, 3 heavy). k = skill tag. r = repeats by default.
+// c = only suggested for these conditions (none = everyone). p = Pebble pre-picks it.
+// wishes / far = Pebble pre-picks it when those answers are chosen.
+const TASK_LIBRARY = {
+  Medical: [
+    { n: "Refill prescriptions", w: 1, k: "meds", p: 1 },
+    { n: "Doctor appointments", w: 2, k: "drive", p: 1 },
+    { n: "Keep a list of meds and doses", w: 1, k: "meds" },
+    { n: "Track symptoms for the doctor", w: 1, k: "meds", r: "Daily" },
+    { n: "Fill the weekly pill box", w: 1, k: "meds", r: "Sun" },
+    { n: "Sit in on appointments and take notes", w: 2, k: "there" },
+    { n: "Order medical supplies", w: 1, k: "phone", far: 1 },
+    { n: "Keep the care binder up to date", w: 1, k: "paper" },
+    { n: "Be there for hospice nurse visits", w: 2, k: "there", p: 1, r: "Thu", c: ["hospice"] },
+    { n: "Comfort meds schedule", w: 2, k: "meds", c: ["hospice"] },
+    { n: "Neurologist visits", w: 2, k: "drive", c: ["dementia"] },
+    { n: "Rides to chemo", w: 2, k: "drive", p: 1, r: "Tue", c: ["cancer"] },
+    { n: "Track side effects", w: 1, k: "meds", r: "Daily", c: ["cancer"] },
+    { n: "Physical therapy exercises", w: 1, k: "there", r: "Mon", c: ["aging", "other"] },
+    { n: "Hearing and vision checkups", w: 1, k: "drive", c: ["aging"] },
+  ],
+  "Daily care": [
+    { n: "Morning check-in", w: 1, k: "phone", r: "Daily" },
+    { n: "Help getting dressed", w: 1, k: "there", r: "Daily" },
+    { n: "Help with bathing", w: 2, k: "there", r: "Wed" },
+    { n: "Bedtime routine", w: 1, k: "there", r: "Daily" },
+    { n: "Toileting and incontinence supplies", w: 2, k: "there" },
+    { n: "Help moving around the house", w: 2, k: "there" },
+    { n: "Hair, nails, and shaving", w: 1, k: "there", r: "Sun" },
+    { n: "Overnight stays", w: 3, k: "there", r: "Fri" },
+    { n: "Give the main caregiver a night off", w: 3, k: "there", p: 1, r: "Fri" },
+    { n: "Repositioning for comfort", w: 2, k: "there", r: "Daily", c: ["hospice"] },
+    { n: "Watch for wandering", w: 2, k: "there", c: ["dementia"] },
+    { n: "Wound or port care", w: 2, k: "meds", c: ["cancer", "other"] },
+  ],
+  Meals: [
+    { n: "Weekly grocery run", w: 1, k: "drive", p: 1, r: "Sat" },
+    { n: "Cook dinners", w: 2, k: "cook", r: "Daily" },
+    { n: "Plan the week’s meals", w: 1, k: "cook", r: "Sun" },
+    { n: "Batch-cook freezer meals", w: 2, k: "cook" },
+    { n: "Set up a meal train", w: 1, k: "phone" },
+    { n: "Order meal delivery", w: 1, k: "phone", far: 1 },
+    { n: "Clear out old food in the fridge", w: 1, k: "there", r: "Thu" },
+    { n: "Help with eating", w: 2, k: "there" },
+    { n: "Keep snacks and water nearby", w: 1, k: "cook" },
+    { n: "Easy-on-the-stomach meals", w: 2, k: "cook", p: 1, c: ["cancer"] },
+    { n: "Soft foods and thickened drinks", w: 1, k: "cook", c: ["hospice", "dementia"] },
+  ],
+  Home: [
+    { n: "Cleaning", w: 2, k: "there", r: "Thu" },
+    { n: "Laundry", w: 1, k: "there", r: "Mon" },
+    { n: "Trash and recycling", w: 1, k: "there", r: "Tue" },
+    { n: "Yard work and snow", w: 2, k: "there" },
+    { n: "Home repairs", w: 2, k: "there" },
+    { n: "Safety check: rails, rugs, lights", w: 2, k: "there" },
+    { n: "Pet care", w: 1, k: "there", r: "Daily" },
+    { n: "Get the mail and water plants", w: 1, k: "there", r: "Wed" },
+    { n: "Set up a hospital bed or equipment", w: 3, k: "there", c: ["hospice", "other"] },
+    { n: "Lock up meds and sharp tools", w: 1, k: "there", c: ["dementia"] },
+    { n: "Wipe down surfaces to avoid germs", w: 1, k: "there", c: ["cancer"] },
+    { n: "Install grab bars", w: 2, k: "there", c: ["aging"] },
+  ],
+  "Getting around": [
+    { n: "Rides to appointments", w: 2, k: "drive", p: 1 },
+    { n: "Pharmacy pickups", w: 1, k: "drive" },
+    { n: "Errands and post office", w: 1, k: "drive", r: "Sat" },
+    { n: "Rides to church or social events", w: 1, k: "drive", r: "Sun" },
+    { n: "Book a ride service or paratransit", w: 1, k: "phone", far: 1 },
+    { n: "Get a disability parking placard", w: 1, k: "paper" },
+    { n: "Car upkeep", w: 1, k: "drive" },
+    { n: "Pick up visiting family", w: 2, k: "drive" },
+    { n: "Bring the wheelchair or walker", w: 1, k: "drive" },
+    { n: "Day program pickups", w: 2, k: "drive", r: "Tue", c: ["dementia"] },
+    { n: "Take over the car keys", w: 2, k: "there", c: ["dementia", "aging"] },
+  ],
+  "Money & paperwork": [
+    { n: "Pay bills", w: 1, k: "paper", r: "Mon" },
+    { n: "Insurance calls", w: 2, k: "phone", p: 1, far: 1 },
+    { n: "Sort the mail", w: 1, k: "paper", r: "Wed" },
+    { n: "Track medical bills and claims", w: 2, k: "paper" },
+    { n: "Medicare or benefits paperwork", w: 2, k: "paper" },
+    { n: "Advance directive and wishes", w: 3, k: "paper", wishes: 1 },
+    { n: "Power of attorney", w: 3, k: "paper", wishes: 1 },
+    { n: "Track shared care costs", w: 1, k: "paper" },
+    { n: "Gather passwords and accounts", w: 2, k: "paper" },
+    { n: "Will and estate papers", w: 3, k: "paper", c: ["hospice", "aging"] },
+    { n: "Memorial plans", w: 3, k: "paper", c: ["hospice"] },
+    { n: "Medical leave paperwork for work", w: 2, k: "paper", c: ["cancer", "other"] },
+  ],
+  Company: [
+    { n: "Visits", w: 1, k: "there", r: "Sun" },
+    { n: "Phone or video calls", w: 1, k: "phone", r: "Wed" },
+    { n: "Check-in texts", w: 1, k: "phone", r: "Daily" },
+    { n: "Music, reading, old photos", w: 1, k: "there" },
+    { n: "A walk or outing", w: 2, k: "there", r: "Sat" },
+    { n: "Keep family updated", w: 1, k: "phone", r: "Fri", far: 1 },
+    { n: "Line up visits from friends", w: 1, k: "phone" },
+    { n: "Faith or spiritual visits", w: 1, k: "there" },
+    { n: "Games and puzzles", w: 1, k: "there" },
+    { n: "Record stories and memories", w: 1, k: "there", c: ["hospice"] },
+    { n: "Memory activities", w: 1, k: "there", c: ["dementia"] },
+    { n: "Chemo day company", w: 2, k: "there", c: ["cancer"] },
+  ],
 };
 
 const MATTERS_THEM = [
-  { id: "comfort", t: "Comfort at home", d: "Pain managed, in his own bed" },
+  { id: "comfort", t: "Comfort at home", d: "Pain managed, in their own bed" },
   { id: "family", t: "Time with family", d: "Visits, calls, meals together" },
-  { id: "wishes", t: "His wishes in order", d: "Paperwork, plans, money" },
-  { id: "himself", t: "Staying himself", d: "Routines, faith, food he loves" },
+  { id: "wishes", t: "Their wishes in order", d: "Paperwork, plans, money" },
+  { id: "himself", t: "Staying who they are", d: "Routines, faith, food he loves" },
 ];
 const MATTERS_YOU = [
   { id: "alone", t: "Not carrying it all alone", d: "Sharing the load fairly" },
@@ -137,7 +134,6 @@ const STRENGTHS = [
   { id: "drive", t: "Driving" }, { id: "phone", t: "Phone calls" }, { id: "paper", t: "Paperwork & bills" },
   { id: "meds", t: "Meds & pharmacy" }, { id: "cook", t: "Cooking" }, { id: "there", t: "Being there" },
 ];
-const PLATE = ["Kids", "Work", "Long commute", "My own health"];
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const DAY_FULL = { Mon: "Monday", Tue: "Tuesday", Wed: "Wednesday", Thu: "Thursday", Fri: "Friday", Sat: "Saturday", Sun: "Sunday" };
 const WEIGHT_LABEL = { 1: "Light", 2: "Medium", 3: "Heavy" };
@@ -182,7 +178,13 @@ function weekOf(blocks) {
     return row;
   });
 }
-const SAMPLE_BUSY = { Mon: [[18, 19]], Tue: [[9, 17]], Wed: [[9, 17]], Thu: [[9, 17]], Fri: [[9, 17]], Sat: [[10, 11]] };
+// Pretend busy times each calendar brings in when connected.
+const SAMPLE_BUSY = {
+  "Google Calendar": { Mon: [[18, 19]], Sat: [[10, 12]] },
+  "Apple Calendar": { Wed: [[19, 21]], Sun: [[9, 11]] },
+  Outlook: { Mon: [[9, 17]], Tue: [[9, 17]], Wed: [[9, 17]], Thu: [[9, 17]], Fri: [[9, 13]] },
+};
+const busyFrom = (cals) => weekOf(Object.fromEntries(DAYS.map((d) => [d, cals.flatMap((c) => SAMPLE_BUSY[c][d] || [])])));
 function fmtRange(a, b) {
   return meridiem(a) === meridiem(b) && b - a < 12 ? `${hour12(a)}–${hour12(b)} ${meridiem(b)}` : `${hour12(a)} ${meridiem(a)}–${hour12(b)} ${meridiem(b)}`;
 }
@@ -196,25 +198,20 @@ const initialState = () => ({
   path: null, // "pebble" | "manual"
   screen: "welcome",
   history: [],
-  lovedOne: "Dad",
-  conditions: ["hospice"],
-  them: ["comfort"],
-  themOwn: "Being home for his granddaughter’s birthday.",
-  you: ["alone", "inperson"],
+  lovedOne: "",
+  conditions: [],
+  them: [],
+  themOwn: "",
+  you: [],
   tasks: [], // {id, n, w, k, cat, on, pebble, kind:"once"|"repeat", days, date, time, who}
-  openCats: {},
+  taskTab: null,
   people: [
     { id: "you", name: "You", img: "avatar-you.png", tier: "main", note: "Main caregiver · your jar", cap: null },
-    { id: "mom", name: "Mom", img: "avatar-mom.png", tier: "main", note: "Lives with Dad, handles day to day", cap: 18, joined: true },
-    { id: "bill", name: "Bill", img: "avatar-bill.png", tier: "main", note: "Invite sent by text", cap: 6, invited: true },
-    { id: "sam", name: "Sam", img: "avatar-sam.png", tier: "main", note: "Invite sent by text", cap: 4, invited: true },
-    { id: "nora", name: "Nora", img: "avatar-nora.png", tier: "trusted", note: "Neighbor · trusted circle", cap: 3, invited: true },
   ],
-  cal: null, // connected calendar name
+  cals: [], // connected calendar names
   busy: weekOf({}),
-  free: weekOf({ Mon: [[10, 12], [13, 17]], Tue: [[18, 20]], Wed: [[18, 20]], Thu: [[18, 20]], Fri: [[18, 20]], Sat: [[13, 17]], Sun: [[13, 16]] }),
-  strengths: ["phone", "paper"],
-  plate: ["Work"],
+  free: weekOf({}),
+  strengths: [],
   splitTouched: false,
   sent: false,
 });
@@ -255,34 +252,27 @@ function onEnter(screen) {
   if (screen === "split" && S.path === "pebble" && !S.splitTouched) suggestSplit();
 }
 
-// Merges the presets for every picked condition, skipping tasks that already appear under another one.
+// Suggests every general task plus the ones for the picked conditions.
 function seedTasks() {
   let id = 0;
-  const seen = new Set();
   S.tasks = [];
   S.splitTouched = false;
-  S.openCats = {};
-  S.conditions.forEach((c) => {
-    Object.entries(PRESETS[c]).forEach(([cat, items]) => {
-      if (!(cat in S.openCats)) S.openCats[cat] = Object.keys(S.openCats).length < 2;
-      items.forEach((t) => {
-        if (seen.has(t.n.toLowerCase())) return;
-        seen.add(t.n.toLowerCase());
-        const pick = S.path === "pebble"
-          ? !!t.p || (t.wishes && S.them.includes("wishes")) || (t.k === "phone" && S.you.includes("far"))
-          : false;
-        if (pick) S.openCats[cat] = true;
-        S.tasks.push({
-          id: `t${id++}`, n: t.n, w: t.w, k: t.k, cat, on: pick, pebble: pick,
-          kind: t.r ? "repeat" : "once",
-          days: t.r === "Daily" ? [...DAYS] : [t.r || "Sat"],
-          date: addDays(1 + (id % 9)),
-          time: "",
-          who: null,
-        });
+  Object.entries(TASK_LIBRARY).forEach(([cat, items]) => {
+    items.forEach((t) => {
+      if (t.c && !t.c.some((c) => S.conditions.includes(c))) return;
+      const pick = S.path === "pebble"
+        && (!!t.p || (t.wishes && S.them.includes("wishes")) || (t.far && S.you.includes("far")));
+      S.tasks.push({
+        id: `t${id++}`, n: t.n, w: t.w, k: t.k, cat, on: pick, pebble: pick,
+        kind: t.r ? "repeat" : "once",
+        days: t.r === "Daily" ? [...DAYS] : [t.r || "Sat"],
+        date: addDays(1 + (id % 9)),
+        time: "",
+        who: null,
       });
     });
   });
+  S.taskTab = Object.keys(TASK_LIBRARY)[0];
 }
 const picked = () => S.tasks.filter((t) => t.on);
 const person = (id) => S.people.find((p) => p.id === id);
@@ -377,7 +367,6 @@ SCREENS.welcome = () => {
     <p class="sub" style="margin-top:10px">Pick how you'd like to start. You can switch anytime.</p>
     <div class="card hero">
       <div class="jars-illus" aria-label="Four jars with glowing stones">${jars}</div>
-      <p class="small cap">Where you're headed: one jar for each main caregiver, one stone per task.</p>
     </div>
     <div style="position:relative">
       <span class="badge caps path-badge">Recommended</span>
@@ -451,29 +440,28 @@ SCREENS.you = () => `${topbar()}
   ${footer("See Pebble's task ideas")}`;
 
 SCREENS.tasks = () => {
-  const cats = [...new Set(S.tasks.map((t) => t.cat))];
-  const condName = listWords(S.conditions.map((id) => CONDITIONS.find((c) => c.id === id).t.toLowerCase()));
+  const cats = Object.keys(TASK_LIBRARY);
+  const tab = S.taskTab;
+  const items = S.tasks.filter((t) => t.cat === tab);
+  const nextCat = cats[cats.indexOf(tab) + 1];
   const pebbleCount = S.tasks.filter((t) => t.pebble).length;
   return `${topbar({ skip: false })}
   <div class="content">
     ${eyebrow("Tasks")}
     <h1 class="title">What needs doing?</h1>
-    <p class="sub">Common tasks for ${esc(condName)}. Tap to pick, tap the weight to change how big it is.</p>
+    <p class="sub">Go through each tab and pick what applies. Tap the size to change how big a task is.</p>
     ${S.path === "pebble" ? `<div class="card r20 pebble-note"><img src="${A("pebble-icon.svg")}" alt=""><span class="small" style="color:var(--ink)">Pebble picked <b>${pebbleCount}</b> from your answers. Uncheck anything that doesn't fit.</span></div>` : ""}
-    ${cats.map((cat) => {
-      const items = S.tasks.filter((t) => t.cat === cat);
-      const n = items.filter((t) => t.on).length;
-      const open = S.openCats[cat];
-      return `<div class="group-head"><p class="eyebrow grey">${esc(cat)}</p><span class="count">${n} of ${items.length} picked</span></div>
-      <div class="card r20">${open
-        ? `<div class="list">${items.map((t) => `<div class="row ${t.on ? "on" : ""}">
-              <button data-act="toggleTask" data-id="${t.id}" style="display:flex;align-items:center;gap:12px;flex:1;text-align:left">${check(t.on)}<span class="name">${esc(t.n)}${t.pebble ? `<span class="tag">Suggested by Pebble</span>` : ""}</span></button>
-              <button data-act="weight" data-id="${t.id}" aria-label="Change size">${weightPill(t.w)}</button>
-            </div>`).join("")}</div>`
-        : `<button class="collapsed" data-act="openCat" data-cat="${esc(cat)}"><span>${esc(items.slice(0, 2).map((t) => t.n).join(", "))}${items.length > 2 ? `, and ${items.length - 2} more` : ""}</span><img src="${A("chevron.svg")}" alt=""></button>`}
-      </div>`;
-    }).join("")}
-    <form class="write-own" data-form="task"><img src="${A("plus.svg")}" alt=""><input name="v" placeholder="Add your own task"><button class="go">Add</button></form>
+    <div class="tabs" role="tablist">${cats.map((c) => {
+      const n = S.tasks.filter((t) => t.cat === c && t.on).length;
+      return `<button role="tab" class="${c === tab ? "on" : ""}" aria-selected="${c === tab}" data-act="taskTab" data-id="${esc(c)}">${esc(c)}${n ? `<b>${n}</b>` : ""}</button>`;
+    }).join("")}</div>
+    <div class="group-head"><p class="eyebrow grey">${esc(tab)}</p><span class="count">${items.filter((t) => t.on).length} of ${items.length} picked</span></div>
+    <div class="card r20"><div class="list">${items.map((t) => `<div class="row ${t.on ? "on" : ""}">
+        <button data-act="toggleTask" data-id="${t.id}" style="display:flex;align-items:center;gap:12px;flex:1;text-align:left">${check(t.on)}<span class="name">${esc(t.n)}${t.pebble ? `<span class="tag">Suggested by Pebble</span>` : ""}</span></button>
+        <button data-act="weight" data-id="${t.id}" aria-label="Change size">${weightPill(t.w)}</button>
+      </div>`).join("")}</div></div>
+    <form class="write-own" data-form="task"><img src="${A("plus.svg")}" alt=""><input name="v" placeholder="Add your own to ${esc(tab)}"><button class="go">Add</button></form>
+    ${nextCat ? `<button class="next-tab" data-act="taskTab" data-id="${esc(nextCat)}">Next: ${esc(nextCat)}<img src="${A("chevron.svg")}" alt=""></button>` : ""}
   </div>
   ${footer(picked().length ? `Next · ${picked().length} task${picked().length > 1 ? "s" : ""}` : "Pick at least one task", { disabled: !picked().length })}`;
 };
@@ -523,60 +511,90 @@ SCREENS.people = () => {
   ${footer()}`;
 };
 
-const CAL_ICON = `<svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="#2F6FCB" stroke-width="1.6"><rect x="2.5" y="3.5" width="13" height="12" rx="2.5"/><path d="M2.5 7.5h13M6 2v3M12 2v3"/></svg>`;
-const CALENDARS = [["Google Calendar", "Your Google account"], ["Apple Calendar", "iCloud calendars on this phone"], ["Outlook", "Work or personal Microsoft account"]];
+const CALENDARS = [
+  { n: "Google Calendar", m: "Your Google account", logo: "logo-google-calendar.svg" },
+  { n: "Apple Calendar", m: "iCloud calendars on this phone", logo: "logo-apple-calendar.svg" },
+  { n: "Outlook", m: "Work or personal Microsoft account", logo: "logo-outlook.svg" },
+];
 
 SCREENS.calendar = () => `${topbar({ skip: false })}
   <div class="content">
     ${eyebrow("Your week")}
-    <h1 class="title">Bring in your calendar?</h1>
-    <p class="sub">Pebble fills in when you’re busy, so you only have to mark the free time.</p>
-    <div class="card r20">${CALENDARS.map(([n, m]) => `<button class="cal-opt ${S.cal === n ? "on" : ""}" data-act="connectCal" data-id="${n}">
-        <span class="ic">${CAL_ICON}</span>
-        <span class="main"><span class="n">${n}</span><span class="m">${S.cal === n ? "Busy times added" : m}</span></span>
-        <span class="go">${S.cal === n ? `<img src="${A("chip-check.svg")}" alt="" width="14" height="11">Connected` : "Connect"}</span>
-      </button>`).join("")}</div>
+    <h1 class="title">Bring in your calendars?</h1>
+    <p class="sub">Connect as many as you use. Pebble fills in when you’re busy, so you only have to add free time.</p>
+    <div class="card r20">${CALENDARS.map(({ n, m, logo }) => {
+      const on = S.cals.includes(n);
+      return `<button class="cal-opt ${on ? "on" : ""}" data-act="connectCal" data-id="${n}">
+        <span class="ic"><img src="${A(logo)}" alt=""></span>
+        <span class="main"><span class="n">${n}</span><span class="m">${on ? "Busy times added" : m}</span></span>
+        <span class="go">${on ? `<img src="${A("chip-check.svg")}" alt="" width="14" height="11">Connected` : "Connect"}</span>
+      </button>`;
+    }).join("")}</div>
     <p class="sub lock" style="margin-top:16px"><img src="${A("lock.svg")}" width="14" height="14" alt="">Shoal only sees busy or free, never what your events are.</p>
-    <p class="small">You can connect or disconnect later in settings.</p>
+    <p class="small">Tap a connected calendar to disconnect it.</p>
   </div>
-  ${footer(S.cal ? "See my week" : "Skip, I’ll fill it in")}`;
+  ${footer(S.cals.length ? "Next: add free time" : "Skip, I’ll fill it in")}`;
 
-SCREENS.avail = () => {
-  const rows = [];
-  for (let h = HOURS.from; h < HOURS.to; h++) rows.push(h);
-  const cell = (d, h) => {
-    const busy = S.busy[d][h], on = !busy && S.free[d][h];
-    const cls = ["wk-cell", on && "on", busy && "busy", h === HOURS.from && "top", h === HOURS.to - 1 && "bot"].filter(Boolean).join(" ");
-    return `<span class="${cls}" data-d="${d}" data-h="${h}"></span>`;
-  };
-  return `${topbar({ skip: false })}
+const TIME_PRESETS = [["Morning", 8, 12], ["Afternoon", 12, 17], ["Evening", 17, 21]];
+
+// One day's 6 AM–10 PM strip: free in blue, busy striped.
+function dayStrip(i) {
+  const segs = [];
+  for (let h = HOURS.from; h < HOURS.to; h++) segs.push(`<i class="${S.busy[i][h] ? "busy" : S.free[i][h] ? "on" : ""}"></i>`);
+  return `<div class="strip">${segs.join("")}</div><div class="strip-axis"><span>6a</span><span>12p</span><span>6p</span><span>10p</span></div>`;
+}
+
+SCREENS.avail = () => `${topbar({ skip: false })}
   <div class="content">
     ${eyebrow("Your week")}
     <h1 class="title">When are you free?</h1>
-    <p class="sub">Tap or drag to mark the times you could help.${S.cal ? ` Striped times are busy on your ${S.cal}.` : ""}</p>
-    <div class="card r20">
-      <div class="wk">
-        <div class="wk-grid" data-paint>
-          <span></span>${DAYS.map((d, i) => `<span class="dh ${i > 4 ? "weekend" : ""}">${d.slice(0, 2)}</span>`).join("")}
-          ${rows.map((h) => `<span class="hl">${h % 2 === 0 ? `${hour12(h)}${meridiem(h) === "AM" ? "a" : "p"}` : ""}</span>${DAYS.map((_, d) => cell(d, h)).join("")}`).join("")}
-        </div>
-        <div class="wk-legend"><span><i></i>Free</span>${S.cal ? `<span><i class="busy"></i>Busy</span>` : ""}</div>
-      </div>
-      <div class="ranges">${DAYS.map((d, i) => {
-        const bl = blocksOf(S.free[i]);
-        return `<div><b>${d}</b><span class="${bl.length ? "" : "none"}">${bl.length ? bl.map(([a, b]) => fmtRange(a, b)).join(", ") : "Not free"}</span></div>`;
-      }).join("")}</div>
-      <div class="week-total"><span class="acts"><button class="linkish" data-act="copyMon">Copy Mon to weekdays</button><button class="linkish" data-act="clearFree">Clear</button></span><b>${yourCap()}h / week</b></div>
-    </div>
-    <p class="sub lock" style="margin-top:14px"><img src="${A("lock.svg")}" width="14" height="14" alt="">Private. Everyone sets their own when they join.</p>
+    <p class="sub">Add the times each day you could help.${S.cals.length ? " Striped times are busy on your calendar." : ""}</p>
+    ${DAYS.map((d, i) => {
+      const free = blocksOf(S.free[i]), busy = blocksOf(S.busy[i]);
+      const hrs = S.free[i].filter(Boolean).length;
+      return `<div class="card day-card">
+        <div class="dc-head"><b class="${i > 4 ? "weekend" : ""}">${DAY_FULL[d]}</b><span class="small">${hrs ? `${hrs}h free` : ""}</span><button class="add-time" data-act="addTime" data-id="${i}"><img src="${A("plus.svg")}" alt="">Add time</button></div>
+        ${dayStrip(i)}
+        ${free.length || busy.length ? `<div class="blocks">
+          ${free.map(([a, b]) => `<span class="block">${fmtRange(a, b)}<button data-act="removeBlock" data-id="${i}" data-a="${a}" data-b="${b}" aria-label="Remove">×</button></span>`).join("")}
+          ${busy.map(([a, b]) => `<span class="block busy">Busy ${fmtRange(a, b)}</span>`).join("")}
+        </div>` : ""}
+      </div>`;
+    }).join("")}
+    <div class="week-total"><button class="linkish" data-act="copyMon">Copy Monday to weekdays</button><b>${yourCap()}h / week</b></div>
+    <p class="sub lock" style="margin-top:6px"><img src="${A("lock.svg")}" width="14" height="14" alt="">Private. Everyone sets their own when they join.</p>
     <p class="label">What you’re good at</p>
     <div class="chips">${STRENGTHS.map((s) => chip(s.t, S.strengths.includes(s.id), "strength", s.id)).join("")}</div>
-    <p class="label">Anything else on your plate? <span class="private"><img src="${A("lock.svg")}" alt="">Private</span></p>
-    <div class="chips">${PLATE.map((p) => chip(p, S.plate.includes(p), "plate", p)).join("")}</div>
-    <p class="small" style="margin-top:18px">Pebble uses this to keep the split fair. Others only see the plan, not your reasons.</p>
+    <p class="small" style="margin-top:18px">Pebble uses this to keep the split fair. Others only see the plan.</p>
   </div>
   ${footer(S.path === "pebble" ? "See Pebble's split" : "Next: split it up")}`;
-};
+
+function timeSheet(i) {
+  S._day = i;
+  const d = DAY_FULL[DAYS[i]];
+  const hourOpts = (sel, from, to) => { let o = ""; for (let h = from; h <= to; h++) o += `<option value="${h}" ${h === sel ? "selected" : ""}>${hour12(h)} ${meridiem(h)}</option>`; return o; };
+  const free = blocksOf(S.free[i]);
+  openSheet(`<h3>${d}</h3>
+    <p class="small">Tap a part of the day, or set exact hours.</p>
+    <div class="row-opts">${TIME_PRESETS.map(([l, a, b]) => chip(`${l} · ${fmtRange(a, b)}`, covered(i, a, b), "presetTime", `${a}-${b}`)).join("")}</div>
+    <p class="label" style="margin-top:16px">Exact hours</p>
+    <div class="range-pick">
+      <select id="tFrom" aria-label="From">${hourOpts(13, 6, 22)}</select><span>to</span>
+      <select id="tTo" aria-label="To">${hourOpts(17, 7, 23)}</select>
+      <button class="btn-soft" data-act="customTime">Add</button>
+    </div>
+    ${free.length ? `<p class="label" style="margin-top:16px">Free on ${d}</p><div class="blocks">${free.map(([a, b]) => `<span class="block">${fmtRange(a, b)}<button data-act="removeBlock" data-id="${i}" data-a="${a}" data-b="${b}" aria-label="Remove">×</button></span>`).join("")}</div>` : ""}
+    <button class="btn-primary" data-act="closeSheet">Done</button>`);
+}
+// True when every hour of [a, b) you aren't busy for is already free (and at least one is).
+const covered = (i, a, b) => S.free[i].slice(a, b).some(Boolean) && S.free[i].slice(a, b).every((on, k) => on || S.busy[i][a + k]);
+// Marks [a, b) free on the sheet's day, skipping busy hours. Returns how many hours were busy.
+function setFree(i, a, b, on) {
+  let skipped = 0;
+  for (let h = a; h < b; h++) { if (S.busy[i][h]) skipped++; else S.free[i][h] = on; }
+  return skipped;
+}
+
 const chip = (label, on, act, id) => `<button class="chip ${on ? "on" : ""}" data-act="${act}" data-id="${esc(id)}">${on ? `<img src="${A("chip-check.svg")}" alt="">` : ""}${esc(label)}</button>`;
 
 SCREENS.split = () => {
@@ -737,15 +755,15 @@ function stoneSheet(t) {
 /* ---------- Render ---------- */
 
 const NOTES = {
-  welcome: ["Welcome", ["Jar art is now framed as “where you're headed”, not a split of tasks that don't exist yet.", "Manual path copy says tasks come first."]],
-  about: ["Care situation", ["New step. Starter tasks change by condition: hospice, dementia, cancer, aging.", "Pick more than one; their task lists merge without duplicates.", "Name is used in later copy."]],
-  them: ["What matters to them", ["Pebble path only. Unchanged from v2, but answers now pre-pick tasks (e.g. “His wishes” adds the advance-directive task)."]],
+  welcome: ["Welcome", ["Jar art shows where you’re headed, with no caption to decode.", "Manual path copy says tasks come first."]],
+  about: ["Care situation", ["Starts blank: no name or condition filled in.", "Pick more than one condition; general tasks are always suggested, plus ones for each condition."]],
+  them: ["What matters to them", ["Pebble path only. Starts blank. Answers pre-pick tasks (e.g. “Their wishes in order” adds the advance-directive task)."]],
   you: ["What matters to you", ["Pebble path only. “Helping from far away” leans Pebble toward phone and paperwork tasks."]],
-  tasks: ["Tasks before people", ["Preset tasks by condition with a write-in at the bottom.", "Each task has a size (light, medium, heavy) that feeds the fair split.", "No one is assigned yet."]],
+  tasks: ["Tasks before people", ["Each category is its own tab, so no one scrolls a giant list.", "About 10 suggestions per tab to jog memory, plus a write-in.", "Each task has a size (light, medium, heavy) that feeds the fair split."]],
   dates: ["Dates and repeats", ["Moved up, before people. Knowing when tasks happen lets the split match them to free time.", "One-time tasks pick a due date from a calendar. Repeating tasks can fall on several days.", "Either can have a time, or stay “any time”."]],
-  calendar: ["Calendar sync", ["Optional. Connecting Google, Apple, or Outlook pre-fills busy times on the next screen.", "Only busy/free is read, never event details. Connecting here is simulated."]],
-  people: ["Who's helping", ["Says plainly that each main caregiver gets the app and a link by text.", "Trusted circle is a separate list, light tasks only."]],
-  avail: ["Weekly time blocks", ["A week grid replaces the per-day sliders. Tap or drag to paint free hours, like Mon 10 AM–12 PM and 1–5 PM.", "Busy times from a connected calendar are striped and can’t be painted.", "Free hours feed the fair split."]],
+  calendar: ["Calendar sync", ["Optional. Connect any mix of Google, Apple, and Outlook; busy times merge.", "Only busy/free is read, never event details. Connecting here is simulated."]],
+  people: ["Who's helping", ["Starts with just you. Each main caregiver gets the app and a link by text.", "Trusted circle is a separate list, light tasks only."]],
+  avail: ["Free time per day", ["One card per day instead of a week grid. Add a part of the day or exact hours.", "Starts blank. Busy calendar times show striped and are skipped.", "Dropped “Anything else on your plate?”, which interviewees didn’t like."]],
   split: ["The split, last", ["Load bars count heavier tasks as more hours.", "Pebble path arrives pre-split. Manual path can ask Pebble.", "If no one has room, it suggests the trusted circle or paid help instead of overloading someone."]],
   review: ["Jars, now earned", ["Jars fill with the tasks you just made.", "Tap a stone: voice playback and “make it glow” (locate) are shown up front, so the jar works without the app."]],
 };
@@ -776,6 +794,8 @@ function render() {
   const c = el.querySelector(".content");
   if (c && keepScroll) c.scrollTop = keepScroll;
   el.querySelector("[autofocus]")?.focus();
+  const tabs = el.querySelector(".tabs"), tab = tabs?.querySelector(".on");
+  if (tab) tabs.scrollLeft = tab.offsetLeft - (tabs.clientWidth - tab.offsetWidth) / 2;
   renderNotes();
 }
 
@@ -811,7 +831,11 @@ const ACTIONS = {
   editOwn: () => { S._editing = true; render(); },
   toggleTask: (d) => { const t = S.tasks.find((x) => x.id === d.id); t.on = !t.on; if (!t.on) t.who = null; render(); },
   weight: (d) => { const t = S.tasks.find((x) => x.id === d.id); t.w = (t.w % 3) + 1; render(); },
-  openCat: (d) => { S.openCats[d.cat] = true; render(); },
+  taskTab: (d) => {
+    S.taskTab = d.id;
+    render();
+    document.querySelector(".content").scrollTop = 0;
+  },
   editDate: (d) => { S._cal = null; dateSheet(S.tasks.find((x) => x.id === d.id)); },
   setKind: (d) => sheetEdit((t) => { t.kind = d.id; }),
   pickDate: (d) => sheetEdit((t) => { t.date = d.id; }),
@@ -832,12 +856,33 @@ const ACTIONS = {
     const inp = document.querySelector('[data-form="person"] input'); if (inp) { inp.value = v; inp.focus(); }
   },
   connectCal: (d) => {
-    if (S.cal === d.id) { S.cal = null; S.busy = weekOf({}); render(); return; }
-    S.cal = d.id;
-    S.busy = weekOf(SAMPLE_BUSY);
-    S.free = S.free.map((row, i) => row.map((on, h) => on && !S.busy[i][h]));
+    const i = S.cals.indexOf(d.id);
+    i >= 0 ? S.cals.splice(i, 1) : S.cals.push(d.id);
+    S.busy = busyFrom(S.cals);
+    S.free = S.free.map((row, day) => row.map((on, h) => on && !S.busy[day][h]));
     render();
-    toast(`${d.id} connected`);
+    toast(`${d.id} ${i >= 0 ? "disconnected" : "connected"}`);
+  },
+  addTime: (d) => timeSheet(+d.id),
+  presetTime: (d) => {
+    const [a, b] = d.id.split("-").map(Number);
+    const on = !covered(S._day, a, b);
+    const skipped = setFree(S._day, a, b, on);
+    render(); timeSheet(S._day);
+    if (on && skipped === b - a) toast("You're busy that whole time");
+    else if (on && skipped) toast("Skipped the hours you're busy");
+  },
+  customTime: () => {
+    const a = +document.getElementById("tFrom").value, b = +document.getElementById("tTo").value;
+    if (b <= a) { toast("End time needs to be after the start"); return; }
+    const skipped = setFree(S._day, a, b, true);
+    render(); timeSheet(S._day);
+    if (skipped) toast("Skipped the hours you're busy");
+  },
+  removeBlock: (d) => {
+    setFree(+d.id, +d.a, +d.b, false);
+    render();
+    if (document.querySelector("#sheet.open")) timeSheet(+d.id);
   },
   copyMon: () => {
     for (let i = 1; i < 5; i++) S.free[i] = S.free[0].map((on, h) => on && !S.busy[i][h]);
@@ -845,9 +890,7 @@ const ACTIONS = {
     const clash = S.free[0].some((on, h) => on && [1, 2, 3, 4].some((i) => S.busy[i][h]));
     toast(clash ? "Copied, skipping times you're busy" : "Copied Monday to Tue–Fri");
   },
-  clearFree: () => { S.free = weekOf({}); render(); },
   strength: (d) => { const i = S.strengths.indexOf(d.id); i >= 0 ? S.strengths.splice(i, 1) : S.strengths.push(d.id); render(); },
-  plate: (d) => { const i = S.plate.indexOf(d.id); i >= 0 ? S.plate.splice(i, 1) : S.plate.push(d.id); render(); },
   assign: (d) => { const t = S.tasks.find((x) => x.id === d.id); t.who = d.who || null; S.splitTouched = true; render(); },
   suggest: () => { suggestSplit(); render(); toast("Pebble balanced it by size and free time"); },
   stone: (d) => stoneSheet(S.tasks.find((x) => x.id === d.id)),
@@ -892,8 +935,7 @@ document.addEventListener("submit", (e) => {
   if (kind === "own") { S[f.dataset.key] = v; S._editing = false; render(); return; }
   if (!v) return;
   if (kind === "task") {
-    S.tasks.push({ id: `c${Date.now()}`, n: v, w: 2, k: "", cat: "Your own", on: true, kind: "once", days: ["Sat"], date: addDays(2), time: "", who: null });
-    S.openCats["Your own"] = true;
+    S.tasks.push({ id: `c${Date.now()}`, n: v, w: 2, k: "", cat: S.taskTab, on: true, kind: "once", days: ["Sat"], date: addDays(2), time: "", who: null });
     render();
     const c = document.querySelector(".content"); c.scrollTop = c.scrollHeight;
     toast("Added. Tap the size if it's bigger or smaller.");
@@ -942,28 +984,3 @@ function fit() {
 window.addEventListener("resize", fit);
 fit();
 render();
-
-// Drag to paint free time. The first cell decides whether the stroke adds or erases.
-let paint = null;
-function paintCell(el) {
-  if (!el?.matches?.(".wk-cell") || el.classList.contains("busy")) return;
-  S.free[+el.dataset.d][+el.dataset.h] = paint;
-  el.classList.toggle("on", paint);
-}
-document.addEventListener("pointerdown", (e) => {
-  const el = e.target.closest(".wk-cell");
-  if (!el || el.classList.contains("busy")) return;
-  e.preventDefault();
-  paint = !S.free[+el.dataset.d][+el.dataset.h];
-  paintCell(el);
-});
-document.addEventListener("pointermove", (e) => {
-  if (paint === null) return;
-  paintCell(document.elementFromPoint(e.clientX, e.clientY));
-});
-document.addEventListener("pointerup", () => {
-  if (paint === null) return;
-  paint = null;
-  render();
-});
-

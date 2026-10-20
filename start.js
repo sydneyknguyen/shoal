@@ -132,10 +132,14 @@ const introJar = (name, states) => {
 
 const SLIDES = [
   {
-    eyebrow: "Why shoal",
-    title: `<em>shoal, n.</em> Fish that stay close together, each at its own pace.`,
-    sub: "Caregiving can work the same way. No one holds it all, and no one has to ask out loud.",
-    visual: () => `<div class="iv-rings">${brandRings("ivr")}${shoalMark(84, "float")}</div>`,
+    eyebrow: "Welcome to Shoal",
+    title: "Care for someone you love, together",
+    sub: "Shoal helps your family share the work of caregiving, from rides and refills to calls and paperwork, so no one carries it all alone.",
+    visual: () => `<div class="iv-rings">${brandRings("ivr")}
+      <div class="iv-circle">${shoalMark(72, "float")}
+        ${[["avatar-you.png", "You"], ["avatar-nora.png", "Nora"], ["avatar-bill.png", "Bill"], ["avatar-sam.png", "Sam"]].map(([img, n], k) =>
+          `<span class="orb o${k}"><span class="avatar"><img src="${A(img)}" alt=""></span><b>${n}</b></span>`).join("")}
+      </div></div>`,
   },
   {
     eyebrow: "How it works",
@@ -295,7 +299,7 @@ Object.assign(NOTES, {
   splash: ["Logo splash", ["The five stones of the mark circle into place, the lit stone glows, then the wordmark fades in.", "Moves on by itself after about 3 seconds. Tap to skip."]],
   signin: ["Sign in", ["Phone number first: no password, just a texted code.", "Google and Facebook as the two other options. Both are simulated here."]],
   verify: ["Text code", ["Six boxes that fill as you type, with the phone's one-time-code autofill.", "A fake text slides in after a moment; tap it to fill the code. Resend unlocks after 30 seconds."]],
-  intro: ["Meet Shoal", ["Five swipeable slides before setup: what the name means, stones, jars, the physical stone, and Pebble.", "Skip goes straight to setup."]],
+  intro: ["Meet Shoal", ["Five swipeable slides before setup: what Shoal is for, stones, jars, the physical stone, and Pebble.", "Skip goes straight to setup."]],
 });
 
 fit();

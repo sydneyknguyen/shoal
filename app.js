@@ -374,6 +374,7 @@ SCREENS.welcome = () => {
         <span><span class="t">Get help from Pebble</span><span class="d">Answer a few short questions. Pebble suggests tasks and a fair split.</span></span>
         <img class="chev" src="${A("chevron.svg")}" alt="">
       </button>
+      <button class="whats-pebble" data-act="go" data-to="pebbleInfo">What's Pebble?</button>
     </div>
     <button class="path" data-act="start" data-path="manual">
       <span class="ico"><img src="${A("checklist.svg")}" width="20" height="18" alt=""></span>
@@ -382,6 +383,51 @@ SCREENS.welcome = () => {
     </button>
     <p class="small foot-note">Pebble is an AI helper. You review every suggestion,<br>and nothing is shared until everyone says yes.</p>
     <button class="skip-onboarding" data-act="skipToApp">Skip onboarding (testing) →</button>
+  </div>`;
+};
+
+// Explains Pebble before anyone picks the Pebble path: what it is, how it works, and what it can see.
+SCREENS.pebbleInfo = () => {
+  const steps = [
+    ["think_01", "You answer a few questions", "What they're facing, what matters to them and to you, and who's helping."],
+    ["research_glasses_focused", "Pebble drafts a plan", "Starter tasks for the situation, then a fair split by task size, free time, and strengths."],
+    ["carry_03", "You decide", "Change, remove, or reassign anything. Nothing goes to your family until you send it."],
+  ];
+  const can = ["Suggest tasks you might not think of", "Balance the load so no one burns out", "Explain why it picked someone"];
+  const wont = ["Give medical advice or make care decisions", "Contact anyone without you", "Read notes, messages, or medical records"];
+  const privacy = [
+    ["Only what you tell it", "Your setup answers and their goals. Calendars share busy or free, never event details."],
+    ["Your family sees the plan, not your answers", "Private answers, like what matters to you, stay with you."],
+    ["Off anytime", "Turn Pebble off and set things up by hand. You can clear its suggestions in Settings."],
+  ];
+  return `${navtop("Back")}
+  <div class="content">
+    <div class="card pebble-hero" aria-label="Pebble, a little stone character, suggesting a task">
+      <div class="ph-glow"></div>
+      <img class="ph-pebble" src="${A("pebble/pebble_offer_open_hands.png")}" alt="">
+      <div class="ph-bubble b1"><span>Bill lives 10 min away. Want him on Thursday's drive?</span></div>
+      <div class="ph-bubble b2"><span class="ph-chip on">Yes, ask Bill</span><span class="ph-chip">Change</span></div>
+    </div>
+    <p class="eyebrow">Meet Pebble</p>
+    <h1 class="title">An AI helper for the planning part</h1>
+    <p class="sub">Pebble turns a few answers into a starter plan, so you don't have to build one from a blank page. You stay in charge of every choice.</p>
+
+    <p class="section-h">How it works</p>
+    <div class="card steps-list">${steps.map(([img, t, d], i) => `<div class="step"><img class="step-pebble" src="${A(`pebble/pebble_${img}.png`)}" alt=""><span><b>${i + 1}. ${t}</b><small>${d}</small></span></div>`).join("")}</div>
+
+    <div class="can-grid">
+      <div class="card can"><p class="eyebrow">Pebble can</p>${can.map((x) => `<p class="ci yes">${x}</p>`).join("")}</div>
+      <div class="card can"><p class="eyebrow grey">Pebble won't</p>${wont.map((x) => `<p class="ci no">${x}</p>`).join("")}</div>
+    </div>
+
+    <p class="section-h">Safety and privacy</p>
+    <div class="privacy-hero"><img src="${A("pebble/pebble_sensitive_01.png")}" alt=""><p>Care details are personal. Pebble only uses what you share during setup, and it treats it gently.</p></div>
+    <div class="card tlist">${privacy.map(([t, d]) => `<div class="tline"><span class="circle-ico"><img src="${A("lock.svg")}" alt=""></span><span class="tl-txt"><span class="n">${t}</span><span class="m">${d}</span></span></div>`).join("")}</div>
+    <div class="card info caution"><img class="warn-pebble" src="${A("pebble/pebble_peer_down.png")}" alt=""><span class="small"><b>Pebble can make mistakes.</b> Check dates, doses, and medical details with the care team. In an emergency, call 911.</span></div>
+  </div>
+  <div class="footer">
+    <button class="btn-primary" data-act="start" data-path="pebble">Start with Pebble</button>
+    <button class="btn-text" data-act="start" data-path="manual">Set it up myself instead</button>
   </div>`;
 };
 
@@ -780,6 +826,7 @@ function stoneSheet(t) {
 /* ---------- Render ---------- */
 
 const NOTES = {
+  pebbleInfo: ["What's Pebble?", ["Linked from the Pebble card so people know what they're opting into.", "Shows what Pebble does, how it works, what it can't do, and what it can see.", "Says plainly that it can be wrong, and to call 911 in an emergency."]],
   welcome: ["Welcome", ["Jar art shows where you’re headed, with no caption to decode.", "Manual path copy says tasks come first."]],
   about: ["Care situation", ["Starts blank: no name or condition filled in.", "Pick more than one condition; general tasks are always suggested, plus ones for each condition."]],
   them: ["What matters to them", ["Pebble path only. Starts blank. Answers pre-pick tasks (e.g. “Their wishes in order” adds the advance-directive task)."]],

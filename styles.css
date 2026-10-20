@@ -785,3 +785,30 @@ input { font: inherit; color: inherit; }
 .note .m.heart { color: var(--muted); }
 .note .n .small { font-weight: 500; }
 .chips.quiet { padding: 0 0 14px; }
+
+/* ---------- What's Pebble ---------- */
+.path.rec { height: 132px; }
+.whats-pebble { position: absolute; left: 77px; bottom: 26px; font-size: 13px; font-weight: 600; color: var(--blue); padding: 4px 0; }
+.pebble-hero { position: relative; height: 250px; overflow: hidden; display: flex; align-items: center; justify-content: center; margin: 0 0 22px; background: linear-gradient(180deg, rgba(236, 244, 255, 0.9), rgba(255, 255, 255, 0.7)); }
+.ph-pebble { position: absolute; left: 50%; bottom: 14px; width: 150px; height: auto; transform: translateX(-68%); filter: drop-shadow(0 10px 14px rgba(90, 60, 40, 0.18)); }
+.ph-glow { position: absolute; width: 260px; height: 260px; border-radius: 50%; top: 20px; background: radial-gradient(circle, rgba(140, 196, 246, 0.35), transparent 65%); }
+.ph-bubble { position: absolute; display: flex; align-items: center; gap: 8px; font-size: 12.5px; line-height: 17px; font-weight: 500; color: var(--ink); }
+.ph-bubble.b1 { left: 16px; right: 40px; top: 16px; padding: 8px 12px 8px 8px; border-radius: 16px 16px 16px 4px; background: #fff; box-shadow: var(--card-shadow); }
+.ph-bubble.b1 { padding: 10px 14px; }
+.ph-bubble.b2 { right: 16px; bottom: 16px; gap: 6px; }
+.ph-chip { padding: 6px 11px; border-radius: 14px; background: #fff; box-shadow: var(--chip-shadow); font-weight: 600; font-size: 12px; }
+.ph-chip.on { background: var(--blue); color: #fff; }
+.can-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+.can { padding: 14px 14px 6px; }
+.can .eyebrow { margin-bottom: 6px; }
+.ci { position: relative; margin: 0 0 10px; padding-left: 20px; font-size: 13px; line-height: 18px; }
+.ci::before { position: absolute; left: 0; top: 0; font-weight: 700; }
+.ci.yes::before { content: "✓"; color: var(--blue); }
+.ci.no::before { content: "✕"; color: var(--muted); }
+.caution { margin-top: 2px; align-items: flex-start; }
+.caution b { color: var(--ink); }
+.card.info .warn-pebble { flex: none; width: 44px; height: auto !important; margin: -4px 0 -6px; }
+.step-pebble { flex: none; width: 46px; height: auto; align-self: center; }
+.privacy-hero { display: flex; align-items: center; gap: 12px; margin: 0 4px 12px; }
+.privacy-hero img { flex: none; width: 68px; height: auto; }
+.privacy-hero p { margin: 0; font-size: 13px; line-height: 18px; color: var(--muted); }

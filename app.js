@@ -115,8 +115,12 @@ const MATTERS_YOU = [
   { id: "far", t: "Helping from far away", d: "Calls, orders, paperwork" },
 ];
 const STRENGTHS = [
-  { id: "drive", t: "Driving" }, { id: "phone", t: "Phone calls" }, { id: "paper", t: "Paperwork & bills" },
-  { id: "meds", t: "Meds & pharmacy" }, { id: "cook", t: "Cooking" }, { id: "there", t: "Being there" },
+  { id: "drive", t: "Driving", d: "Appointments, errands, pickups" },
+  { id: "phone", t: "Phone calls", d: "Insurance, pharmacies, family updates" },
+  { id: "paper", t: "Paperwork & bills", d: "Forms, claims, paying bills" },
+  { id: "meds", t: "Meds & pharmacy", d: "Refills, pill boxes, tracking symptoms" },
+  { id: "cook", t: "Cooking", d: "Meals, groceries, meal plans" },
+  { id: "there", t: "Being there", d: "Visits, personal care, overnights" },
 ];
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const DAY_FULL = { Mon: "Monday", Tue: "Tuesday", Wed: "Wednesday", Thu: "Thursday", Fri: "Friday", Sat: "Saturday", Sun: "Sunday" };
@@ -211,8 +215,8 @@ let lastDir = "fwd";
 /* ---------- Flow ---------- */
 
 const FLOWS = {
-  pebble: ["about", "them", "you", "tasks", "dates", "people", "calendar", "avail", "split", "review"],
-  manual: ["about", "tasks", "dates", "people", "calendar", "avail", "split", "review"],
+  pebble: ["about", "them", "you", "tasks", "dates", "people", "calendar", "avail", "strengths", "split", "review"],
+  manual: ["about", "tasks", "dates", "people", "calendar", "avail", "strengths", "split", "review"],
 };
 const flow = () => FLOWS[S.path || "manual"];
 const stepIndex = () => flow().indexOf(S.screen);
@@ -597,12 +601,22 @@ SCREENS.avail = () => {
     }).join("")}</div>
     ${S.cals.length ? `<p class="small" style="margin-top:10px">Hours marked busy come from your connected calendar${S.cals.length > 1 ? "s" : ""}.</p>` : ""}
     <p class="sub lock" style="margin-top:12px"><img src="${A("lock.svg")}" width="14" height="14" alt="">Private. Everyone sets their own when they join.</p>
-    <p class="label">What you’re good at</p>
-    <div class="chips">${STRENGTHS.map((s) => chip(s.t, S.strengths.includes(s.id), "strength", s.id)).join("")}</div>
-    <p class="small" style="margin-top:18px">Pebble uses this to keep the split fair. Others only see the plan.</p>
+  </div>
+  ${footer()}`;
+};
+
+SCREENS.strengths = () => `${topbar({ skip: false })}
+  <div class="content">
+    ${eyebrow("About you")}
+    <h1 class="title">What are you good at?</h1>
+    <p class="sub">Pick all that apply. Pebble leans toward giving you tasks that fit.</p>
+    ${STRENGTHS.map((s) => {
+      const on = S.strengths.includes(s.id);
+      return `<button class="option ${on ? "on" : ""}" data-act="strength" data-id="${s.id}"><span class="txt"><span class="t">${s.t}</span><span class="d">${s.d}</span></span>${check(on)}</button>`;
+    }).join("")}
+    <p class="small" style="margin-top:14px">Pebble uses this to keep the split fair. Others only see the plan.</p>
   </div>
   ${footer(S.path === "pebble" ? "See Pebble's split" : "Next: split it up")}`;
-};
 
 const chip = (label, on, act, id) => `<button class="chip ${on ? "on" : ""}" data-act="${act}" data-id="${esc(id)}">${on ? `<img src="${A("chip-check.svg")}" alt="">` : ""}${esc(label)}</button>`;
 
@@ -773,6 +787,7 @@ const NOTES = {
   calendar: ["Calendar sync", ["Optional. Connect any mix of Google, Apple, and Outlook; busy times merge.", "Only busy/free is read, never event details. Connecting here is simulated."]],
   people: ["Who's helping", ["Starts with just you. Each main caregiver gets the app and a link by text.", "Trusted circle: light tasks only.", "New: kids & teens, who only get kid-friendly tasks (calls, games, pets, the mail)."]],
   avail: ["Free time, one day at a time", ["Pick a day, then tap big hour buttons, grouped into morning, afternoon, and evening.", "Copy a day to weekdays or every day. A summary shows the whole week.", "Starts blank. Busy calendar hours can’t be picked."]],
+  strengths: ["What you're good at", ["Split out from the free-time screen so each page asks one thing.", "Picks nudge Pebble's split toward tasks that match."]],
   split: ["The split, last", ["Totals stay pinned at the top while the tasks scroll.", "Load bars count heavier tasks as more hours. Pebble path arrives pre-split.", "If no one has room, it suggests the trusted circle or paid help instead of overloading someone."]],
   review: ["Jars, now earned", ["Jars fill with the tasks you just made.", "Tap a stone: voice playback and “make it glow” (locate) are shown up front, so the jar works without the app."]],
 };

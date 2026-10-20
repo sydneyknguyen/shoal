@@ -364,6 +364,22 @@ SCREENS.pairRest = () => {
 
 /* ---------- Home ---------- */
 
+// How much the family has on each day this week. Tap a bar to see that day's tasks.
+function loadChart(week) {
+  const days = DAYS.map((d, i) => {
+    const date = fromIso(shift(week, i)), id = iso(date);
+    const list = active().filter((t) => occurs(t, date));
+    return { d, date, id, n: list.length, urgent: list.some((t) => isUrgent(t) && t.date === id) };
+  });
+  const max = Math.max(1, ...days.map((x) => x.n));
+  const heavy = days.reduce((a, b) => (b.n > a.n ? b : a));
+  return `<div class="load-chart">${days.map((x) => `<button class="lc-day ${x.id === S.app.day ? "on" : ""} ${x.id === iso(TODAY) ? "today" : ""} ${heavy.n && x.n === heavy.n ? "heavy" : ""}" data-act="homeDay" data-id="${x.id}"
+      aria-pressed="${x.id === S.app.day}" aria-label="${DAY_FULL[dayKey(x.date)]} ${x.date.getDate()}, ${x.n} task${x.n === 1 ? "" : "s"}${x.urgent ? ", one is urgent" : ""}">
+      <span class="lc-col">${x.urgent ? gem("urgent", { size: "xs" }) : ""}<span class="lc-bar" style="height:${Math.max(8, Math.round((x.n / max) * 84))}px"></span></span>
+      <small>${x.d[0]}</small><b>${x.date.getDate()}</b></button>`).join("")}</div>
+    <p class="lc-cap">${heavy.n ? `${DAY_FULL[dayKey(heavy.date)]} is the heavy day · ${heavy.n} tasks` : "A light week"}</p>`;
+}
+
 SCREENS.home = () => {
   const urgent = active().filter(isUrgent).sort((a, b) => a.date.localeCompare(b.date));
   const finished = S.tasks.find((t) => t.done && t.doneAt && t.who !== "you" && !S.app.thanked[t.id] && !S.app.dismissed[t.id]);
@@ -384,11 +400,7 @@ SCREENS.home = () => {
       <button class="linkish" data-act="sayThanks" data-id="${finished.id}">Thank</button><button class="x-btn" data-act="dismissThanks" data-id="${finished.id}" aria-label="Dismiss"><span aria-hidden="true">×</span></button></div>` : ""}
     <div class="card shelf">${familyJars()}</div>
     <div class="card week">
-      <div class="day-strip">${DAYS.map((d, i) => {
-        const date = fromIso(shift(week, i)), id = iso(date);
-        const has = active().some((t) => occurs(t, date));
-        return `<button class="${id === S.app.day ? "on" : ""} ${id === iso(TODAY) ? "today" : ""}" data-act="homeDay" data-id="${id}" aria-pressed="${id === S.app.day}" aria-label="${DAY_FULL[dayKey(date)]} ${date.getDate()}${has ? ", has tasks" : ""}"><small>${d[0]}</small>${date.getDate()}<i class="${has ? "has" : ""}"></i></button>`;
-      }).join("")}</div>
+      ${loadChart(week)}
       <div class="tlist flat">${today.length ? today.map((t) => taskLine(t)).join("") : `<p class="small empty">Nothing on ${DAY_FULL[dayKey(day)]}.</p>`}</div>
     </div>
   </div>
@@ -397,26 +409,56 @@ SCREENS.home = () => {
 
 /* ---------- My jar ---------- */
 
+// Completion ring: done (blue), urgent (honey), still to do (grey), one gap between each.
+function ring(segs, { size = 220, stroke = 12 } = {}) {
+  const r = (size - stroke) / 2, c = 2 * Math.PI * r, total = segs.reduce((n, x) => n + x.v, 0) || 1;
+  const gap = segs.filter((x) => x.v).length > 1 ? 6 : 0;
+  let at = 0;
+  return `<svg class="ring-svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" aria-hidden="true">
+    <circle cx="${size / 2}" cy="${size / 2}" r="${r}" fill="none" stroke="rgba(110,115,124,0.13)" stroke-width="${stroke}"/>
+    ${segs.filter((x) => x.v).map((x) => {
+      const len = Math.max(0, (x.v / total) * c - gap);
+      const el = `<circle class="ring-seg" cx="${size / 2}" cy="${size / 2}" r="${r}" fill="none" stroke="${x.color}" stroke-width="${stroke}" stroke-linecap="round"
+        stroke-dasharray="${len} ${c}" stroke-dashoffset="${-at}" transform="rotate(-90 ${size / 2} ${size / 2})"/>`;
+      at += (x.v / total) * c;
+      return el;
+    }).join("")}
+  </svg>`;
+}
+
+const jarOrder = (t) => (isUrgent(t) ? 0 : t.kind === "once" ? 1 : 2);
+function jarMeta(t) {
+  if (isUrgent(t)) return `<span class="st-urgent">${dueLabel(t)[0].toUpperCase()}${dueLabel(t).slice(1)}</span>`;
+  return t.kind === "once" ? fmtDate(t.date) : repeatLabel(t.days);
+}
+
 SCREENS.myjar = () => {
   const all = mine("you");
   const live = all.filter((t) => !t.done);
   const done = all.filter((t) => t.done);
+  const urgent = live.filter(isUrgent);
+  // "Today" counts what happens today plus anything urgent that needs attention now.
+  const today = live.filter((t) => occurs(t, TODAY) || isUrgent(t)).length;
+  const fam = S.tasks.filter((t) => t.on && t.who);
+  const famDone = fam.filter((t) => t.done).length;
   const tab = S.app.jarTab;
-  const shown = live.filter((t) => tab === "all" || (tab === "once" ? t.kind === "once" : t.kind === "repeat"));
-  const group = (title, list) => list.length ? `<p class="section-h">${title}<span class="small">${list.length}</span></p>
-    <div class="card tlist">${list.map((t) => taskLine(t, { showWho: false, trail: `<button class="tick" data-act="markDone" data-id="${t.id}" aria-label="Mark done">${check(false)}</button>` })).join("")}</div>` : "";
+  const shown = live.filter((t) => tab === "all" || t.kind === tab).sort((a, b) => jarOrder(a) - jarOrder(b) || (a.date || "").localeCompare(b.date || ""));
+  const count = (k) => live.filter((t) => k === "all" || t.kind === k).length;
   return `<div class="content app">
-    <div class="jarhead">
-      <div class="mini-jar">${familyJars({ only: "you", act: false })}</div>
-      <div class="jh-txt"><h1 class="title">Your jar</h1><p class="small">${live.length} active · ${done.length} done</p></div>
-      <button class="round-btn" data-act="newTask" aria-label="Add a task"><img src="${A("plus.svg")}" alt=""></button>
+    <div class="apphead"><h1 class="title">Your jar</h1><button class="round-btn" data-act="newTask" aria-label="Add a task"><img src="${A("plus.svg")}" alt=""></button></div>
+    <div class="ring-hero" role="img" aria-label="${done.length} of ${all.length} of your tasks done, ${urgent.length} urgent, ${today} for today">
+      ${ring([{ v: done.length, color: "#418ef3" }, { v: urgent.length, color: "#e2ad47" }, { v: live.length - urgent.length, color: "transparent" }])}
+      <div class="ring-mid">${today ? `<b>${today}</b><span>${today === 1 ? "thing" : "things"} for you today</span>` : `<b class="none">✓</b><span>Nothing for you today</span>`}</div>
     </div>
-    <div class="tabs">${[["all", "All"], ["once", "One-time"], ["repeat", "Ongoing"]].map(([id, l]) => `<button class="${tab === id ? "on" : ""}" aria-pressed="${tab === id}" data-act="jarTab" data-id="${id}">${l}</button>`).join("")}</div>
-    ${S.app.requests.map((r) => `<div class="card request"><span class="tl-txt"><span class="eyebrow">Request from ${esc(nameOf(r.from))}</span><span class="n">${esc(r.n)}</span></span><button class="pill-btn" data-act="review" data-id="${r.id}">Review</button></div>`).join("")}
-    ${tab !== "repeat" ? group("One-time", shown.filter((t) => t.kind === "once")) : ""}
-    ${tab !== "once" ? group("Ongoing", shown.filter((t) => t.kind === "repeat")) : ""}
-    ${!shown.length ? `<div class="card empty-card"><p class="small">Nothing here. Tap + to add a task.</p></div>` : ""}
-    ${done.length ? `<button class="collapsed" data-act="showDone">Done · ${done.length}<img src="${A("chevron.svg")}" alt="" style="transform:rotate(${S.app.showDone ? 90 : 0}deg)"></button>
+    <p class="ring-cap">${done.length} of ${all.length} yours done · ${famDone} of ${fam.length} together</p>
+    <div class="ring-key"><span><i style="background:#418ef3"></i>Done</span><span><i style="background:#e2ad47"></i>Urgent</span><span><i></i>To do</span></div>
+    <div class="card jar-list">
+      <div class="utabs" role="tablist">${[["all", "All"], ["once", "One-time"], ["repeat", "Ongoing"]].map(([id, l]) => `<button role="tab" class="${tab === id ? "on" : ""}" aria-selected="${tab === id}" data-act="jarTab" data-id="${id}">${l}<small>${count(id)}</small></button>`).join("")}</div>
+      ${tab !== "repeat" ? S.app.requests.map((r) => `<div class="jl-req"><span class="tl-txt"><span class="eyebrow">Request from ${esc(nameOf(r.from))}</span><span class="n">${esc(r.n)}</span></span><button class="linkish" data-act="review" data-id="${r.id}">Review</button></div>`).join("") : ""}
+      ${shown.map((t) => taskLine(t, { meta: jarMeta(t), trail: `<button class="tick" data-act="markDone" data-id="${t.id}" aria-label="Mark ${esc(t.n)} done">${check(false)}</button>` })).join("")}
+      ${!shown.length ? `<p class="small empty">Nothing here. Tap + to add a task.</p>` : ""}
+    </div>
+    ${done.length ? `<button class="collapsed" data-act="showDone" aria-expanded="${!!S.app.showDone}">Done · ${done.length}<img src="${A("chevron.svg")}" alt="" style="transform:rotate(${S.app.showDone ? 90 : 0}deg)"></button>
       ${S.app.showDone ? `<div class="card tlist">${done.map((t) => taskLine(t, { showWho: false, meta: "Done" })).join("")}</div>` : ""}` : ""}
   </div>
   ${tabbar()}`;
@@ -821,8 +863,8 @@ Object.assign(NOTES, {
   glow: ["What the glow means", ["Honey = urgent, ice blue = in progress, white = unassigned, off = done.", "Light stones are one-time, dark stones are ongoing."]],
   charge: ["Charging", ["The base powers the jars, so stones charge in a jar or on the base. No moving stones around to charge.", "Only a stone left out (on a table, in a bag) runs down, and the app warns you."]],
   pairRest: ["Pair the rest", ["Optional. Anyone can pair their own stones later."]],
-  home: ["Home", ["Urgent first, then the family jars and this week. No section labels, so it reads at a glance.", "Top right: the jar icon opens the home kit (glow, batteries, jars), the bell opens notifications."]],
-  myjar: ["My jar", ["One-time and ongoing tasks, plus requests from family.", "Tick a task to mark it done."]],
+  home: ["Home", ["Urgent first, then the family jars and this week. No section labels, so it reads at a glance.", "The week is a bar chart of how much the family has each day. Tap a bar to see that day's tasks.", "Top right: the jar icon opens the home kit (glow, batteries, jars), the bell opens notifications."]],
+  myjar: ["My jar", ["The ring shows how much of yours is done (blue) and urgent (honey). The middle is what's on for today.", "One list with All, One-time and Ongoing tabs. Urgent tasks sit on top. Tick to mark done."]],
   task: ["A task", ["Shows who has it, its stone, steps, and notes. Hand off or mark done from here.", "Every task has a stone. Linking a real stone at home is optional."]],
   handoff: ["Hand off", ["Sends a request. Trusted circle and kids are limited to the tasks they can take."]],
   newTask: ["Add a task", ["Name, one-time or ongoing, due date, who, remote OK, notes. Saving adds its stone to that person's jar."]],

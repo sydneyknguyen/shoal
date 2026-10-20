@@ -188,7 +188,7 @@ function blocksOf(row) {
 
 const initialState = () => ({
   path: null, // "pebble" | "manual"
-  screen: "welcome",
+  screen: "splash",
   history: [],
   lovedOne: "",
   conditions: [],
@@ -843,13 +843,13 @@ const NOTES = {
 
 function renderNotes() {
   if (APP_SCREENS.has(S.screen)) { renderAppNotes(); return; }
-  const all = ["welcome", ...flow()];
+  const all = [...PRE_SCREENS, "welcome", ...flow()];
   const seen = new Set([S.screen, ...S.history]);
   const [title, bullets] = NOTES[S.screen];
   document.getElementById("notes").innerHTML = `
     <p class="eyebrow">Shoal · onboarding v3 · ${S.path ? (S.path === "pebble" ? "Pebble path" : "Manual path") : "pick a path"}</p>
     <h2>${title}</h2>
-    <ol>${all.map((s) => `<li><button data-act="jump" data-to="${s}" aria-current="${s === S.screen}" ${seen.has(s) || s === "welcome" ? "" : "disabled"}>${NOTES[s][0]}</button></li>`).join("")}</ol>
+    <ol>${all.map((s) => `<li><button data-act="jump" data-to="${s}" aria-current="${s === S.screen}" ${seen.has(s) || s === "welcome" || PRE_SCREENS.includes(s) ? "" : "disabled"}>${NOTES[s][0]}</button></li>`).join("")}</ol>
     <div class="why"><strong>What changed here</strong><ul>${bullets.map((b) => `<li>${b}</li>`).join("")}</ul></div>
     <button class="reset" data-act="restart">Restart prototype</button>
     <button class="reset" data-act="skipToApp">Skip to the main app →</button>`;
@@ -1059,4 +1059,4 @@ function fit() {
   wrap.style.height = `${874 * s}px`;
 }
 window.addEventListener("resize", fit);
-// First render happens at the end of main-app.js, once its screens are defined.
+// First render happens at the end of start.js, once every screen is defined.

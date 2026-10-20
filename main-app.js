@@ -1001,5 +1001,3 @@ const APP_INPUT = {
   thanksNote: (v) => { S.app.thanksNote = v; },
 };
 
-fit();
-render();

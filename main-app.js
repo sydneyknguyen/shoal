@@ -5,7 +5,7 @@ const SETUP = ["ready", "jars", "pick", "hold", "paired", "find", "glow", "charg
 const TABS = [["home", "Home"], ["myjar", "My jar"], ["peopleTab", "People"], ["settings", "Settings"]];
 const APP_SCREENS = new Set([
   ...SETUP, ...TABS.map((t) => t[0]),
-  "task", "handoff", "newTask", "newStone", "person", "stones", "stoneDetail",
+  "task", "handoff", "newTask", "newStone", "person", "kit", "stones", "stoneDetail",
   "done", "thanks", "clear", "recap", "notifications", "recapSettings",
 ]);
 const KIT = 14;
@@ -93,7 +93,7 @@ function ensureAppData() {
     first: null, heard: false, blink: null, task: null, person: null, stone: null, draft: null, stoneFor: null,
     handTo: undefined, note: "", thankFor: null, thankPick: 0, thanksNote: "", shareThanks: true, thanked: {}, dismissed: {}, seenNotes: false,
     requests: helper ? [{ id: "r1", from: helper.id, n: "Call the pharmacy", note: "They'll only talk to the main contact." }] : [],
-    prefs: { little: true, weekly: true, names: true, quiet: false, quietFor: "week", publicCode: false, night: true, glow: "on" },
+    prefs: { little: true, weekly: true, names: true, quiet: false, quietFor: "week", publicCode: false, night: true, nightFrom: "22:00", nightTo: "07:00", glow: "on" },
     demo,
   };
 }
@@ -155,6 +155,7 @@ const ICONS = {
   peopleTab: `<circle cx="9" cy="8" r="3.2"/><path d="M3.5 19.5c.6-3 2.8-5 5.5-5s4.9 2 5.5 5"/><circle cx="16.5" cy="9" r="2.6"/><path d="M15.8 14.3c2.5-.1 4.3 1.7 4.8 4.4"/>`,
   settings: `<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>`,
   bell: `<path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 2h-15z"/><path d="M10 20.5a2.2 2.2 0 0 0 4 0"/>`,
+  kit: `<rect x="3" y="17.5" width="18" height="3.5" rx="1.75"/><path d="M5.5 17.5V10a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v7.5M12.5 17.5V10a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v7.5M7 5.5h3M14 5.5h3"/>`,
   glow: `<path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.7.6 1.1 1.4 1.1 2.2h5c0-.8.4-1.6 1.1-2.2A6 6 0 0 0 12 3z"/>`,
 };
 const icon = (k) => `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${ICONS[k]}</svg>`;
@@ -370,7 +371,9 @@ SCREENS.home = () => {
   const day = fromIso(S.app.day);
   const today = active().filter((t) => occurs(t, day)).sort((a, b) => (a.time || "99").localeCompare(b.time || "99"));
   return `<div class="content app">
-    <div class="apphead">${shoalMark(30)}<button class="bell" data-act="go" data-to="notifications" aria-label="Notifications">${icon("bell")}${unread() ? `<i class="dot"></i>` : ""}</button></div>
+    <div class="apphead">${shoalMark(30)}<span class="head-btns">
+      <button class="bell" data-act="go" data-to="kit" aria-label="Home kit">${icon("kit")}${notCharging().length ? `<i class="dot warn"></i>` : ""}</button>
+      <button class="bell" data-act="go" data-to="notifications" aria-label="Notifications">${icon("bell")}${unread() ? `<i class="dot"></i>` : ""}</button></span></div>
     <p class="eyebrow grey">${TODAY.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}</p>
     <h1 class="title">Good morning</h1>
     ${urgent.length ? `<button class="card attention" data-act="openTask" data-id="${urgent[0].id}">${gemOf(urgent[0], { size: "m" })}
@@ -379,7 +382,7 @@ SCREENS.home = () => {
       </button>` : ""}
     ${finished ? `<div class="finished">${avatar(person(finished.who), "s20")}<span class="fin-txt"><b>${esc(person(finished.who).name)}</b> finished “${esc(finished.n)}”</span>
       <button class="linkish" data-act="sayThanks" data-id="${finished.id}">Thank</button><button class="x-btn" data-act="dismissThanks" data-id="${finished.id}" aria-label="Dismiss">×</button></div>` : ""}
-    <div class="card shelf"><button class="glow-btn" data-act="glowSheet" aria-label="Jar glow">${icon("glow")}<span>${GLOW[S.app.prefs.glow || "on"]}</span></button>${familyJars()}</div>
+    <div class="card shelf">${familyJars()}</div>
     <div class="card week">
       <div class="day-strip">${DAYS.map((d, i) => {
         const date = fromIso(shift(week, i)), id = iso(date);
@@ -582,10 +585,6 @@ SCREENS.settings = () => {
     <div class="apphead"><h1 class="title">Settings</h1></div>
     <p class="section-h">Family</p>
     <div class="card tlist">${row("Family setup", "Redo with Pebble or by hand", "redoSetup")}</div>
-    <p class="section-h">Kit</p>
-    <div class="card tlist">${row("Stones", `${paired} paired · ${notCharging().length ? `${notCharging().length} not charging` : "all charging"}`, "go", notCharging().length ? gem("urgent", { size: "xs" }) : "", 'data-to="stones"')}
-      ${row("Jar glow", GLOW[S.app.prefs.glow || "on"], "glowSheet")}
-      <div class="srow"><span class="tl-txt"><span class="n">Glow at night</span><span class="m">${S.app.prefs.night ? "Off 10 PM – 7 AM" : "Glows all night"}</span></span>${toggle(!S.app.prefs.night, "pref", "night")}</div></div>
     <p class="section-h">Together</p>
     <div class="card tlist">${row("Thank-yous &amp; recaps", "Weekly recap on Sundays", "go", "", 'data-to="recapSettings"')}${row("Notifications", "Urgent, requests, and thank-yous", "go", "", 'data-to="notifications"')}</div>
     <p class="section-h">Pebble</p>
@@ -593,6 +592,45 @@ SCREENS.settings = () => {
     <button class="btn-text center" data-act="restart">Restart prototype</button>
   </div>
   ${tabbar()}`;
+};
+
+// The physical side: jars, base, stones and glow, one tap from Home.
+SCREENS.kit = () => {
+  const P = S.app.prefs, g = P.glow || "on";
+  const main = S.people.filter((p) => p.tier === "main");
+  const out = notCharging();
+  const spares = S.stones.filter((s) => !s.out && !inJar(s));
+  const jarRow = (p) => {
+    const st = mine(p.id);
+    return `<div class="srow kit-row">${avatar(p, "s36")}<span class="tl-txt"><span class="n">${p.id === "you" ? "Your jar" : `${esc(p.name)}'s jar`}</span><span class="m">${st.length} stone${st.length === 1 ? "" : "s"}</span></span><span class="charge">⚡ Charging</span></div>`;
+  };
+  return `${navtop("Home")}
+  <div class="content">
+    <h1 class="title">Home kit</h1>
+    <div class="card kit-hero">${familyJars({ act: false })}
+      <div class="base-line"></div>
+      <span class="badge ${out.length ? "amber" : ""}">${out.length ? `${out.length} stone off power` : "Base connected · everything charging"}</span>
+    </div>
+    ${out.map((st) => `<button class="card kit-alert" data-act="openStone" data-id="${st.id}">${gem(taskOf(st) ? stateOf(taskOf(st)) : "open", { size: "s", cls: "faded" })}
+      <span class="tl-txt"><span class="n">Stone ${String(st.id).padStart(2, "0")} is ${outLabel(st)}</span><span class="m">${st.battery}% and not charging. Put it back in a jar or on the base.</span></span><span class="pill-btn">Find</span></button>`).join("")}
+    <p class="section-h">Glow</p>
+    <div class="card kit-glow">
+      <div class="seg big">${[["on", "On"], ["dim", "Dim"], ["off", "Off"]].map(([k, l]) => `<button class="${g === k ? "on" : ""}" data-act="setGlow" data-id="${k}">${l}</button>`).join("")}</div>
+      <div class="srow"><span class="tl-txt"><span class="n">Night hours</span><span class="m">${P.night ? `Off ${fmtTime(P.nightFrom)} – ${fmtTime(P.nightTo)}` : "Glows all night"}</span></span>${toggle(P.night, "pref", "night")}</div>
+      ${P.night ? `<button class="srow" data-act="nightSheet"><span class="tl-txt"><span class="n">Change hours</span></span>${chev}</button>` : ""}
+      ${legend()}
+    </div>
+    <p class="section-h">Jars and base</p>
+    <div class="card tlist">${main.map(jarRow).join("")}
+      <div class="srow kit-row"><span class="kit-ic">${icon("kit")}</span><span class="tl-txt"><span class="n">Base</span><span class="m">Connected · ${spares.length} spare stone${spares.length === 1 ? "" : "s"}</span></span><span class="charge">⚡ Charging</span></div>
+    </div>
+    <p class="section-h">Stones</p>
+    <div class="card tlist">
+      <button class="srow" data-act="go" data-to="stones"><span class="tl-txt"><span class="n">All stones</span><span class="m">${KIT} stones · ${S.stones.filter((s) => s.task).length} paired · battery and location</span></span>${chev}</button>
+      <button class="srow" data-act="pairSheet"><span class="tl-txt"><span class="n">Pair a stone</span><span class="m">Link a spare stone to a task</span></span>${chev}</button>
+      <button class="srow" data-act="tab" data-to="ready"><span class="tl-txt"><span class="n">Setup guide</span><span class="m">Jars, pairing and charging, step by step</span></span>${chev}</button>
+    </div>
+  </div>`;
 };
 
 SCREENS.stones = () => {
@@ -613,7 +651,7 @@ SCREENS.stones = () => {
     return `<button class="card stone-card" data-act="openStone" data-id="${s.id}">${t ? gemOf(t, { size: "m" }) : gem("open", { size: "m", cls: "dim" })}
       <b>Stone ${String(s.id).padStart(2, "0")}</b><small>${t ? esc(t.n) : "Not paired"}</small><span class="batt ${s.out ? "low" : ""}">${battLabel(s)}</span></button>`;
   };
-  return `${navtop("Settings", `<button class="btn-soft sm" data-act="pairSheet">Pair a stone</button>`)}
+  return `${navtop("Home kit", `<button class="btn-soft sm" data-act="pairSheet">Pair a stone</button>`)}
   <div class="content">
     <h1 class="title">Stones</h1>
     <p class="sub">${KIT} stones · ${paired.length} paired. Stones charge in the jars and on the base.</p>
@@ -726,7 +764,6 @@ const NOTIF = {
   request: ["Handoff request", `<path d="M4 9h13l-3.5-3.5M20 15H7l3.5 3.5"/>`],
   done: ["Finished", `<path d="m6 12.5 4 4 8-9"/>`],
   thanks: ["Thank-you", `<path d="M12 19s-7-4.3-7-9.2A3.8 3.8 0 0 1 12 7.5a3.8 3.8 0 0 1 7 2.3C19 14.7 12 19 12 19z"/>`],
-  kit: ["Stone", `<rect x="4" y="8" width="14" height="8" rx="2"/><path d="M20 11v2M7 11v2"/>`],
 };
 const nfBadge = (k) => `<span class="nf-badge nb-${k}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">${NOTIF[k][1]}</svg></span>`;
 
@@ -739,7 +776,6 @@ function notifications() {
   S.tasks.filter((t) => t.done && t.doneAt && t.who !== "you").forEach((t) => list.push({ kind: "done", when: t.doneAt.split(",")[0], who: person(t.who), n: `${nameOf(t.who)} finished “${t.n}”`, m: S.app.thanked[t.id] ? "You said thanks" : "Tap to say thanks", act: S.app.thanked[t.id] ? "openTask" : "sayThanks", id: t.id }));
   if (others[1] || others[0]) list.push({ kind: "thanks", when: "Today", who: others[1] || others[0], n: `${(others[1] || others[0]).name} thanked you`, m: "“Thanks for covering the pharmacy call. I owe you one.”" });
   if (others[0]) list.push({ kind: "thanks", when: "Yesterday", who: others[0], n: `${others[0].name} sent you a heart`, m: "For picking up groceries" });
-  lowBattery().forEach((st) => list.push({ kind: "kit", needs: true, cta: "Find", when: "1h ago", gem: gem("done", { size: "s", cls: "faded" }), n: `Stone ${String(st.id).padStart(2, "0")} is ${outLabel(st)}`, m: `${st.battery}% and not charging. Put it back in a jar or on the base.`, act: "openStone", id: st.id }));
   return list;
 }
 
@@ -785,7 +821,7 @@ Object.assign(NOTES, {
   glow: ["What the glow means", ["Honey = urgent, ice blue = in progress, white = unassigned, off = done.", "Light stones are one-time, dark stones are ongoing."]],
   charge: ["Charging", ["The base powers the jars, so stones charge in a jar or on the base. No moving stones around to charge.", "Only a stone left out (on a table, in a bag) runs down, and the app warns you."]],
   pairRest: ["Pair the rest", ["Optional. Anyone can pair their own stones later."]],
-  home: ["Home", ["Urgent first, then the family jars and this week. No section labels, so it reads at a glance.", "The bulb on the jars dims or turns off the glow. The bell opens notifications."]],
+  home: ["Home", ["Urgent first, then the family jars and this week. No section labels, so it reads at a glance.", "Top right: the jar icon opens the home kit (glow, batteries, jars), the bell opens notifications."]],
   myjar: ["My jar", ["One-time and ongoing tasks, plus requests from family.", "Tick a task to mark it done."]],
   task: ["A task", ["Shows who has it, its stone, steps, and notes. Hand off or mark done from here.", "Every task has a stone. Linking a real stone at home is optional."]],
   handoff: ["Hand off", ["Sends a request. Trusted circle and kids are limited to the tasks they can take."]],
@@ -793,18 +829,19 @@ Object.assign(NOTES, {
   newStone: ["Link a real stone", ["Every task already has a stone in the app jar. Linking a real one is optional, from the task's ••• menu."]],
   peopleTab: ["People", ["Everyone's jars and progress, plus the extended circle."]],
   person: ["A person's tasks, and why", ["Each task says why Pebble suggested that person."]],
-  settings: ["Settings", ["Family setup, stones, glow at night, recaps, and what Pebble can see."]],
+  settings: ["Settings", ["Family setup, recaps, notifications, and what Pebble can see. Jars, stones and glow live in the home kit."]],
+  kit: ["Home kit", ["Everything physical in one place, opened from the jar icon on Home: glow, night hours, jars, the base, and every stone's battery.", "A dot on the icon means a stone is off power."]],
   stones: ["Stones", ["All 14 stones by where they are: in a jar, on the base, or out and not charging."]],
   stoneDetail: ["Stone detail", ["Make it blink, see what it's paired to, or unpair it."]],
   done: ["Marked done", ["A quiet celebration, with a prompt to thank whoever helped."]],
   thanks: ["Say thanks", ["One tap, optional note. Their jar gives a soft glow."]],
   clear: ["Jar is clear", ["When everything of yours is done."]],
   recap: ["Weekly recap", ["Sunday recap. No streaks or rankings, only what went well."]],
-  notifications: ["Notifications", ["Needs you: handoff requests, your urgent tasks, a stone left out of its jar. Each has a button.", "Updates: things others finished and thank-yous. A badge on each picture shows the kind."]],
+  notifications: ["Notifications", ["Needs you: handoff requests and your urgent tasks. Each has a button. Stone alerts live in the home kit.", "Updates: things others finished and thank-yous. A badge on each picture shows the kind."]],
   recapSettings: ["Thank-yous and recaps", ["Turn each one off, or go quiet for a while."]],
 });
 
-const APP_NAV = ["ready", "home", "myjar", "task", "newTask", "peopleTab", "person", "settings", "stones", "done", "clear", "recap", "notifications"];
+const APP_NAV = ["ready", "home", "myjar", "task", "newTask", "peopleTab", "person", "settings", "kit", "stones", "done", "clear", "recap", "notifications"];
 
 function renderAppNotes() {
   const [title, bullets] = NOTES[S.screen] || ["", []];
@@ -968,16 +1005,21 @@ Object.assign(ACTIONS, {
     toast(s ? `Stone ${String(s.id).padStart(2, "0")} linked` : `All ${KIT} stones are in use`);
   },
   dismissThanks: (d) => { S.app.dismissed[d.id] = true; render(); },
-  glowSheet: () => {
-    const g = S.app.prefs.glow || "on";
-    openSheet(`<h3>Jar glow</h3><p class="small">For the jars at home and in the app.</p>
-      <div class="seg big glow-seg">${[["on", "On"], ["dim", "Dim"], ["off", "Off"]].map(([k, l]) => `<button class="${g === k ? "on" : ""}" data-act="setGlow" data-id="${k}">${l}</button>`).join("")}</div>
-      ${legend()}
+  nightSheet: () => {
+    const P = S.app.prefs;
+    openSheet(`<h3>Night hours</h3><p class="small">Stones stop glowing overnight, then come back on.</p>
+      <p class="label">Turn off at</p><div class="chips">${["21:00", "22:00", "23:00"].map((t) => chip(fmtTime(t), P.nightFrom === t, "nightTime", `from-${t}`)).join("")}</div>
+      <p class="label">Back on at</p><div class="chips">${["06:00", "07:00", "08:00"].map((t) => chip(fmtTime(t), P.nightTo === t, "nightTime", `to-${t}`)).join("")}</div>
       <button class="btn-primary" data-act="closeSheet">Done</button>`);
+  },
+  nightTime: (d) => {
+    const [k, t] = d.id.split("-");
+    S.app.prefs[k === "from" ? "nightFrom" : "nightTo"] = t;
+    ACTIONS.nightSheet();
+    render();
   },
   setGlow: (d) => {
     S.app.prefs.glow = d.id;
-    closeSheet();
     render();
     toast(d.id === "on" ? "Stones glow" : d.id === "dim" ? "Stones dimmed" : "Glow off. Colors still show in the app.");
   },

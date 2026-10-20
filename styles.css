@@ -689,8 +689,6 @@ input { font: inherit; color: inherit; }
 .finished .fin-txt b { color: var(--ink, #21262e); font-weight: 600; }
 .x-btn { flex: none; width: 28px; height: 28px; border-radius: 14px; font-size: 18px; line-height: 1; color: var(--muted); }
 .card.shelf { position: relative; margin-top: 12px; }
-.glow-btn { position: absolute; top: 10px; right: 10px; z-index: 2; display: inline-flex; align-items: center; gap: 4px; height: 28px; padding: 0 10px 0 6px; border-radius: 14px; background: rgba(15, 76, 147, 0.06); color: var(--navy); font-size: 12px; font-weight: 600; }
-.glow-btn svg { width: 18px; height: 18px; }
 .shelf-jars.glow-dim .gem:not(.done) { box-shadow: 0 0 4px 0 var(--glow), inset 0 -3px 5px rgba(0, 0, 0, 0.07); filter: saturate(0.8) brightness(0.96); }
 .shelf-jars.glow-off .gem:not(.done) { box-shadow: inset 0 -3px 5px rgba(0, 0, 0, 0.07); }
 .glassbox .gem.still { animation: none; }
@@ -708,20 +706,16 @@ input { font: inherit; color: inherit; }
 .nf-badge.nb-urgent { background: #f2b84b; }
 .nf-badge.nb-request { background: var(--blue, #2070d9); }
 .nf-badge.nb-done { background: #8a96a6; }
-.nf-badge.nb-thanks { background: #e7798f; }
-.nf-badge.nb-kit { background: #c4442f; }
+.nf-badge.nb-thanks { background: #8b6fd6; }
 .nf-kind { font-size: 11px; font-weight: 700; letter-spacing: 0.4px; text-transform: uppercase; color: var(--muted); margin-bottom: 1px; }
 .notif.request .nf-kind { color: var(--blue, #2070d9); }
 .notif.urgent .nf-kind { color: #a06a0a; }
-.notif.thanks .nf-kind { color: #c4566c; }
-.notif.kit .nf-kind { color: #c4442f; }
+.notif.thanks .nf-kind { color: #7357c4; }
 .notif .pill-btn { display: grid; place-items: center; }
 .notif-needs { display: flex; flex-direction: column; gap: 10px; margin-bottom: 8px; }
 .notif.needs { border-radius: 18px; background: rgba(255, 255, 255, 0.9); box-shadow: 0 2px 10px rgba(33, 38, 46, 0.06); border: 1.5px solid transparent; }
 .notif.needs.request { border-color: rgba(32, 112, 217, 0.35); background: rgba(240, 247, 255, 0.95); }
 .notif.needs.urgent { border-color: rgba(246, 196, 92, 0.55); background: rgba(255, 252, 244, 0.95); }
-.notif.needs.kit { border-color: rgba(196, 68, 47, 0.3); background: rgba(255, 246, 244, 0.95); }
-.notif.needs.kit .pill-btn { background: rgba(196, 68, 47, 0.1); color: #c4442f; }
 .notif.needs.urgent .pill-btn { background: var(--amber-tint); color: #8a5a07; }
 .shelf .legend { margin-top: 12px; }
 .shelf-top { display: flex; justify-content: space-between; padding: 0 14px 6px; }
@@ -1029,3 +1023,19 @@ input { font: inherit; color: inherit; }
 .pr-check img { width: 12px; height: 12px; filter: brightness(10); }
 .priv-row b { display: block; font-size: 14px; font-weight: 600; line-height: 19px; }
 .priv-row small { display: block; font-size: 12.5px; color: var(--muted); line-height: 17px; margin-top: 1px; }
+
+/* ---------- Home kit ---------- */
+.head-btns { display: flex; gap: 2px; }
+.bell .dot.warn { background: #e0533d; }
+.kit-hero { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 20px 8px 18px; margin-top: 8px; }
+.kit-hero .base-line { width: 86%; height: 10px; margin-top: -10px; border-radius: 5px; background: linear-gradient(180deg, #f3f3f1, #dcdcd8); box-shadow: inset 0 -2px 3px rgba(0, 0, 0, 0.08); }
+.kit-alert { display: flex; align-items: center; gap: 12px; width: 100%; padding: 14px; margin-top: 12px; text-align: left; border: 1.5px solid rgba(224, 83, 61, 0.3); background: rgba(255, 246, 244, 0.95); }
+.kit-alert .pill-btn { display: grid; place-items: center; background: rgba(224, 83, 61, 0.1); color: #c4442f; }
+.kit-glow { padding: 14px 14px 12px; }
+.kit-glow .seg.big { margin-bottom: 4px; }
+.kit-glow .srow { padding-left: 2px; padding-right: 2px; }
+.kit-glow .legend { margin-top: 8px; }
+.kit-row { gap: 12px; }
+.kit-row .charge { flex: none; font-size: 12.5px; font-weight: 600; color: var(--blue-label, #2070d9); }
+.kit-ic { flex: none; width: 36px; height: 36px; border-radius: 18px; display: grid; place-items: center; background: rgba(15, 76, 147, 0.07); color: var(--navy); }
+.kit-hero .shelf-jars { width: 100%; flex-wrap: nowrap; }

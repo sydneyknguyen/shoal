@@ -1,4 +1,4 @@
-/* Shoal onboarding prototype — vanilla JS, one state object, full re-render per change. */
+/* Shoal prototype: onboarding — vanilla JS, one state object, full re-render per change. */
 
 const A = (f) => `assets/${f}`;
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -241,6 +241,7 @@ function back() {
 }
 
 function onEnter(screen) {
+  if (APP_SCREENS.has(screen)) { appEnter(screen); return; }
   if (screen === "tasks" && !S.tasks.length) seedTasks();
   // Pebble proposes a split; manual starts unassigned so you can pick, or ask Pebble.
   if (screen === "split" && S.path === "pebble" && !S.splitTouched) suggestSplit();
@@ -695,7 +696,7 @@ SCREENS.review = () => {
     <div class="card info"><img src="${A("lock.svg")}" alt=""><span class="small">Each pebble can read its own task aloud, so the jar works even when your phone isn't nearby. You'll get a reminder before anything is due.</span></div>
   </div>
   ${S.sent
-    ? footer("Go to my jar", { act: "restart", backBtn: false })
+    ? footer("Set up the stones", { act: "enterApp", backBtn: false })
     : footer(invitees.length ? `Send plan to ${listNames(invitees)}` : "Finish", { act: "send" })}`;
 };
 const listWords = (n) => (n.length <= 2 ? n.join(" and ") : `${n.slice(0, -1).join(", ")}, and ${n.at(-1)}`);
@@ -793,6 +794,7 @@ const NOTES = {
 };
 
 function renderNotes() {
+  if (APP_SCREENS.has(S.screen)) { renderAppNotes(); return; }
   const all = ["welcome", ...flow()];
   const seen = new Set([S.screen, ...S.history]);
   const [title, bullets] = NOTES[S.screen];
@@ -801,7 +803,8 @@ function renderNotes() {
     <h2>${title}</h2>
     <ol>${all.map((s) => `<li><button data-act="jump" data-to="${s}" aria-current="${s === S.screen}" ${seen.has(s) || s === "welcome" ? "" : "disabled"}>${NOTES[s][0]}</button></li>`).join("")}</ol>
     <div class="why"><strong>What changed here</strong><ul>${bullets.map((b) => `<li>${b}</li>`).join("")}</ul></div>
-    <button class="reset" data-act="restart">Restart prototype</button>`;
+    <button class="reset" data-act="restart">Restart prototype</button>
+    <button class="reset" data-act="skipToApp">Skip to the main app →</button>`;
 }
 
 function render() {
@@ -811,9 +814,9 @@ function render() {
   el.innerHTML = SCREENS[S.screen]();
   el.dataset.s = S.screen;
   if (prevScreen !== S.screen) {
-    el.classList.remove("enter-fwd", "enter-back");
+    el.classList.remove("enter-fwd", "enter-back", "enter-fade");
     void el.offsetWidth;
-    el.classList.add(lastDir === "back" ? "enter-back" : "enter-fwd");
+    el.classList.add(`enter-${lastDir}`);
   }
   const c = el.querySelector(".content");
   if (c && keepScroll) c.scrollTop = keepScroll;
@@ -974,6 +977,8 @@ document.addEventListener("submit", (e) => {
 });
 
 document.addEventListener("input", (e) => {
+  const hook = APP_INPUT[e.target.dataset.input];
+  if (hook) { hook(e.target.value); return; }
   if (e.target.dataset.input === "taskTime") {
     // Update the task and the screen behind the sheet, but leave the sheet alone so the picker keeps focus.
     sheetTask().time = e.target.value;
@@ -1006,5 +1011,4 @@ function fit() {
   wrap.style.height = `${874 * s}px`;
 }
 window.addEventListener("resize", fit);
-fit();
-render();
+// First render happens at the end of main-app.js, once its screens are defined.

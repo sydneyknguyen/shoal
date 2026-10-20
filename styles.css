@@ -246,7 +246,7 @@ input { font: inherit; color: inherit; }
   background: var(--blue-tint); color: var(--blue-label);
   font-weight: 500; font-size: 13px; white-space: nowrap;
 }
-.badge.caps { font-weight: 600; font-size: 11px; letter-spacing: 0.66px; }
+.badge.caps { font-weight: 600; font-size: 11px; letter-spacing: 0.66px; text-transform: uppercase; }
 .badge.amber { background: var(--amber-tint); color: #8a5a07; }
 
 .avatar { flex: none; width: 40px; height: 40px; border-radius: 50%; border: 1.5px solid #fff; overflow: hidden; background: #dfe8f3; display: grid; place-items: center; font-weight: 600; color: var(--navy); font-size: 14px; }
@@ -264,7 +264,7 @@ input { font: inherit; color: inherit; }
 .jars-illus .plate { position: absolute; left: 6.35px; width: 71.56px; height: 10.03px; border-radius: 2.96px; background: rgba(141, 138, 130, 0.22); border: 0.093px solid #0f4c93; }
 .jars-illus .rocks { position: absolute; }
 .jars-illus .rocks img { position: absolute; display: block; }
-.hero .cap { position: absolute; left: 20px; right: 20px; top: 165px; text-align: center; }
+.hero .cap { position: absolute; left: 20px; right: 20px; top: 165px; margin: 0; text-align: center; }
 
 .path {
   position: relative; display: flex; align-items: flex-start; gap: 16px;
@@ -329,23 +329,66 @@ input { font: inherit; color: inherit; }
 .seg button { padding: 5px 10px; border-radius: 10px; font-size: 12.5px; font-weight: 600; color: var(--muted); }
 .seg button.on { background: #fff; color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,.08); }
 
-/* ---------- Availability ---------- */
-.day { display: grid; grid-template-columns: 40px 1fr 44px; align-items: center; gap: 10px; padding: 10px 16px; position: relative; }
-.day + .day::before { content: ""; position: absolute; left: 16px; right: 16px; top: 0; height: 1px; background: var(--line); }
-.day .dn { font-weight: 600; font-size: 14px; }
-.day.weekend .dn { color: var(--blue-label); }
-.day .hrs { text-align: right; font-weight: 600; font-size: 14px; font-variant-numeric: tabular-nums; }
-.day .hrs.zero { color: var(--muted); font-weight: 500; }
-.day .when { grid-column: 2 / 4; display: flex; gap: 6px; margin-top: -2px; }
-.day .when button { font-size: 11.5px; font-weight: 600; padding: 3px 9px; border-radius: 10px; color: var(--muted); background: rgba(110, 115, 124, 0.08); }
-.day .when button.on { background: var(--blue-tint); color: var(--blue-label); }
-input[type="range"] { -webkit-appearance: none; appearance: none; width: 100%; height: 22px; background: transparent; margin: 0; }
-input[type="range"]::-webkit-slider-runnable-track { height: 4px; border-radius: 2px; background: linear-gradient(90deg, var(--blue) var(--p, 0%), var(--blue-track) var(--p, 0%)); }
-input[type="range"]::-moz-range-track { height: 4px; border-radius: 2px; background: linear-gradient(90deg, var(--blue) var(--p, 0%), var(--blue-track) var(--p, 0%)); }
-input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; border-radius: 11px; background: #fff; border: 1.5px solid var(--blue); box-shadow: var(--check-shadow); margin-top: -9px; }
-input[type="range"]::-moz-range-thumb { width: 20px; height: 20px; border-radius: 11px; background: #fff; border: 1.5px solid var(--blue); box-shadow: var(--check-shadow); }
-.week-total { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-top: 1px solid var(--line); }
-.week-total b { font-size: 15px; }
+/* ---------- Calendar connect ---------- */
+.cal-opt { display: flex; align-items: center; gap: 14px; width: 100%; text-align: left; padding: 15px 18px; position: relative; }
+.cal-opt + .cal-opt::before { content: ""; position: absolute; left: 18px; right: 18px; top: 0; height: 1px; background: var(--line); }
+.cal-opt .ic { flex: none; width: 36px; height: 36px; border-radius: 10px; background: var(--blue-tint); display: grid; place-items: center; }
+.cal-opt .main { flex: 1; }
+.cal-opt .n { font-weight: 600; font-size: 15.5px; display: block; }
+.cal-opt .m { font-size: 13px; color: var(--muted); display: block; margin-top: 3px; }
+.cal-opt .go { font-weight: 600; font-size: 14px; color: var(--blue); }
+.cal-opt.on .go { color: var(--blue-label); display: inline-flex; align-items: center; gap: 4px; }
+
+/* ---------- Availability (week grid) ---------- */
+.wk { padding: 12px 10px 8px 4px; }
+.wk-grid { display: grid; grid-template-columns: 30px repeat(7, 1fr); column-gap: 3px; touch-action: none; user-select: none; -webkit-user-select: none; }
+.wk-grid .dh { text-align: center; font-weight: 600; font-size: 12.5px; padding-bottom: 6px; }
+.wk-grid .dh.weekend { color: var(--blue-label); }
+.wk-grid .hl { font-size: 10.5px; color: var(--muted); text-align: right; padding-right: 5px; transform: translateY(-6px); font-variant-numeric: tabular-nums; }
+.wk-cell { height: 19px; background: rgba(110, 115, 124, 0.07); border-top: 1px solid rgba(255, 255, 255, 0.9); cursor: pointer; }
+.wk-cell.top { border-radius: 6px 6px 0 0; }
+.wk-cell.bot { border-radius: 0 0 6px 6px; }
+.wk-cell.on { background: var(--blue); }
+.wk-cell.on + .wk-cell.on, .wk-cell.on.join { border-top-color: rgba(255, 255, 255, 0.25); }
+.wk-cell.busy { cursor: not-allowed; background: repeating-linear-gradient(135deg, rgba(110, 115, 124, 0.16) 0 3px, rgba(110, 115, 124, 0.05) 3px 7px); }
+.wk-legend { display: flex; gap: 14px; padding: 10px 0 0 34px; font-size: 12px; color: var(--muted); }
+.wk-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; background: var(--blue); }
+.wk-legend i.busy { background: repeating-linear-gradient(135deg, rgba(110, 115, 124, 0.3) 0 2px, rgba(110, 115, 124, 0.08) 2px 4px); }
+.ranges { padding: 4px 16px 4px; }
+.ranges div { display: flex; gap: 12px; padding: 7px 0; font-size: 13.5px; }
+.ranges div + div { border-top: 1px solid var(--line); }
+.ranges b { width: 34px; flex: none; font-weight: 600; }
+.ranges span { color: var(--ink); }
+.ranges span.none { color: var(--muted); }
+.week-total { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 12px 16px; border-top: 1px solid var(--line); }
+.week-total b { font-size: 15px; white-space: nowrap; }
+.week-total .acts { display: flex; gap: 14px; }
+
+/* ---------- Date sheet ---------- */
+.badge.wrap { white-space: normal; text-align: right; max-width: 132px; line-height: 17px; }
+.cal { margin-top: 6px; }
+.cal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+.cal-head b { font-weight: 600; font-size: 15px; }
+.cal-head button { width: 36px; height: 36px; display: grid; place-items: center; border-radius: 18px; }
+.cal-head button img { width: 7px; height: 12px; }
+.cal-head button:disabled { opacity: 0.3; }
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); row-gap: 2px; text-align: center; }
+.cal-grid i { font-style: normal; font-size: 11.5px; font-weight: 600; color: var(--muted); padding: 2px 0 6px; }
+.cal-grid button { height: 36px; width: 36px; margin: 0 auto; border-radius: 18px; font-size: 14.5px; font-variant-numeric: tabular-nums; color: var(--ink); }
+.cal-grid button:disabled { color: #c3c6cb; }
+.cal-grid button.today { box-shadow: inset 0 0 0 1.5px var(--blue-track); font-weight: 600; }
+.cal-grid button.on { background: var(--blue); color: #fff; font-weight: 600; box-shadow: var(--check-shadow); }
+.day-pick { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-top: 8px; }
+.day-pick button { height: 52px; border-radius: 14px; background: rgba(255, 255, 255, 0.6); box-shadow: var(--chip-shadow); display: flex; flex-direction: column; align-items: center; justify-content: center; font-weight: 600; font-size: 15px; color: var(--ink); }
+.day-pick button small { font-size: 10px; font-weight: 500; color: var(--muted); margin-top: 1px; }
+.day-pick button.on { background: var(--blue); color: #fff; box-shadow: var(--check-shadow); }
+.day-pick button.on small { color: rgba(255, 255, 255, 0.8); }
+.sheet .label .linkish, .sheet .label .small { font-weight: 500; }
+.time-input { display: inline-flex; align-items: center; height: 38px; padding: 0 12px; border-radius: 19px; border: 1.2px dashed var(--dash); background: rgba(255, 255, 255, 0.25); }
+.time-input.on { border: 1.5px solid var(--blue); background: rgba(255, 255, 255, 0.85); }
+.time-input input { border: 0; background: transparent; font: inherit; font-size: 14px; font-weight: 600; color: var(--ink); outline: none; }
+.sheet { max-height: calc(100% - 40px); overflow-y: auto; }
+
 .linkish { color: var(--blue); font-weight: 600; font-size: 13px; }
 
 /* ---------- Split ---------- */

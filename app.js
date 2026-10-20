@@ -143,21 +143,65 @@ const DAY_FULL = { Mon: "Monday", Tue: "Tuesday", Wed: "Wednesday", Thu: "Thursd
 const WEIGHT_LABEL = { 1: "Light", 2: "Medium", 3: "Heavy" };
 const WEIGHT_HOURS = { 1: 1, 2: 3, 3: 6 }; // rough weekly hours, used for the fair split
 
-// Today is Tue Oct 20 in the prototype.
-const DATE_OPTS = ["Wed, Oct 21", "Thu, Oct 22", "Fri, Oct 23", "Sat, Oct 24", "Mon, Oct 26", "Thu, Oct 29"];
+// Today is Tue Oct 20, 2026 in the prototype. Dates are stored as "YYYY-MM-DD", times as "HH:MM".
+const TODAY = new Date(2026, 9, 20);
+const iso = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+const fromIso = (s) => { const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d); };
+const addDays = (n) => iso(new Date(TODAY.getFullYear(), TODAY.getMonth(), TODAY.getDate() + n));
+const fmtDate = (s) => fromIso(s).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+const hour12 = (h) => h % 12 || 12;
+const meridiem = (h) => (h % 24 < 12 ? "AM" : "PM");
+function fmtTime(t) {
+  if (!t) return "";
+  const [h, m] = t.split(":").map(Number);
+  return `${hour12(h)}${m ? `:${String(m).padStart(2, "0")}` : ""} ${meridiem(h)}`;
+}
+function repeatLabel(days) {
+  const set = DAYS.filter((d) => days.includes(d));
+  if (set.length === 7) return "Every day";
+  if (set.join() === "Mon,Tue,Wed,Thu,Fri") return "Weekdays";
+  if (set.join() === "Sat,Sun") return "Weekends";
+  return set.length === 1 ? `Every ${set[0]}` : set.join(", ");
+}
+const whenLabel = (t) => `${t.kind === "once" ? fmtDate(t.date) : repeatLabel(t.days)}${t.time ? ` · ${fmtTime(t.time)}` : ""}`;
+function spokenWhen(t) {
+  const day = t.kind === "once"
+    ? `on ${fromIso(t.date).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}`
+    : t.days.length === 7 ? "every day" : `every ${listWords(DAYS.filter((d) => t.days.includes(d)).map((d) => DAY_FULL[d]))}`;
+  return t.time ? `${day} at ${fmtTime(t.time)}` : day;
+}
 
 /* ---------- State ---------- */
+
+// Week grids are 7 days x 24 hourly cells. Blocks are [startHour, endHour).
+const HOURS = { from: 6, to: 22 };
+function weekOf(blocks) {
+  return DAYS.map((d) => {
+    const row = Array(24).fill(false);
+    (blocks[d] || []).forEach(([a, b]) => { for (let h = a; h < b; h++) row[h] = true; });
+    return row;
+  });
+}
+const SAMPLE_BUSY = { Mon: [[18, 19]], Tue: [[9, 17]], Wed: [[9, 17]], Thu: [[9, 17]], Fri: [[9, 17]], Sat: [[10, 11]] };
+function fmtRange(a, b) {
+  return meridiem(a) === meridiem(b) && b - a < 12 ? `${hour12(a)}–${hour12(b)} ${meridiem(b)}` : `${hour12(a)} ${meridiem(a)}–${hour12(b)} ${meridiem(b)}`;
+}
+function blocksOf(row) {
+  const out = [];
+  for (let h = 0; h < 24; h++) if (row[h] && !row[h - 1]) { let e = h; while (row[e]) e++; out.push([h, e]); }
+  return out;
+}
 
 const initialState = () => ({
   path: null, // "pebble" | "manual"
   screen: "welcome",
   history: [],
   lovedOne: "Dad",
-  condition: "hospice",
+  conditions: ["hospice"],
   them: ["comfort"],
   themOwn: "Being home for his granddaughter’s birthday.",
   you: ["alone", "inperson"],
-  tasks: [], // {id, n, w, k, cat, on, pebble, kind:"once"|"repeat", date, repeat, who}
+  tasks: [], // {id, n, w, k, cat, on, pebble, kind:"once"|"repeat", days, date, time, who}
   openCats: {},
   people: [
     { id: "you", name: "You", img: "avatar-you.png", tier: "main", note: "Main caregiver · your jar", cap: null },
@@ -166,7 +210,9 @@ const initialState = () => ({
     { id: "sam", name: "Sam", img: "avatar-sam.png", tier: "main", note: "Invite sent by text", cap: 4, invited: true },
     { id: "nora", name: "Nora", img: "avatar-nora.png", tier: "trusted", note: "Neighbor · trusted circle", cap: 3, invited: true },
   ],
-  avail: DAYS.map((d, i) => (i < 5 ? { h: 2, when: ["eve"] } : { h: i === 5 ? 5 : 3, when: ["am", "pm"] })),
+  cal: null, // connected calendar name
+  busy: weekOf({}),
+  free: weekOf({ Mon: [[10, 12], [13, 17]], Tue: [[18, 20]], Wed: [[18, 20]], Thu: [[18, 20]], Fri: [[18, 20]], Sat: [[13, 17]], Sun: [[13, 16]] }),
   strengths: ["phone", "paper"],
   plate: ["Work"],
   splitTouched: false,
@@ -178,8 +224,8 @@ let lastDir = "fwd";
 /* ---------- Flow ---------- */
 
 const FLOWS = {
-  pebble: ["about", "them", "you", "tasks", "dates", "people", "avail", "split", "review"],
-  manual: ["about", "tasks", "dates", "people", "avail", "split", "review"],
+  pebble: ["about", "them", "you", "tasks", "dates", "people", "calendar", "avail", "split", "review"],
+  manual: ["about", "tasks", "dates", "people", "calendar", "avail", "split", "review"],
 };
 const flow = () => FLOWS[S.path || "manual"];
 const stepIndex = () => flow().indexOf(S.screen);
@@ -209,32 +255,38 @@ function onEnter(screen) {
   if (screen === "split" && S.path === "pebble" && !S.splitTouched) suggestSplit();
 }
 
+// Merges the presets for every picked condition, skipping tasks that already appear under another one.
 function seedTasks() {
-  const preset = PRESETS[S.condition];
   let id = 0;
+  const seen = new Set();
   S.tasks = [];
   S.splitTouched = false;
   S.openCats = {};
-  Object.entries(preset).forEach(([cat, items], ci) => {
-    S.openCats[cat] = ci < 2;
-    items.forEach((t) => {
-      const pick = S.path === "pebble"
-        ? !!t.p || (t.wishes && S.them.includes("wishes")) || (t.k === "phone" && S.you.includes("far"))
-        : false;
-      S.tasks.push({
-        id: `t${id++}`, n: t.n, w: t.w, k: t.k, cat, on: pick, pebble: pick,
-        kind: t.r ? "repeat" : "once",
-        repeat: t.r || "Sat",
-        date: DATE_OPTS[(id + 1) % DATE_OPTS.length],
-        who: null,
+  S.conditions.forEach((c) => {
+    Object.entries(PRESETS[c]).forEach(([cat, items]) => {
+      if (!(cat in S.openCats)) S.openCats[cat] = Object.keys(S.openCats).length < 2;
+      items.forEach((t) => {
+        if (seen.has(t.n.toLowerCase())) return;
+        seen.add(t.n.toLowerCase());
+        const pick = S.path === "pebble"
+          ? !!t.p || (t.wishes && S.them.includes("wishes")) || (t.k === "phone" && S.you.includes("far"))
+          : false;
+        if (pick) S.openCats[cat] = true;
+        S.tasks.push({
+          id: `t${id++}`, n: t.n, w: t.w, k: t.k, cat, on: pick, pebble: pick,
+          kind: t.r ? "repeat" : "once",
+          days: t.r === "Daily" ? [...DAYS] : [t.r || "Sat"],
+          date: addDays(1 + (id % 9)),
+          time: "",
+          who: null,
+        });
       });
     });
-    if (S.path === "pebble" && items.some((t) => t.p)) S.openCats[cat] = true;
   });
 }
 const picked = () => S.tasks.filter((t) => t.on);
 const person = (id) => S.people.find((p) => p.id === id);
-const yourCap = () => S.avail.reduce((a, d) => a + d.h, 0);
+const yourCap = () => S.free.flat().filter(Boolean).length;
 const capOf = (p) => (p.id === "you" ? yourCap() : p.cap);
 
 function loads() {
@@ -246,7 +298,7 @@ function loads() {
 function hoursOf(t) {
   const base = WEIGHT_HOURS[t.w];
   if (t.kind === "once") return base * 0.5;
-  return t.repeat === "Daily" ? base * 2.5 : base;
+  return base * (0.6 + 0.4 * t.days.length);
 }
 
 // Greedy fair split: heaviest first, to whoever has the most room left. Strengths nudge "You".
@@ -350,12 +402,15 @@ SCREENS.about = () => `${topbar({ skip: false })}
     <h1 class="title">Who are you caring for?</h1>
     <p class="sub">This picks the starter tasks. You can change any of them.</p>
     <label class="card cond-name"><span>Name</span><input data-input="lovedOne" value="${esc(S.lovedOne)}" maxlength="20" aria-label="Their name"></label>
-    <p class="label">What are they facing?</p>
-    ${CONDITIONS.map((c) => `<button class="option ${S.condition === c.id ? "on" : ""}" data-act="condition" data-id="${c.id}">
-      <span class="txt"><span class="t">${c.t}</span><span class="d">${c.d}</span></span>${check(S.condition === c.id)}
-    </button>`).join("")}
+    <p class="label">What are they facing? <span class="small">Pick all that apply</span></p>
+    ${CONDITIONS.map((c) => {
+      const on = S.conditions.includes(c.id);
+      return `<button class="option ${on ? "on" : ""}" data-act="condition" data-id="${c.id}">
+      <span class="txt"><span class="t">${c.t}</span><span class="d">${c.d}</span></span>${check(on)}
+    </button>`;
+    }).join("")}
   </div>
-  ${footer("Next", { disabled: !S.lovedOne.trim() })}`;
+  ${footer("Next", { disabled: !S.lovedOne.trim() || !S.conditions.length })}`;
 
 SCREENS.them = () => `${topbar()}
   <div class="content">
@@ -396,9 +451,8 @@ SCREENS.you = () => `${topbar()}
   ${footer("See Pebble's task ideas")}`;
 
 SCREENS.tasks = () => {
-  const cats = Object.keys(PRESETS[S.condition]);
-  const extra = [...new Set(S.tasks.map((t) => t.cat))].filter((c) => !cats.includes(c));
-  const condName = CONDITIONS.find((c) => c.id === S.condition).t.toLowerCase();
+  const cats = [...new Set(S.tasks.map((t) => t.cat))];
+  const condName = listWords(S.conditions.map((id) => CONDITIONS.find((c) => c.id === id).t.toLowerCase()));
   const pebbleCount = S.tasks.filter((t) => t.pebble).length;
   return `${topbar({ skip: false })}
   <div class="content">
@@ -406,7 +460,7 @@ SCREENS.tasks = () => {
     <h1 class="title">What needs doing?</h1>
     <p class="sub">Common tasks for ${esc(condName)}. Tap to pick, tap the weight to change how big it is.</p>
     ${S.path === "pebble" ? `<div class="card r20 pebble-note"><img src="${A("pebble-icon.svg")}" alt=""><span class="small" style="color:var(--ink)">Pebble picked <b>${pebbleCount}</b> from your answers. Uncheck anything that doesn't fit.</span></div>` : ""}
-    ${[...cats, ...extra].map((cat) => {
+    ${cats.map((cat) => {
       const items = S.tasks.filter((t) => t.cat === cat);
       const n = items.filter((t) => t.on).length;
       const open = S.openCats[cat];
@@ -429,7 +483,7 @@ SCREENS.dates = () => {
   const rep = picked().filter((t) => t.kind === "repeat");
   const row = (t) => `<button class="date-row" data-act="editDate" data-id="${t.id}">
       <span class="main"><span class="n">${esc(t.n)}</span><span class="m">${weightPill(t.w)} ${t.kind === "once" ? "Happens once" : "Repeats"}</span></span>
-      <span class="badge">${t.kind === "once" ? t.date : t.repeat === "Daily" ? "Every day" : `Every ${t.repeat}`}</span>
+      <span class="badge wrap">${whenLabel(t)}</span>
       <img class="chev" src="${A("chevron.svg")}" alt="">
     </button>`;
   return `${topbar({ skip: false })}
@@ -469,22 +523,52 @@ SCREENS.people = () => {
   ${footer()}`;
 };
 
+const CAL_ICON = `<svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="#2F6FCB" stroke-width="1.6"><rect x="2.5" y="3.5" width="13" height="12" rx="2.5"/><path d="M2.5 7.5h13M6 2v3M12 2v3"/></svg>`;
+const CALENDARS = [["Google Calendar", "Your Google account"], ["Apple Calendar", "iCloud calendars on this phone"], ["Outlook", "Work or personal Microsoft account"]];
+
+SCREENS.calendar = () => `${topbar({ skip: false })}
+  <div class="content">
+    ${eyebrow("Your week")}
+    <h1 class="title">Bring in your calendar?</h1>
+    <p class="sub">Pebble fills in when you’re busy, so you only have to mark the free time.</p>
+    <div class="card r20">${CALENDARS.map(([n, m]) => `<button class="cal-opt ${S.cal === n ? "on" : ""}" data-act="connectCal" data-id="${n}">
+        <span class="ic">${CAL_ICON}</span>
+        <span class="main"><span class="n">${n}</span><span class="m">${S.cal === n ? "Busy times added" : m}</span></span>
+        <span class="go">${S.cal === n ? `<img src="${A("chip-check.svg")}" alt="" width="14" height="11">Connected` : "Connect"}</span>
+      </button>`).join("")}</div>
+    <p class="sub lock" style="margin-top:16px"><img src="${A("lock.svg")}" width="14" height="14" alt="">Shoal only sees busy or free, never what your events are.</p>
+    <p class="small">You can connect or disconnect later in settings.</p>
+  </div>
+  ${footer(S.cal ? "See my week" : "Skip, I’ll fill it in")}`;
+
 SCREENS.avail = () => {
-  const total = yourCap();
+  const rows = [];
+  for (let h = HOURS.from; h < HOURS.to; h++) rows.push(h);
+  const cell = (d, h) => {
+    const busy = S.busy[d][h], on = !busy && S.free[d][h];
+    const cls = ["wk-cell", on && "on", busy && "busy", h === HOURS.from && "top", h === HOURS.to - 1 && "bot"].filter(Boolean).join(" ");
+    return `<span class="${cls}" data-d="${d}" data-h="${h}"></span>`;
+  };
   return `${topbar({ skip: false })}
   <div class="content">
     ${eyebrow("Your week")}
     <h1 class="title">When are you free?</h1>
-    <p class="sub lock"><img src="${A("lock.svg")}" width="14" height="14" alt="">Private. Everyone sets their own when they join.</p>
-    <div class="card">
-      ${S.avail.map((d, i) => `<div class="day ${i > 4 ? "weekend" : ""}">
-        <span class="dn">${DAYS[i]}</span>
-        <input type="range" min="0" max="8" step="1" value="${d.h}" data-range="${i}" style="--p:${d.h / 8 * 100}%" aria-label="${DAYS[i]} hours free">
-        <span class="hrs ${d.h ? "" : "zero"}">${d.h ? `${d.h}${d.h === 8 ? "+" : ""}h` : "—"}</span>
-        ${d.h ? `<span class="when">${[["am", "Morning"], ["pm", "Afternoon"], ["eve", "Evening"]].map(([k, l]) => `<button class="${d.when.includes(k) ? "on" : ""}" data-act="when" data-day="${i}" data-k="${k}">${l}</button>`).join("")}</span>` : ""}
-      </div>`).join("")}
-      <div class="week-total"><button class="linkish" data-act="copyMon">Copy Monday to all weekdays</button><b>${total}h / week</b></div>
+    <p class="sub">Tap or drag to mark the times you could help.${S.cal ? ` Striped times are busy on your ${S.cal}.` : ""}</p>
+    <div class="card r20">
+      <div class="wk">
+        <div class="wk-grid" data-paint>
+          <span></span>${DAYS.map((d, i) => `<span class="dh ${i > 4 ? "weekend" : ""}">${d.slice(0, 2)}</span>`).join("")}
+          ${rows.map((h) => `<span class="hl">${h % 2 === 0 ? `${hour12(h)}${meridiem(h) === "AM" ? "a" : "p"}` : ""}</span>${DAYS.map((_, d) => cell(d, h)).join("")}`).join("")}
+        </div>
+        <div class="wk-legend"><span><i></i>Free</span>${S.cal ? `<span><i class="busy"></i>Busy</span>` : ""}</div>
+      </div>
+      <div class="ranges">${DAYS.map((d, i) => {
+        const bl = blocksOf(S.free[i]);
+        return `<div><b>${d}</b><span class="${bl.length ? "" : "none"}">${bl.length ? bl.map(([a, b]) => fmtRange(a, b)).join(", ") : "Not free"}</span></div>`;
+      }).join("")}</div>
+      <div class="week-total"><span class="acts"><button class="linkish" data-act="copyMon">Copy Mon to weekdays</button><button class="linkish" data-act="clearFree">Clear</button></span><b>${yourCap()}h / week</b></div>
     </div>
+    <p class="sub lock" style="margin-top:14px"><img src="${A("lock.svg")}" width="14" height="14" alt="">Private. Everyone sets their own when they join.</p>
     <p class="label">What you’re good at</p>
     <div class="chips">${STRENGTHS.map((s) => chip(s.t, S.strengths.includes(s.id), "strength", s.id)).join("")}</div>
     <p class="label">Anything else on your plate? <span class="private"><img src="${A("lock.svg")}" alt="">Private</span></p>
@@ -519,7 +603,7 @@ SCREENS.split = () => {
       </div>` : ""}
     ${picked().map((t) => `<div class="card task-card">
       <div class="head">${stone(!!t.who)}<span class="n">${esc(t.n)}</span>${weightPill(t.w)}</div>
-      <p class="meta">${t.kind === "once" ? `Once · ${t.date}` : t.repeat === "Daily" ? "Every day" : `Every ${t.repeat}`} · ${t.who ? esc(person(t.who).name) : "Unassigned"}</p>
+      <p class="meta">${t.kind === "once" ? "Once · " : ""}${whenLabel(t)} · ${t.who ? esc(person(t.who).name) : "Unassigned"}</p>
       <div class="pickers">
         ${helpers.map((p) => {
           const blocked = p.tier === "trusted" && t.w > 1;
@@ -573,10 +657,8 @@ SCREENS.review = () => {
     ? footer("Go to my jar", { act: "restart", backBtn: false })
     : footer(invitees.length ? `Send plan to ${listNames(invitees)}` : "Finish", { act: "send" })}`;
 };
-const listNames = (ps) => {
-  const n = ps.map((p) => p.name);
-  return n.length <= 2 ? n.join(" and ") : `${n.slice(0, -1).join(", ")}, and ${n.at(-1)}`;
-};
+const listWords = (n) => (n.length <= 2 ? n.join(" and ") : `${n.slice(0, -1).join(", ")}, and ${n.at(-1)}`);
+const listNames = (ps) => listWords(ps.map((p) => p.name));
 
 /* ---------- Sheets ---------- */
 
@@ -593,23 +675,58 @@ function closeSheet() {
   setTimeout(() => { if (!el.classList.contains("open")) el.innerHTML = ""; }, 300);
 }
 
+function monthGrid(t) {
+  const [y, m] = S._cal;
+  const first = new Date(y, m, 1);
+  const offset = (first.getDay() + 6) % 7; // Monday-first
+  const count = new Date(y, m + 1, 0).getDate();
+  const cells = Array.from({ length: offset }, () => `<span></span>`);
+  for (let d = 1; d <= count; d++) {
+    const date = new Date(y, m, d), id = iso(date);
+    const cls = [id === t.date && "on", id === iso(TODAY) && "today"].filter(Boolean).join(" ");
+    cells.push(`<button class="${cls}" data-act="pickDate" data-id="${id}" ${date < TODAY ? "disabled" : ""}>${d}</button>`);
+  }
+  const atStart = y === TODAY.getFullYear() && m === TODAY.getMonth();
+  return `<div class="cal">
+    <div class="cal-head">
+      <button data-act="calMove" data-id="-1" ${atStart ? "disabled" : ""} aria-label="Previous month"><img src="${A("chevron.svg")}" alt="" style="transform:scaleX(-1)"></button>
+      <b>${first.toLocaleDateString("en-US", { month: "long", year: "numeric" })}</b>
+      <button data-act="calMove" data-id="1" aria-label="Next month"><img src="${A("chevron.svg")}" alt=""></button>
+    </div>
+    <div class="cal-grid">${["M", "T", "W", "T", "F", "S", "S"].map((d) => `<i>${d}</i>`).join("")}${cells.join("")}</div>
+  </div>`;
+}
+
 function dateSheet(t) {
+  S._sheetTask = t.id;
+  if (!S._cal) { const d = fromIso(t.date); S._cal = [d.getFullYear(), d.getMonth()]; }
   openSheet(`<h3>${esc(t.n)}</h3>
     <p class="small">How often does this happen?</p>
     <div class="row-opts">${chip("Once", t.kind === "once", "setKind", "once")}${chip("Repeats", t.kind === "repeat", "setKind", "repeat")}</div>
-    <p class="label" style="margin-top:18px">${t.kind === "once" ? "Due" : "Every"}</p>
-    <div class="row-opts">${t.kind === "once"
-      ? DATE_OPTS.map((d) => chip(d, t.date === d, "setDate", d)).join("")
-      : ["Daily", ...DAYS].map((d) => chip(d === "Daily" ? "Every day" : d, t.repeat === d, "setRepeat", d)).join("")}</div>
+    ${t.kind === "once"
+      ? `<p class="label" style="margin-top:16px">Due <span class="small">${fmtDate(t.date)}</span></p>${monthGrid(t)}`
+      : `<p class="label" style="margin-top:16px">On these days <button class="linkish" data-act="allDays">${t.days.length === 7 ? "Just one day" : "Every day"}</button></p>
+         <div class="day-pick">${DAYS.map((d) => `<button class="${t.days.includes(d) ? "on" : ""}" data-act="toggleDay" data-id="${d}">${d[0]}<small>${d}</small></button>`).join("")}</div>`}
+    <p class="label" style="margin-top:16px">Time</p>
+    <div class="row-opts" style="align-items:center">
+      ${chip("Any time", !t.time, "anyTime", "")}
+      <label class="time-input ${t.time ? "on" : ""}"><input type="time" step="900" value="${t.time}" data-input="taskTime" aria-label="Time"></label>
+    </div>
     <button class="btn-primary" data-act="closeSheet">Done</button>`);
-  S._sheetTask = t.id;
+}
+
+const sheetTask = () => S.tasks.find((x) => x.id === S._sheetTask);
+function sheetEdit(fn) {
+  const t = sheetTask();
+  fn(t);
+  render();
+  dateSheet(t);
 }
 
 function stoneSheet(t) {
   const p = t.who && person(t.who);
-  const when = t.kind === "once" ? `due ${t.date}` : t.repeat === "Daily" ? "every day" : `every ${t.repeat}`;
   openSheet(`<div style="display:flex;align-items:center;gap:10px">${stone(!!t.who)}<h3 style="margin:0">${esc(t.n)}</h3></div>
-    <p class="small" style="margin:8px 0 0">${WEIGHT_LABEL[t.w]} task · ${when} · ${p ? esc(p.name) : "Unassigned"}</p>
+    <p class="small" style="margin:8px 0 0">${WEIGHT_LABEL[t.w]} task · ${t.kind === "once" ? "due " : ""}${whenLabel(t)} · ${p ? esc(p.name) : "Unassigned"}</p>
     <div class="actions">
       <button class="btn-soft" data-act="speak" data-id="${t.id}">▶ Play on pebble</button>
       <button class="btn-soft" data-act="locate" data-id="${t.id}">Make it glow</button>
@@ -621,13 +738,14 @@ function stoneSheet(t) {
 
 const NOTES = {
   welcome: ["Welcome", ["Jar art is now framed as “where you're headed”, not a split of tasks that don't exist yet.", "Manual path copy says tasks come first."]],
-  about: ["Care situation", ["New step. Starter tasks change by condition: hospice, dementia, cancer, aging.", "Name is used in later copy."]],
+  about: ["Care situation", ["New step. Starter tasks change by condition: hospice, dementia, cancer, aging.", "Pick more than one; their task lists merge without duplicates.", "Name is used in later copy."]],
   them: ["What matters to them", ["Pebble path only. Unchanged from v2, but answers now pre-pick tasks (e.g. “His wishes” adds the advance-directive task)."]],
   you: ["What matters to you", ["Pebble path only. “Helping from far away” leans Pebble toward phone and paperwork tasks."]],
   tasks: ["Tasks before people", ["Preset tasks by condition with a write-in at the bottom.", "Each task has a size (light, medium, heavy) that feeds the fair split.", "No one is assigned yet."]],
-  dates: ["Dates and repeats", ["Moved up, before people. Knowing when tasks happen lets the split match them to free time."]],
+  dates: ["Dates and repeats", ["Moved up, before people. Knowing when tasks happen lets the split match them to free time.", "One-time tasks pick a due date from a calendar. Repeating tasks can fall on several days.", "Either can have a time, or stay “any time”."]],
+  calendar: ["Calendar sync", ["Optional. Connecting Google, Apple, or Outlook pre-fills busy times on the next screen.", "Only busy/free is read, never event details. Connecting here is simulated."]],
   people: ["Who's helping", ["Says plainly that each main caregiver gets the app and a link by text.", "Trusted circle is a separate list, light tasks only."]],
-  avail: ["Per-day availability", ["Replaces the “a few hours / evenings / most days” buckets with a slider for each day.", "Weekdays and weekends are set separately, plus morning, afternoon, or evening."]],
+  avail: ["Weekly time blocks", ["A week grid replaces the per-day sliders. Tap or drag to paint free hours, like Mon 10 AM–12 PM and 1–5 PM.", "Busy times from a connected calendar are striped and can’t be painted.", "Free hours feed the fair split."]],
   split: ["The split, last", ["Load bars count heavier tasks as more hours.", "Pebble path arrives pre-split. Manual path can ask Pebble.", "If no one has room, it suggests the trusted circle or paid help instead of overloading someone."]],
   review: ["Jars, now earned", ["Jars fill with the tasks you just made.", "Tap a stone: voice playback and “make it glow” (locate) are shown up front, so the jar works without the app."]],
 };
@@ -675,7 +793,12 @@ function toast(msg) {
 const ACTIONS = {
   next, back,
   start: (d) => { S.path = d.path; S.tasks = []; go("about"); },
-  condition: (d) => { if (S.condition !== d.id) S.tasks = []; S.condition = d.id; render(); },
+  condition: (d) => {
+    const i = S.conditions.indexOf(d.id);
+    i >= 0 ? S.conditions.splice(i, 1) : S.conditions.push(d.id);
+    S.tasks = [];
+    render();
+  },
   toggleThem: (d) => {
     const i = S.them.indexOf(d.id);
     if (i >= 0) S.them.splice(i, 1);
@@ -689,10 +812,18 @@ const ACTIONS = {
   toggleTask: (d) => { const t = S.tasks.find((x) => x.id === d.id); t.on = !t.on; if (!t.on) t.who = null; render(); },
   weight: (d) => { const t = S.tasks.find((x) => x.id === d.id); t.w = (t.w % 3) + 1; render(); },
   openCat: (d) => { S.openCats[d.cat] = true; render(); },
-  editDate: (d) => dateSheet(S.tasks.find((x) => x.id === d.id)),
-  setKind: (d) => { const t = S.tasks.find((x) => x.id === S._sheetTask); t.kind = d.id; render(); dateSheet(t); },
-  setDate: (d) => { const t = S.tasks.find((x) => x.id === S._sheetTask); t.date = d.id; render(); dateSheet(t); },
-  setRepeat: (d) => { const t = S.tasks.find((x) => x.id === S._sheetTask); t.repeat = d.id; render(); dateSheet(t); },
+  editDate: (d) => { S._cal = null; dateSheet(S.tasks.find((x) => x.id === d.id)); },
+  setKind: (d) => sheetEdit((t) => { t.kind = d.id; }),
+  pickDate: (d) => sheetEdit((t) => { t.date = d.id; }),
+  calMove: (d) => { const [y, m] = S._cal; const n = new Date(y, m + +d.id, 1); S._cal = [n.getFullYear(), n.getMonth()]; dateSheet(sheetTask()); },
+  toggleDay: (d) => sheetEdit((t) => {
+    const i = t.days.indexOf(d.id);
+    if (i < 0) t.days.push(d.id);
+    else if (t.days.length > 1) t.days.splice(i, 1);
+    else toast("Pick at least one day");
+  }),
+  allDays: () => sheetEdit((t) => { t.days = t.days.length === 7 ? ["Mon"] : [...DAYS]; }),
+  anyTime: () => sheetEdit((t) => { t.time = ""; }),
   closeSheet,
   addPerson: () => { S._adding = true; S._addTier = "main"; render(); },
   addTier: (d) => {
@@ -700,8 +831,21 @@ const ACTIONS = {
     S._addTier = d.tier; render();
     const inp = document.querySelector('[data-form="person"] input'); if (inp) { inp.value = v; inp.focus(); }
   },
-  when: (d) => { const day = S.avail[+d.day]; const i = day.when.indexOf(d.k); i >= 0 ? day.when.splice(i, 1) : day.when.push(d.k); render(); },
-  copyMon: () => { for (let i = 1; i < 5; i++) S.avail[i] = { h: S.avail[0].h, when: [...S.avail[0].when] }; render(); toast("Copied Monday to Tue–Fri"); },
+  connectCal: (d) => {
+    if (S.cal === d.id) { S.cal = null; S.busy = weekOf({}); render(); return; }
+    S.cal = d.id;
+    S.busy = weekOf(SAMPLE_BUSY);
+    S.free = S.free.map((row, i) => row.map((on, h) => on && !S.busy[i][h]));
+    render();
+    toast(`${d.id} connected`);
+  },
+  copyMon: () => {
+    for (let i = 1; i < 5; i++) S.free[i] = S.free[0].map((on, h) => on && !S.busy[i][h]);
+    render();
+    const clash = S.free[0].some((on, h) => on && [1, 2, 3, 4].some((i) => S.busy[i][h]));
+    toast(clash ? "Copied, skipping times you're busy" : "Copied Monday to Tue–Fri");
+  },
+  clearFree: () => { S.free = weekOf({}); render(); },
   strength: (d) => { const i = S.strengths.indexOf(d.id); i >= 0 ? S.strengths.splice(i, 1) : S.strengths.push(d.id); render(); },
   plate: (d) => { const i = S.plate.indexOf(d.id); i >= 0 ? S.plate.splice(i, 1) : S.plate.push(d.id); render(); },
   assign: (d) => { const t = S.tasks.find((x) => x.id === d.id); t.who = d.who || null; S.splitTouched = true; render(); },
@@ -710,8 +854,7 @@ const ACTIONS = {
   speak: (d) => {
     const t = S.tasks.find((x) => x.id === d.id);
     const p = t.who && person(t.who);
-    const when = t.kind === "once" ? `due ${t.date}` : t.repeat === "Daily" ? "every day" : `every ${DAY_FULL[t.repeat]}`;
-    const line = `${t.n}. ${when}. ${p ? (p.id === "you" ? "This one is yours." : `${p.name} has this one.`) : "No one has this yet."}`;
+    const line = `${t.n}. ${t.kind === "once" ? "Due " : ""}${spokenWhen(t)}.${p ? (p.id === "you" ? "This one is yours." : `${p.name} has this one.`) : "No one has this yet."}`;
     if ("speechSynthesis" in window) { speechSynthesis.cancel(); speechSynthesis.speak(new SpeechSynthesisUtterance(line)); }
     toast(`🔊 “${line}”`);
   },
@@ -749,7 +892,7 @@ document.addEventListener("submit", (e) => {
   if (kind === "own") { S[f.dataset.key] = v; S._editing = false; render(); return; }
   if (!v) return;
   if (kind === "task") {
-    S.tasks.push({ id: `c${Date.now()}`, n: v, w: 2, k: "", cat: "Your own", on: true, kind: "once", repeat: "Sat", date: DATE_OPTS[1], who: null });
+    S.tasks.push({ id: `c${Date.now()}`, n: v, w: 2, k: "", cat: "Your own", on: true, kind: "once", days: ["Sat"], date: addDays(2), time: "", who: null });
     S.openCats["Your own"] = true;
     render();
     const c = document.querySelector(".content"); c.scrollTop = c.scrollHeight;
@@ -765,18 +908,12 @@ document.addEventListener("submit", (e) => {
 });
 
 document.addEventListener("input", (e) => {
-  const r = e.target.closest("[data-range]");
-  if (r) {
-    const d = S.avail[+r.dataset.range];
-    const was = d.h;
-    d.h = +r.value;
-    if (d.h && !d.when.length) d.when = ["eve"];
-    r.style.setProperty("--p", `${d.h / 8 * 100}%`);
-    const row = r.closest(".day");
-    row.querySelector(".hrs").textContent = d.h ? `${d.h}${d.h === 8 ? "+" : ""}h` : "—";
-    row.querySelector(".hrs").classList.toggle("zero", !d.h);
-    document.querySelector(".week-total b").textContent = `${yourCap()}h / week`;
-    if (!!was !== !!d.h) render(); // show/hide time-of-day row
+  if (e.target.dataset.input === "taskTime") {
+    // Update the task and the screen behind the sheet, but leave the sheet alone so the picker keeps focus.
+    sheetTask().time = e.target.value;
+    e.target.parentElement.classList.toggle("on", !!e.target.value);
+    document.querySelector('.sheet [data-act="anyTime"]')?.classList.toggle("on", !e.target.value);
+    render();
     return;
   }
   const t = e.target.closest("[data-input]");
@@ -805,3 +942,28 @@ function fit() {
 window.addEventListener("resize", fit);
 fit();
 render();
+
+// Drag to paint free time. The first cell decides whether the stroke adds or erases.
+let paint = null;
+function paintCell(el) {
+  if (!el?.matches?.(".wk-cell") || el.classList.contains("busy")) return;
+  S.free[+el.dataset.d][+el.dataset.h] = paint;
+  el.classList.toggle("on", paint);
+}
+document.addEventListener("pointerdown", (e) => {
+  const el = e.target.closest(".wk-cell");
+  if (!el || el.classList.contains("busy")) return;
+  e.preventDefault();
+  paint = !S.free[+el.dataset.d][+el.dataset.h];
+  paintCell(el);
+});
+document.addEventListener("pointermove", (e) => {
+  if (paint === null) return;
+  paintCell(document.elementFromPoint(e.clientX, e.clientY));
+});
+document.addEventListener("pointerup", () => {
+  if (paint === null) return;
+  paint = null;
+  render();
+});
+

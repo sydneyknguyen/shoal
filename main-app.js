@@ -80,7 +80,8 @@ function ensureAppData() {
   S.tasks.forEach((t) => {
     Object.assign(t, { done: t.done || false, steps: t.steps || [], notes: t.notes || "", remote: t.remote || false });
   });
-  S.stones = Array.from({ length: KIT }, (_, i) => ({ id: i + 1, task: null, battery: BATTERY[i] }));
+  // Jars and the base are powered, so a stone charges anywhere but "out" (on a table, in a bag).
+  S.stones = Array.from({ length: KIT }, (_, i) => ({ id: i + 1, task: null, battery: BATTERY[i], out: i === 3 }));
   // In the demo, the rest of the family has already paired a few of their own stones.
   if (demo) ["mom", "mom", "bill", "bill", "bill", "sam"].forEach((who) => {
     const t = S.tasks.find((x) => x.on && !x.done && x.who === who && !stoneOf(x));
@@ -130,7 +131,13 @@ function pairStone(taskId) {
   if (s) s.task = taskId;
   return s;
 }
-const lowBattery = () => S.stones.filter((s) => s.battery < 20);
+// Only stones away from a jar or the base can run down.
+const notCharging = () => S.stones.filter((s) => s.out);
+const lowBattery = () => notCharging().filter((s) => s.battery < 30);
+const inJar = (s) => { const t = taskOf(s); return t && t.who && person(t.who).tier === "main"; };
+const outLabel = (s) => (s.task ? "out of its jar" : "off the base");
+const placeOf = (s) => (s.out ? `${outLabel(s)[0].toUpperCase()}${outLabel(s).slice(1)} · not charging` : inJar(s) ? `In ${possessive(person(taskOf(s).who))} jar · charging` : "On the base · charging");
+const battLabel = (s) => (s.out ? `${s.battery}%` : `⚡ ${s.battery}%`);
 const WHY = { drive: "Lives nearby", phone: "Good on the phone", cook: "Likes to cook", meds: "Knows the meds", paper: "Good with paperwork", there: "Wants to be there" };
 const whyOf = (t, p) => t.why || (p.remote || t.remote ? "Can do it from anywhere" : WHY[t.k] || "Had free time then");
 
@@ -224,7 +231,7 @@ function firstTask() {
 
 SCREENS.ready = () => {
   const helpers = S.people.filter((p) => p.tier === "main").length;
-  const steps = [["Set up the jars", "One per person, about a minute"], ["Pair your first stone", "Tap it to one of your tasks"], ["Try it out", "Find, glow and charging"]];
+  const steps = [["Set up the jars", "One per person, about a minute"], ["Pair your first stone", "Tap it to one of your tasks"], ["Try it out", "Find a stone and see the glow"]];
   return `${setupTop(0)}
   <div class="content">
     <p class="eyebrow">Setup · about 5 minutes</p>
@@ -239,7 +246,7 @@ SCREENS.ready = () => {
 SCREENS.jars = () => {
   const main = S.people.filter((p) => p.tier === "main");
   const others = S.people.filter((p) => p.tier !== "main");
-  const steps = [["Plug in the base", "The round end charges spare stones"], ["Snap on one jar per person", "Use only as many as you need"], ["Write a name on each lid", listNames(main)]];
+  const steps = [["Plug in the base", "It powers the jars and charges spare stones"], ["Snap on one jar per person", "Use only as many as you need"], ["Write a name on each lid", listNames(main)]];
   return `${setupTop(1)}
   <div class="content">
     <p class="eyebrow">Step 1 of 8</p>
@@ -273,7 +280,7 @@ SCREENS.hold = () => {
     </div>
     ${t ? `<div class="card pair-to"><p class="eyebrow grey">Pairing it to</p>${taskLine(t, { act: "noop" })}</div>` : ""}
   </div>
-  ${solo("It's paired", "setupNext", ["Stone not lighting up?", "toast", 'data-msg="Set it on the round end of the base for 10 minutes, then try again"'], S.app.heard ? "" : "disabled")}`;
+  ${solo("It's paired", "setupNext", ["Stone not lighting up?", "toast", 'data-msg="Set it in a jar or on the base for 10 minutes, then try again"'], S.app.heard ? "" : "disabled")}`;
 };
 
 SCREENS.paired = () => {
@@ -324,14 +331,14 @@ SCREENS.glow = () => `${setupTop(6)}
 SCREENS.charge = () => `${setupTop(7)}
   <div class="content">
     <p class="eyebrow">Step 7 of 8 · Try it</p>
-    <h1 class="title">When it fades, charge it</h1>
-    <p class="sub">Set the stone on the round end of the base. It's full in about 2 hours. The app keeps working while a stone is off.</p>
+    <h1 class="title">Stones charge in the jar</h1>
+    <p class="sub">The jars sit on the base, so every stone charges while it's in a jar. Spare stones charge on the round end. You never have to move a stone just to charge it.</p>
     <div class="card stage-card">
-      <div class="fade-row"><span>${gem("done", { size: "m", cls: "faded" })}<small>Faded</small></span><span class="arrow">→</span><span>${gem("open", { size: "m" })}<small>Charged</small></span></div>
-      <span class="badge">About 2 hours to full</span>
       <div class="base"><i></i><i></i><i></i><b>${gem("open", { size: "s" })}</b></div>
-      <div class="base-caps"><small>Jars snap here</small><small class="blue">Round end charges</small></div>
+      <div class="base-caps"><small class="blue">Jars charge here</small><small class="blue">Spares charge here</small></div>
+      <div class="fade-row"><span>${gem("done", { size: "m", cls: "faded" })}<small>Left out, it fades</small></span><span class="arrow">→</span><span>${gem("open", { size: "m" })}<small>Back in a jar</small></span></div>
     </div>
+    <p class="small center">If a stone stays out, like on a table, we'll let you know before it runs low.</p>
   </div>
   ${solo("Got it", "setupNext")}`;
 
@@ -576,7 +583,7 @@ SCREENS.settings = () => {
     <p class="section-h">Family</p>
     <div class="card tlist">${row("Family setup", "Redo with Pebble or by hand", "redoSetup")}</div>
     <p class="section-h">Kit</p>
-    <div class="card tlist">${row("Stones", `${paired} paired · ${lowBattery().length} low battery`, "go", gem("urgent", { size: "xs" }), 'data-to="stones"')}
+    <div class="card tlist">${row("Stones", `${paired} paired · ${notCharging().length ? `${notCharging().length} not charging` : "all charging"}`, "go", notCharging().length ? gem("urgent", { size: "xs" }) : "", 'data-to="stones"')}
       ${row("Jar glow", GLOW[S.app.prefs.glow || "on"], "glowSheet")}
       <div class="srow"><span class="tl-txt"><span class="n">Glow at night</span><span class="m">${S.app.prefs.night ? "Off 10 PM – 7 AM" : "Glows all night"}</span></span>${toggle(!S.app.prefs.night, "pref", "night")}</div></div>
     <p class="section-h">Together</p>
@@ -591,26 +598,26 @@ SCREENS.settings = () => {
 SCREENS.stones = () => {
   const f = S.app.stoneFilter;
   const paired = S.stones.filter((s) => s.task);
-  const keep = (s) => (f === "unpaired" ? !s.task : f === "low" ? s.battery < 20 : true);
+  const keep = (s) => (f === "unpaired" ? !s.task : f === "out" ? s.out : true);
   const groups = [];
+  const out = S.stones.filter((s) => s.out && keep(s));
+  if (out.length) groups.push(["Not charging", out]);
   S.people.filter((p) => p.tier === "main").forEach((p) => {
-    const list = S.stones.filter((s) => { const t = taskOf(s); return t && t.who === p.id && keep(s); });
+    const list = S.stones.filter((s) => !s.out && inJar(s) && taskOf(s).who === p.id && keep(s));
     if (list.length) groups.push([p.id === "you" ? "In your jar" : `In ${p.name}'s jar`, list]);
   });
-  const loose = S.stones.filter((s) => { const t = taskOf(s); return t && (!t.who || person(t.who).tier !== "main") && keep(s); });
-  if (loose.length) groups.push(["Glowing on the shelf", loose]);
-  const charger = S.stones.filter((s) => !s.task && keep(s));
-  if (charger.length) groups.push(["On the charger", charger]);
+  const base = S.stones.filter((s) => !s.out && !inJar(s) && keep(s));
+  if (base.length) groups.push(["On the base", base]);
   const card = (s) => {
     const t = taskOf(s);
     return `<button class="card stone-card" data-act="openStone" data-id="${s.id}">${t ? gemOf(t, { size: "m" }) : gem("open", { size: "m", cls: "dim" })}
-      <b>Stone ${String(s.id).padStart(2, "0")}</b><small>${t ? esc(t.n) : "Not paired"}</small><span class="batt ${s.battery < 20 ? "low" : ""}">${s.battery}%</span></button>`;
+      <b>Stone ${String(s.id).padStart(2, "0")}</b><small>${t ? esc(t.n) : "Not paired"}</small><span class="batt ${s.out ? "low" : ""}">${battLabel(s)}</span></button>`;
   };
   return `${navtop("Settings", `<button class="btn-soft sm" data-act="pairSheet">Pair a stone</button>`)}
   <div class="content">
     <h1 class="title">Stones</h1>
-    <p class="sub">${KIT} stones · ${paired.length} paired · ${lowBattery().length} low battery</p>
-    <div class="chips">${[["all", "All"], ["unpaired", `Unpaired ${KIT - paired.length}`], ["low", `Low battery ${lowBattery().length}`]].map(([id, l]) => chip(l, f === id, "stoneFilter", id)).join("")}</div>
+    <p class="sub">${KIT} stones · ${paired.length} paired. Stones charge in the jars and on the base.</p>
+    <div class="chips">${[["all", "All"], ["unpaired", `Unpaired ${KIT - paired.length}`], ["out", `Not charging ${notCharging().length}`]].map(([id, l]) => chip(l, f === id, "stoneFilter", id)).join("")}</div>
     ${groups.map(([h, list]) => `<p class="section-h">${h}</p><div class="stone-grid">${list.map(card).join("")}</div>`).join("") || `<p class="small empty">No stones here.</p>`}
   </div>`;
 };
@@ -619,14 +626,15 @@ SCREENS.stoneDetail = () => {
   const s = S.stones.find((x) => x.id === S.app.stone);
   const t = taskOf(s);
   const st = t ? stateOf(t) : "open";
-  const where = t ? (t.who && person(t.who).tier === "main" ? `In ${possessive(person(t.who))} jar` : "On the shelf") : "On the charger";
+  const where = placeOf(s);
   return `${navtop("Stones", `<button class="btn-soft sm" data-act="toast" data-msg="Renaming is coming soon">Rename</button>`)}
   <div class="content">
     <div class="card stage-card tall ${S.app.blink === `s${s.id}` ? "blinking" : ""}">${t ? gemOf(t, { size: "xl", cls: "breathe" }) : gem("open", { size: "xl", cls: "dim" })}</div>
     <h1 class="title center">Stone ${String(s.id).padStart(2, "0")}</h1>
     <p class="small center">${where} · last seen 2 min ago</p>
-    <div class="badges center">${t ? `<span class="badge ${st === "urgent" ? "amber" : ""}">${st === "done" ? "Resting" : `Glowing · ${STATE[st][0].toLowerCase()}`}</span>` : `<span class="badge plain">Charging</span>`}
-      <span class="badge plain ${s.battery < 20 ? "low" : ""}">▮ ${s.battery}% · about ${Math.max(1, Math.round(s.battery / 25))} day${s.battery < 38 ? "" : "s"}</span></div>
+    <div class="badges center">${t ? `<span class="badge ${st === "urgent" ? "amber" : ""}">${st === "done" ? "Resting" : `Glowing · ${STATE[st][0].toLowerCase()}`}</span>` : `<span class="badge plain">Spare</span>`}
+      <span class="badge plain ${s.out ? "low" : ""}">${s.out ? `▮ ${s.battery}% · about ${Math.max(1, Math.round(s.battery / 25))} day${s.battery < 38 ? "" : "s"} left` : `⚡ ${s.battery}% · charging`}</span></div>
+    ${s.out ? `<div class="card info">${gem("done", { size: "xs" })}<span class="small">Put it back in a jar or on the base and it charges on its own.</span></div>` : ""}
     <button class="btn-ghost wide" data-act="blinkStone" data-id="${s.id}">Make it blink to find it</button>
     <p class="section-h">Paired to</p>
     ${t ? `<div class="card pair-to">${taskLine(t, { trail: chev })}</div>` : `<button class="card give-stone" data-act="pairSheet"><span class="plus-box"><img src="${A("plus.svg")}" alt=""></span><span class="tl-txt"><span class="n">Pair it to a task</span><span class="m">It glows as soon as it's paired</span></span>${chev}</button>`}
@@ -712,28 +720,42 @@ SCREENS.recap = () => {
   ${solo("Send thanks to everyone", "thankAll")}`;
 };
 
-// Everything that needs you, or is just nice to know, newest first.
+// Each kind of notification gets its own badge, so a glance tells you what it is.
+const NOTIF = {
+  urgent: ["Urgent", `<path d="M12 7v6M12 16.5v.5"/>`],
+  request: ["Handoff request", `<path d="M4 9h13l-3.5-3.5M20 15H7l3.5 3.5"/>`],
+  done: ["Finished", `<path d="m6 12.5 4 4 8-9"/>`],
+  thanks: ["Thank-you", `<path d="M12 19s-7-4.3-7-9.2A3.8 3.8 0 0 1 12 7.5a3.8 3.8 0 0 1 7 2.3C19 14.7 12 19 12 19z"/>`],
+  kit: ["Stone", `<rect x="4" y="8" width="14" height="8" rx="2"/><path d="M20 11v2M7 11v2"/>`],
+};
+const nfBadge = (k) => `<span class="nf-badge nb-${k}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">${NOTIF[k][1]}</svg></span>`;
+
+// Things that need you first, then updates.
 function notifications() {
   const others = S.people.filter((p) => p.id !== "you");
   const list = [];
-  active().filter(isUrgent).slice(0, 2).forEach((t) => list.push({ kind: "urgent", when: "Now", gem: gemOf(t, { size: "s" }), n: `${t.n} is ${dueLabel(t)}`, m: t.who ? `${nameOf(t.who)} has it` : "No one has it yet", act: "openTask", id: t.id }));
-  S.app.requests.forEach((r) => list.push({ kind: "request", when: "Today", who: person(r.from), n: `${nameOf(r.from)} asked you to take “${r.n}”`, m: r.note, act: "review", id: r.id }));
-  S.tasks.filter((t) => t.done && t.doneAt && t.who !== "you").forEach((t) => list.push({ kind: "done", when: t.doneAt.split(",")[0], who: person(t.who), n: `${nameOf(t.who)} finished “${t.n}”`, m: S.app.thanked[t.id] ? "You said thanks" : "Say thanks", act: S.app.thanked[t.id] ? "openTask" : "sayThanks", id: t.id }));
+  S.app.requests.forEach((r) => list.push({ kind: "request", needs: true, cta: "Review", when: "Today", who: person(r.from), n: `${nameOf(r.from)} asked you to take “${r.n}”`, m: r.note, act: "review", id: r.id }));
+  active().filter(isUrgent).slice(0, 2).forEach((t) => list.push({ kind: "urgent", needs: t.who === "you" || !t.who, cta: "Open", when: "Now", gem: gemOf(t, { size: "s" }), n: `${t.n} is ${dueLabel(t)}`, m: t.who ? `${t.who === "you" ? "You have" : `${nameOf(t.who)} has`} it` : "No one has it yet", act: "openTask", id: t.id }));
+  S.tasks.filter((t) => t.done && t.doneAt && t.who !== "you").forEach((t) => list.push({ kind: "done", when: t.doneAt.split(",")[0], who: person(t.who), n: `${nameOf(t.who)} finished “${t.n}”`, m: S.app.thanked[t.id] ? "You said thanks" : "Tap to say thanks", act: S.app.thanked[t.id] ? "openTask" : "sayThanks", id: t.id }));
   if (others[1] || others[0]) list.push({ kind: "thanks", when: "Today", who: others[1] || others[0], n: `${(others[1] || others[0]).name} thanked you`, m: "“Thanks for covering the pharmacy call. I owe you one.”" });
   if (others[0]) list.push({ kind: "thanks", when: "Yesterday", who: others[0], n: `${others[0].name} sent you a heart`, m: "For picking up groceries" });
-  if (lowBattery().length) list.push({ kind: "kit", when: "Yesterday", gem: gem("done", { size: "s" }), n: `${lowBattery().length} stone${lowBattery().length === 1 ? " is" : "s are"} low on battery`, m: "Set them on the base to charge", act: "go", to: "stones" });
+  lowBattery().forEach((st) => list.push({ kind: "kit", needs: true, cta: "Find", when: "1h ago", gem: gem("done", { size: "s", cls: "faded" }), n: `Stone ${String(st.id).padStart(2, "0")} is ${outLabel(st)}`, m: `${st.battery}% and not charging. Put it back in a jar or on the base.`, act: "openStone", id: st.id }));
   return list;
 }
 
 SCREENS.notifications = () => {
   const list = notifications();
+  const row = (x) => `<button class="notif ${x.kind} ${x.needs ? "needs" : ""}" ${x.act ? `data-act="${x.act}" data-id="${x.id || ""}"` : "disabled"}>
+      <span class="nf-icon">${x.who ? avatar(x.who, "s36") : `<span class="nf-tile">${x.gem}</span>`}${nfBadge(x.kind)}</span>
+      <span class="tl-txt"><span class="nf-kind">${NOTIF[x.kind][0]} · ${x.when}</span><span class="n">${esc(x.n)}</span><span class="m">${esc(x.m)}</span></span>
+      ${x.needs && x.cta ? `<span class="pill-btn">${x.cta}</span>` : ""}</button>`;
+  const needs = list.filter((x) => x.needs), rest = list.filter((x) => !x.needs);
   return `${navtop("Home")}
   <div class="content">
     <h1 class="title">Notifications</h1>
-    ${list.length ? `<div class="card tlist notif-list">${list.map((x) => `<button class="notif ${x.kind}" ${x.act ? `data-act="${x.act}" data-id="${x.id || ""}" ${x.to ? `data-to="${x.to}"` : ""}` : "disabled"}>
-      <span class="nf-icon">${x.who ? avatar(x.who, "s36") : x.gem}</span>
-      <span class="tl-txt"><span class="n">${esc(x.n)}</span><span class="m">${esc(x.m)}</span></span><span class="small">${x.when}</span></button>`).join("")}</div>`
-      : `<div class="card empty-card"><p class="small">Nothing new.</p></div>`}
+    ${needs.length ? `<p class="section-h">Needs you</p><div class="notif-needs">${needs.map(row).join("")}</div>` : ""}
+    ${rest.length ? `<p class="section-h">Updates</p><div class="card tlist notif-list">${rest.map(row).join("")}</div>` : ""}
+    ${!list.length ? `<div class="card empty-card"><p class="small">Nothing new.</p></div>` : ""}
     <p class="small center">Choose what you get in Settings.</p>
   </div>`;
 };
@@ -761,7 +783,7 @@ Object.assign(NOTES, {
   paired: ["Paired", ["Pairs to your most urgent task, so the first glow means something."]],
   find: ["Find a stone", ["Tap Find stone and its stone blinks in the jar."]],
   glow: ["What the glow means", ["Honey = urgent, ice blue = in progress, white = unassigned, off = done.", "Light stones are one-time, dark stones are ongoing."]],
-  charge: ["Charging", ["Round end of the base charges. The app keeps working while a stone is off."]],
+  charge: ["Charging", ["The base powers the jars, so stones charge in a jar or on the base. No moving stones around to charge.", "Only a stone left out (on a table, in a bag) runs down, and the app warns you."]],
   pairRest: ["Pair the rest", ["Optional. Anyone can pair their own stones later."]],
   home: ["Home", ["Urgent first, then the family jars and this week. No section labels, so it reads at a glance.", "The bulb on the jars dims or turns off the glow. The bell opens notifications."]],
   myjar: ["My jar", ["One-time and ongoing tasks, plus requests from family.", "Tick a task to mark it done."]],
@@ -772,13 +794,13 @@ Object.assign(NOTES, {
   peopleTab: ["People", ["Everyone's jars and progress, plus the extended circle."]],
   person: ["A person's tasks, and why", ["Each task says why Pebble suggested that person."]],
   settings: ["Settings", ["Family setup, stones, glow at night, recaps, and what Pebble can see."]],
-  stones: ["Stones", ["All 14 stones grouped by jar, with battery. Filter to unpaired or low battery."]],
+  stones: ["Stones", ["All 14 stones by where they are: in a jar, on the base, or out and not charging."]],
   stoneDetail: ["Stone detail", ["Make it blink, see what it's paired to, or unpair it."]],
   done: ["Marked done", ["A quiet celebration, with a prompt to thank whoever helped."]],
   thanks: ["Say thanks", ["One tap, optional note. Their jar gives a soft glow."]],
   clear: ["Jar is clear", ["When everything of yours is done."]],
   recap: ["Weekly recap", ["Sunday recap. No streaks or rankings, only what went well."]],
-  notifications: ["Notifications", ["Urgent tasks, requests from family, things others finished, thank-yous, and low batteries.", "Each one opens the place you'd act on it."]],
+  notifications: ["Notifications", ["Needs you: handoff requests, your urgent tasks, a stone left out of its jar. Each has a button.", "Updates: things others finished and thank-yous. A badge on each picture shows the kind."]],
   recapSettings: ["Thank-yous and recaps", ["Turn each one off, or go quiet for a while."]],
 });
 
@@ -992,7 +1014,7 @@ Object.assign(ACTIONS, {
     toast(`Stone ${String(d.id).padStart(2, "0")} is blinking`);
     setTimeout(() => { if (S.app.blink === `s${d.id}`) { S.app.blink = null; render(); } }, 3000);
   },
-  unpair: (d) => { S.stones.find((s) => s.id === +d.id).task = null; back(); toast("Stone unpaired. Set it on the charger."); },
+  unpair: (d) => { S.stones.find((s) => s.id === +d.id).task = null; back(); toast("Stone unpaired. Keep it on the base as a spare."); },
   sayThanks: (d) => {
     const t = S.tasks.find((x) => x.id === d.id);
     S.app.thankFor = { who: t.who, n: t.n, when: t.doneAt || "Today", task: t.id };

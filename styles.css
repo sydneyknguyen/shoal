@@ -1321,3 +1321,7 @@ button, input, textarea { touch-action: manipulation; -webkit-tap-highlight-colo
 /* Write-ins sit one even step below the options; "No preference" is set apart as the alternative */
 .option + .write-own { margin-top: 0; }
 .write-own + .opt-none { margin-top: 22px; }
+
+/* Kids & teens tab */
+.kid-note { display: flex; flex-direction: column; gap: 4px; padding: 14px 16px; margin-bottom: 4px; }
+.kid-note b { font-size: 15px; font-weight: 600; }

@@ -15,7 +15,8 @@ const CONDITIONS = [
 
 // w = weight (1 light, 2 medium, 3 heavy). k = skill tag. r = repeats by default ("Needed" = only as it comes up).
 // c = only suggested for these conditions (none = everyone). p = Pebble pre-picks it.
-// wishes / far = Pebble pre-picks it when those answers are chosen. y = kid-friendly.
+// wishes / far = Pebble pre-picks it when those answers are chosen. Tasks in "Kids & teens" get y (kid task).
+const KID_CAT = "Kids & teens";
 const TASK_LIBRARY = {
   Medical: [
     { n: "Refill prescriptions", w: 1, k: "meds", p: 1 },
@@ -43,15 +44,15 @@ const TASK_LIBRARY = {
     { n: "Overnight stays", w: 3, k: "there", r: "Fri" },
     { n: "Give the main caregiver a night off", w: 3, k: "there", p: 1, r: "Fri" },
     { n: "Visit and keep them company", w: 1, k: "there", r: "Sun" },
-    { n: "Phone or video calls", w: 1, k: "phone", r: "Wed", y: 1 },
-    { n: "Music, reading, old photos", w: 1, k: "there", y: 1 },
-    { n: "Games and puzzles", w: 1, k: "there", y: 1 },
+    { n: "Phone or video calls", w: 1, k: "phone", r: "Wed" },
+    { n: "Music, reading, old photos", w: 1, k: "there" },
+    { n: "Games and puzzles", w: 1, k: "there" },
     { n: "A walk or outing", w: 2, k: "there", r: "Sat" },
     { n: "Keep family updated", w: 1, k: "phone", r: "Fri", far: 1 },
     { n: "Repositioning for comfort", w: 2, k: "there", r: "Daily", c: ["hospice"] },
-    { n: "Record stories and memories", w: 1, k: "there", c: ["hospice"], y: 1 },
+    { n: "Record stories and memories", w: 1, k: "there", c: ["hospice"] },
     { n: "Watch for wandering", w: 2, k: "there", c: ["dementia"] },
-    { n: "Memory activities", w: 1, k: "there", c: ["dementia"], y: 1 },
+    { n: "Memory activities", w: 1, k: "there", c: ["dementia"] },
     { n: "Chemo day company", w: 2, k: "there", c: ["cancer"] },
   ],
   "Home & meals": [
@@ -61,12 +62,12 @@ const TASK_LIBRARY = {
     { n: "Order meal delivery", w: 1, k: "phone", far: 1 },
     { n: "Cleaning", w: 2, k: "there", r: "Thu" },
     { n: "Laundry", w: 1, k: "there", r: "Mon" },
-    { n: "Trash and recycling", w: 1, k: "there", r: "Tue", y: 1 },
-    { n: "Yard work and snow", w: 2, k: "there", y: 1 },
+    { n: "Trash and recycling", w: 1, k: "there", r: "Tue" },
+    { n: "Yard work and snow", w: 2, k: "there" },
     { n: "Safety check: rails, rugs, lights", w: 2, k: "there" },
-    { n: "Pet care", w: 1, k: "there", r: "Daily", y: 1 },
-    { n: "Get the mail and water plants", w: 1, k: "there", r: "Wed", y: 1 },
-    { n: "Keep snacks and water nearby", w: 1, k: "cook", y: 1 },
+    { n: "Pet care", w: 1, k: "there", r: "Daily" },
+    { n: "Get the mail and water plants", w: 1, k: "there", r: "Wed" },
+    { n: "Keep snacks and water nearby", w: 1, k: "cook" },
     { n: "Easy-on-the-stomach meals", w: 2, k: "cook", p: 1, c: ["cancer"] },
     { n: "Soft foods and thickened drinks", w: 1, k: "cook", c: ["hospice", "dementia"] },
     { n: "Set up a hospital bed or equipment", w: 3, k: "there", c: ["hospice", "other"] },
@@ -82,7 +83,7 @@ const TASK_LIBRARY = {
     { n: "Get a disability parking placard", w: 1, k: "paper" },
     { n: "Car upkeep", w: 1, k: "drive", r: "Needed" },
     { n: "Pick up visiting family", w: 2, k: "drive", r: "Needed" },
-    { n: "Come along to carry bags", w: 1, k: "there", y: 1 },
+    { n: "Come along to carry bags", w: 1, k: "there" },
     { n: "Day program pickups", w: 2, k: "drive", r: "Tue", c: ["dementia"] },
     { n: "Take over the car keys", w: 2, k: "there", c: ["dementia", "aging"] },
   ],
@@ -100,6 +101,21 @@ const TASK_LIBRARY = {
     { n: "Memorial plans", w: 3, k: "paper", c: ["hospice"] },
     { n: "Medical leave paperwork for work", w: 2, k: "paper", c: ["cancer", "other"] },
   ],
+  // Kids and teens get their own small list. Nice to have: nothing here is ever urgent, and a missed
+  // one doesn't weigh on anyone's share. kp = Pebble picks it when a kid or teen is helping.
+  "Kids & teens": [
+    { n: "Call or video chat", w: 1, k: "there", r: "Sun", kp: 1 },
+    { n: "Make a card or drawing", w: 1, k: "there", kp: 1 },
+    { n: "Read or play a game together", w: 1, k: "there", r: "Sat", kp: 1 },
+    { n: "Bring in the mail", w: 1, k: "there", r: "Daily" },
+    { n: "Water the plants", w: 1, k: "there", r: "Wed" },
+    { n: "Feed or walk the pets", w: 1, k: "there", r: "Daily" },
+    { n: "Help set the table", w: 1, k: "cook", r: "Sun" },
+    { n: "Share photos and school news", w: 1, k: "phone", r: "Fri" },
+    { n: "Help carry groceries", w: 1, k: "there", r: "Sat" },
+    { n: "Look at old photos together", w: 1, k: "there", c: ["dementia", "aging"] },
+    { n: "Record a story or song", w: 1, k: "there", c: ["hospice"] },
+  ]
 };
 
 const MATTERS_THEM = [
@@ -280,10 +296,11 @@ function seedTasks() {
   Object.entries(TASK_LIBRARY).forEach(([cat, items]) => {
     items.forEach((t) => {
       if (t.c && !t.c.some((c) => S.conditions.includes(c))) return;
+      const kids = S.people.some((p) => p.tier === "kid");
       const pick = S.path === "pebble"
-        && (!!t.p || (t.wishes && S.them.includes("wishes")) || (t.far && S.you.includes("far")));
+        && (!!t.p || (t.wishes && S.them.includes("wishes")) || (t.far && S.you.includes("far")) || (t.kp && kids));
       S.tasks.push({
-        id: `t${id++}`, n: t.n, w: t.w, k: t.k, y: !!t.y, cat, on: pick, pebble: pick,
+        id: `t${id++}`, n: t.n, w: t.w, k: t.k, y: cat === KID_CAT, cat, on: pick, pebble: pick,
         kind: t.r ? "repeat" : "once",
         days: t.r === "Daily" ? [...DAYS] : t.r === "Needed" ? [] : [t.r || "Sat"],
         date: addDays(1 + (id % 9)),
@@ -306,20 +323,23 @@ function loads() {
   return out;
 }
 function hoursOf(t) {
+  if (t.y) return 0; // nice to have; never part of the fair split
   const base = WEIGHT_HOURS[t.w];
   if (t.kind === "once") return base * 0.5;
   return base * (0.6 + 0.4 * t.days.length);
 }
 
-// Trusted circle only gets light tasks; kids and teens only get kid-friendly ones.
+// Trusted circle only gets light tasks; kids and teens only get kid tasks.
 const canTake = (p, t) => (p.tier === "trusted" ? t.w === 1 : p.tier === "kid" ? t.y : true);
-const TIER_NOTE = { main: "Invite sent by text", trusted: "Invite sent by text", kid: "Kid-friendly tasks only" };
+const TIER_NOTE = { main: "Invite sent by text", trusted: "Invite sent by text", kid: "Kid tasks only" };
 
 // Greedy fair split: heaviest first, to whoever has the most room left. Preferences nudge "You" toward or away.
 function suggestSplit() {
   const load = {};
   S.people.forEach((p) => (load[p.id] = 0));
-  const tasks = picked().slice().sort((a, b) => hoursOf(b) - hoursOf(a));
+  const kids = S.people.filter((p) => p.tier === "kid");
+  picked().filter((t) => t.y).forEach((t, i) => { t.who = kids.length ? kids[i % kids.length].id : null; });
+  const tasks = picked().filter((t) => !t.y).sort((a, b) => hoursOf(b) - hoursOf(a));
   tasks.forEach((t) => {
     let best = null, bestScore = Infinity;
     S.people.forEach((p) => {
@@ -521,8 +541,8 @@ SCREENS.tasks = () => {
   const rest = items.filter((t) => !top.includes(t)), restOn = rest.filter((t) => t.on).length;
   const open = !top.length || S.moreOpen?.[tab];
   const taskRow = (t) => `<div class="row ${t.on ? "on" : ""}">
-        <button data-act="toggleTask" data-id="${t.id}" style="display:flex;align-items:center;gap:12px;flex:1;text-align:left">${check(t.on)}<span class="name">${esc(t.n)}${t.y ? `<span class="tag kid">Kid-friendly</span>` : ""}</span></button>
-        <button data-act="weight" data-id="${t.id}" aria-label="Change size">${weightPill(t.w)}</button>
+        <button data-act="toggleTask" data-id="${t.id}" style="display:flex;align-items:center;gap:12px;flex:1;text-align:left">${check(t.on)}<span class="name">${esc(t.n)}</span></button>
+        ${t.y ? "" : `<button data-act="weight" data-id="${t.id}" aria-label="Change size">${weightPill(t.w)}</button>`}
       </div>`;
   return `${topbar({ skip: false })}
   <div class="content">
@@ -534,6 +554,7 @@ SCREENS.tasks = () => {
       const n = S.tasks.filter((t) => t.cat === c && t.on).length;
       return `<button role="tab" class="${c === tab ? "on" : ""}" aria-selected="${c === tab}" data-act="taskTab" data-id="${esc(c)}">${esc(c)}${n ? `<b>${n}</b>` : ""}</button>`;
     }).join("")}</div>
+    ${tab === KID_CAT ? `<div class="card r20 kid-note"><b>Small ways kids and teens can help</b><span class="small">Nice to have, never urgent. If one gets missed, it doesn't count against anyone.</span></div>` : ""}
     <div class="group-head"><p class="eyebrow grey">${top.length ? "Pebble's picks" : esc(tab)}</p><span class="count">${items.filter((t) => t.on).length} of ${items.length} picked</span></div>
     ${top.length ? `<div class="card r20"><div class="list">${top.map(taskRow).join("")}</div></div>` : ""}
     ${rest.length ? (top.length ? `<button class="more-toggle" data-act="moreTasks" aria-expanded="${open}">
@@ -597,7 +618,7 @@ function weekPreview() {
 const PEOPLE_GROUPS = [
   { tier: "main", t: "Main caregivers", hint: "Get the app, a jar, and stones", add: "Add a caregiver" },
   { tier: "trusted", t: "Trusted circle", hint: "Friends and neighbors · light tasks", add: "Add a friend or neighbor" },
-  { tier: "kid", t: "Kids & teens", hint: "Kid-friendly tasks only", add: "Add a kid or teen" },
+  { tier: "kid", t: "Kids & teens", hint: "Their own small tasks, never urgent", add: "Add a kid or teen" },
 ];
 SCREENS.people = () => {
   const line = (p) => `<div class="person">${avatar(p, "s36")}
@@ -713,7 +734,7 @@ const chip = (label, on, act, id) => `<button class="chip ${on ? "on" : ""}" dat
 SCREENS.split = () => {
   const L = loads();
   const helpers = S.people;
-  const unassigned = picked().filter((t) => !t.who);
+  const unassigned = picked().filter((t) => !t.who && !t.y);
   return `${topbar({ skip: false })}
   <div class="content">
     ${eyebrow("Split")}
@@ -738,7 +759,7 @@ SCREENS.split = () => {
       <div class="pickers">
         ${helpers.map((p) => {
           const blocked = !canTake(p, t);
-          return `<button class="pick ${t.who === p.id ? "on" : ""}" data-act="assign" data-id="${t.id}" data-who="${p.id}" ${blocked ? `disabled style="opacity:.35" title="${p.tier === "kid" ? "Kids and teens get kid-friendly tasks only" : "Trusted circle gets light tasks only"}"` : ""}>
+          return `<button class="pick ${t.who === p.id ? "on" : ""}" data-act="assign" data-id="${t.id}" data-who="${p.id}" ${blocked ? `disabled style="opacity:.35" title="${p.tier === "kid" ? "Kids and teens get kid tasks only" : "Trusted circle gets light tasks only"}"` : ""}>
             <span class="ringwrap">${avatar(p, "s36")}<img class="ring" src="${A("selected-ring.svg")}" alt=""></span>${esc(p.name)}</button>`;
         }).join("")}
         <button class="pick ${!t.who ? "on" : ""}" data-act="assign" data-id="${t.id}" data-who="">
@@ -908,10 +929,10 @@ const NOTES = {
   about: ["Care situation", ["Starts blank: no name or condition filled in.", "Pick more than one condition; general tasks are always suggested, plus ones for each condition."]],
   them: ["What matters to them", ["Pebble path only. Starts blank. Answers pre-pick tasks (e.g. “Their wishes in order” adds the advance-directive task)."]],
   you: ["What matters to you", ["Pebble path only. “Helping from far away” leans Pebble toward phone and paperwork tasks."]],
-  tasks: ["Tasks before people", ["Five category tabs: Medical, Care & visits, Home & meals, Rides & errands, Money & paperwork. “Company” folded into Care & visits.", "About 10–15 suggestions per tab, plus a write-in. Kid-friendly tasks are tagged.", "Each task has a size (light, medium, heavy) that feeds the fair split."]],
+  tasks: ["Tasks before people", ["Six category tabs: Medical, Care & visits, Home & meals, Rides & errands, Money & paperwork, and Kids & teens.", "Pebble's picks sit on top; the rest fold under More suggestions. Kid tasks are their own tab and never urgent.", "Each task has a size (light, medium, heavy) that feeds the fair split."]],
   dates: ["Check Pebble's guesses", ["Pebble guesses when each task happens; you only fix the wrong ones.", "Grouped as Repeats, One time, As needed, so the three kinds are clear before you tap.", "The sheet asks one thing at a time: which kind, then only the detail it needs. The week grid is a preview."]],
   calendar: ["Calendar sync", ["Optional. Connect any mix of Google, Apple, and Outlook; busy times merge.", "Only busy/free is read, never event details. Connecting here is simulated."]],
-  people: ["Who's helping", ["Starts with just you. Each main caregiver gets the app and a link by text.", "Trusted circle: light tasks only.", "New: kids & teens, who only get kid-friendly tasks (calls, games, pets, the mail)."]],
+  people: ["Who's helping", ["Starts with just you. Each main caregiver gets the app and a link by text.", "Trusted circle: light tasks only.", "Kids & teens get their own task list (calls, cards, pets, the mail). Never urgent, and missing one doesn't count against anyone."]],
   avail: ["Free time, one day at a time", ["Pick a day, then tap big hour buttons, grouped into morning, afternoon, and evening.", "Copy a day to weekdays or every day. A summary shows the whole week.", "Starts blank. Busy calendar hours can’t be picked."]],
   strengths: ["Preferences, not skills", ["Asks what you like helping with, so no one has to claim they're good at something.", "“No preference” is a real answer. The optional avoid list steers Pebble away, e.g. medical care.", "Write-ins for both."]],
   split: ["The split, last", ["Totals stay pinned at the top while the tasks scroll.", "Load bars count heavier tasks as more hours. Pebble path arrives pre-split.", "If no one has room, it suggests the trusted circle or paid help instead of overloading someone."]],
@@ -1117,10 +1138,10 @@ document.addEventListener("submit", (e) => {
   }
   if (!v) return;
   if (kind === "task") {
-    S.tasks.push({ id: `c${Date.now()}`, n: v, w: 2, k: "", cat: S.taskTab, on: true, mine: true, kind: "once", days: ["Sat"], date: addDays(2), time: "", who: null });
+    S.tasks.push({ id: `c${Date.now()}`, n: v, w: S.taskTab === KID_CAT ? 1 : 2, k: "", y: S.taskTab === KID_CAT, cat: S.taskTab, on: true, mine: true, kind: "once", days: ["Sat"], date: addDays(2), time: "", who: null });
     render();
     const c = document.querySelector(".content"); c.scrollTop = c.scrollHeight;
-    toast("Added. Tap the size if it's bigger or smaller.");
+    toast(S.taskTab === KID_CAT ? "Added" : "Added. Tap the size if it's bigger or smaller.");
   }
   if (kind === "person") {
     const tier = S._addTier || "main";

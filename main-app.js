@@ -108,7 +108,8 @@ const active = () => S.tasks.filter((t) => t.on && !t.done);
 const mine = (who = "you") => S.tasks.filter((t) => t.on && t.who === who);
 const stoneOf = (t) => S.stones?.find((s) => s.task === t.id);
 const taskOf = (s) => s.task && S.tasks.find((t) => t.id === s.task);
-const isUrgent = (t) => t.kind === "once" && !t.done && t.date <= addDays(2);
+// Kid tasks are nice to have, so they never turn urgent or nag anyone.
+const isUrgent = (t) => !t.y && t.kind === "once" && !t.done && t.date <= addDays(2);
 function stateOf(t) {
   if (t.done) return "done";
   if (!t.who) return "open";
@@ -575,7 +576,7 @@ SCREENS.handoff = () => {
         const ok = canTake(p, t);
         const n = mine(p.id).filter((x) => !x.done).length;
         return `<button class="radio-row" data-act="handTo" data-id="${p.id}" ${ok ? "" : "disabled"}>${avatar(p, "s36")}
-          <span class="tl-txt"><span class="n">${esc(p.name)}</span><span class="m">${ok ? `${n} task${n === 1 ? "" : "s"}${p.remote ? " · remote" : ""}${p.tier === "trusted" ? " · gets a text" : ""}` : p.tier === "kid" ? "Kid-friendly tasks only" : "Light tasks only"}</span></span>
+          <span class="tl-txt"><span class="n">${esc(p.name)}</span><span class="m">${ok ? `${n} task${n === 1 ? "" : "s"}${p.remote ? " · remote" : ""}${p.tier === "trusted" ? " · gets a text" : ""}` : p.tier === "kid" ? "Kid tasks only" : "Light tasks only"}</span></span>
           ${check(to === p.id)}</button>`;
       }).join("")}
       ${t.who ? `<button class="radio-row" data-act="handTo" data-id="">${gem("open", { size: "s" })}<span class="tl-txt"><span class="n">Unassigned</span><span class="m">Glows white for whoever is free</span></span>${check(to === null)}</button>` : ""}
@@ -669,7 +670,7 @@ SCREENS.person = () => {
   return `${navtop("People")}
   <div class="content">
     <div class="phead">${avatar(p, "lg")}<h1 class="title">${esc(p.name)}</h1></div>
-    <p class="sub">${ts.length} task${ts.length === 1 ? "" : "s"}${p.about ? ` · ${esc(p.about)}` : p.tier === "trusted" ? " · Trusted circle, light tasks" : p.tier === "kid" ? " · Kid-friendly tasks" : ""}</p>
+    <p class="sub">${ts.length} task${ts.length === 1 ? "" : "s"}${p.about ? ` · ${esc(p.about)}` : p.tier === "trusted" ? " · Trusted circle, light tasks" : p.tier === "kid" ? " · Kid tasks, never urgent" : ""}</p>
     <p class="section-h">Their tasks, and why</p>
     <div class="card tlist">${ts.length ? ts.map((t) => taskLine(t, {
       meta: `${avatar(p, "s20")} ${esc(p.name)} · ${dueLabel(t)}</span><span class="why">Why: ${esc(whyOf(t, p))}`,

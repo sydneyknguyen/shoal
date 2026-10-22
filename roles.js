@@ -5,7 +5,7 @@ const ROLES = [
   { id: "main", screen: "home", who: "You", label: "Main caregiver", sees: "The whole plan: every jar, task, and stone." },
   { id: "nurse", screen: "asNurse", who: "Ana", label: "Nurse or doula", sees: "Visits, the care notes the family shares, and what she's asked for." },
   { id: "trusted", screen: "asTrusted", who: "Nora", label: "Trusted circle", sees: "Her own tasks and light ones she can pick up. No medical details." },
-  { id: "kid", screen: "asKid", who: "Leo", label: "Kid or teen", sees: "Kid-friendly jobs only, in plain words." },
+  { id: "kid", screen: "asKid", who: "Leo", label: "Kid or teen", sees: "Their own small jobs, in plain words. Never urgent." },
   { id: "public", screen: "asPublic", who: "A volunteer", label: "Volunteer code", sees: "Only tasks the family shares. No names, no address." },
 ];
 const ROLE_SCREENS = ROLES.filter((r) => r.id !== "main").map((r) => r.screen);

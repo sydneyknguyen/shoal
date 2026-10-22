@@ -346,21 +346,18 @@ function footer(label = "Next", { disabled = false, act = "next", backBtn = true
 const SCREENS = {};
 
 SCREENS.welcome = () => {
-  // Jar illustration from the Figma frame. Positions are the design's own.
-  const rocks = [
-    { f: "rocks-1.svg", x: 6.35, y: 48.15, w: 69.83, h: 55.08, i: [5.87, 2.12, 4.7, 5.16] },
-    { f: "rocks-2.svg", x: 3.23, y: 29.49, w: 73.21, h: 55.51, i: [3.49, 7.53, 4.67, 0] },
-    { f: "rocks-3.svg", x: 6.46, y: 60.02, w: 69.74, h: 34.69, i: [17.27, 2.12, 7.47, 2.12] },
-    { f: "rocks-4.svg", x: 6.46, y: 78.06, w: 69.74, h: 16.65, i: [2.22, 2.12, 15.56, 2.12] },
+  // Four family jars, drawn with the same stones as the rest of the app. Done stones sit at the bottom.
+  const fill = [
+    ["done", "done", "done", "open", "progress", "urgent", "progress"],
+    ["done", "done", "open", "open", "progress", "progress", "urgent", "open"],
+    ["done", "done", "open", "progress", "open"],
+    ["done", "done", "open"],
   ];
-  const jars = rocks.map((r, j) => {
-    const [t, rt, b, l] = r.i;
-    const img = `left:${-l / 100 * r.w}px;top:${-t / 100 * r.h}px;width:${r.w * (1 + (l + rt) / 100)}px;height:${r.h * (1 + (t + b) / 100)}px`;
-    return `<div class="jar" style="left:${j * 85.93}px">
-      <img class="glass" src="${A("jar.png")}" alt="">
-      <div class="rocks" style="left:${r.x}px;top:${r.y}px;width:${r.w}px;height:${r.h}px"><img src="${A(r.f)}" alt="" style="${img}"></div>
-    </div>`;
-  }).join("");
+  const jars = `<div class="shelf-jars">${fill.map((ts) => {
+    const pos = jarSlots(ts.length);
+    return `<div class="rjar"><div class="glassbox"><img class="glass" src="${A("jar.png")}" alt="">
+      ${ts.map((st, i) => gem(st, { size: "s", style: `left:${pos[i].x}px;top:${pos[i].y}px` })).join("")}</div></div>`;
+  }).join("")}</div>`;
   return `<div class="content no-top">
     <h1 class="title xl">Let's set up your family's plan</h1>
     <p class="sub" style="margin-top:10px">Pick how you'd like to start. You can switch anytime.</p>

@@ -69,7 +69,8 @@ function demoTasks() {
 // Sets up everything the main app needs, from onboarding answers if there are any.
 function ensureAppData() {
   if (S.app) return;
-  const demo = !S.tasks.some((t) => t.on);
+  // Skipping onboarding (testing) loads a sample family. Finishing it starts a real, empty plan.
+  const demo = !S.setup && !S.tasks.some((t) => t.on);
   if (demo) {
     if (!S.lovedOne) S.lovedOne = "Dad";
     DEMO_PEOPLE.forEach((p) => {
@@ -77,9 +78,7 @@ function ensureAppData() {
     });
     S.tasks = demoTasks();
   }
-  S.tasks.forEach((t) => {
-    Object.assign(t, { done: t.done || false, steps: t.steps || [], notes: t.notes || "", remote: t.remote || false });
-  });
+  S.tasks.forEach(normTask);
   // Jars and the base are powered, so a stone charges anywhere but "out" (on a table, in a bag).
   S.stones = Array.from({ length: KIT }, (_, i) => ({ id: i + 1, task: null, battery: BATTERY[i], out: i === 3 }));
   // In the demo, the rest of the family has already paired a few of their own stones.
@@ -96,6 +95,11 @@ function ensureAppData() {
     prefs: { little: true, weekly: true, names: true, quiet: false, quietFor: "week", publicCode: false, night: true, nightFrom: "22:00", nightTo: "07:00", glow: "on" },
     demo,
   };
+}
+
+// Tasks made in setup get the fields the app screens expect.
+function normTask(t) {
+  t.done ??= false; t.steps ??= []; t.notes ??= ""; t.remote ??= false;
 }
 
 /* ---------- Model helpers ---------- */
@@ -217,6 +221,50 @@ function taskLine(t, { meta, trail = "", act = "openTask", showWho = true } = {}
     <${act === "noop" ? "div" : "button"} class="tl-main" ${act === "noop" ? "" : `data-act="${act}" data-id="${t.id}"`}>${gemOf(t)}<span class="sr-only">${STATE[stateOf(t)][0]}:</span>
       <span class="tl-txt"><span class="n">${esc(t.n)}</span><span class="m">${m}</span></span></${act === "noop" ? "div" : "button"}>${trail}
   </div>`;
+}
+
+/* ---------- Setup checklist ---------- */
+
+// What onboarding used to ask all at once, now done from Home in any order, one short sitting each.
+const SETUP_STEPS = [
+  { id: "tasks", t: "Add what needs doing", m: "About 5 min" },
+  { id: "calendar", t: "Bring in your calendar", m: "About 1 min · so tasks land on free time" },
+  { id: "schedule", t: "Put tasks on the calendar", m: "About 3 min", needs: "tasks" },
+  { id: "split", t: "Choose who does what", m: "About 3 min · then send the plan", needs: "tasks" },
+  { id: "stones", t: "Set up the jars and stones", m: "About 5 min · when the kit arrives", needs: "tasks" },
+];
+const setupCount = () => SETUP_STEPS.filter((x) => S.setup[x.id]).length;
+
+function setupCard() {
+  if (!S.setup || S.setup.hidden) return "";
+  const n = setupCount();
+  if (n === SETUP_STEPS.length) return `<div class="card setup-card all-set">
+    <span class="tl-txt"><span class="n">You're all set up</span><span class="m">Change anything from My jar, People, or Settings.</span></span>
+    <button class="linkish" data-act="hideSetup">Hide</button></div>`;
+  return `<div class="card setup-card">
+    <div class="sc-head"><span><p class="eyebrow">Finish setting up</p><b>${n} of ${SETUP_STEPS.length} done</b></span><span class="small">Any order, whenever you're ready</span></div>
+    <div class="bar"><i style="width:${(n / SETUP_STEPS.length) * 100}%"></i></div>
+    <div class="tlist flat">${SETUP_STEPS.map((x) => {
+      const done = S.setup[x.id], locked = x.needs && !S.setup[x.needs];
+      return `<button class="srow sc-row ${done ? "done" : ""} ${locked ? "locked" : ""}" data-act="setupStep" data-id="${x.id}">
+        <span class="sc-check">${done ? `<img src="${A("check.svg")}" alt="Done">` : ""}</span>
+        <span class="tl-txt"><span class="n">${x.t}</span><span class="m">${locked ? "Add tasks first" : done ? "Done · tap to change" : x.m}</span></span>${chev}</button>`;
+    }).join("")}</div>
+  </div>`;
+}
+
+function finishOnboarding() {
+  S.setup = {};
+  ensureAppData();
+  tabTo("home");
+  toast("You're in. Set up the rest whenever you're ready.");
+}
+function setupDone(id) {
+  if (S.setup) S.setup[id] = true;
+  tabTo("home");
+  if (!S.setup) return;
+  const n = setupCount();
+  toast(n === SETUP_STEPS.length ? "All set up" : `${n} of ${SETUP_STEPS.length} done`);
 }
 
 /* ---------- Setup & first stone ---------- */
@@ -360,7 +408,7 @@ SCREENS.pairRest = () => {
     })).join("")}
     ${list.length > 5 ? `<button class="more" data-act="morePair">${S.app.morePair ? "Show fewer" : `+ ${list.length - 5} more tasks`}${chev}</button>` : ""}</div>
   </div>
-  ${solo("Go to Home", "tab", ["Do this later", "tab", 'data-to="home"'], 'data-to="home"')}`;
+  ${solo("Go to Home", "finishStones", ["Do this later", "tab", 'data-to="home"'])}`;
 };
 
 /* ---------- Home ---------- */
@@ -389,10 +437,11 @@ SCREENS.home = () => {
   const today = active().filter((t) => occurs(t, day)).sort((a, b) => (a.time || "99").localeCompare(b.time || "99"));
   return `<div class="content app">
     <div class="apphead">${shoalMark(30)}<span class="head-btns">
-      <button class="bell" data-act="go" data-to="kit" aria-label="Home kit">${icon("kit")}${notCharging().length ? `<i class="dot warn"></i>` : ""}</button>
+      <button class="bell" data-act="go" data-to="kit" aria-label="Home kit">${icon("kit")}${notCharging().length && (!S.setup || S.setup.stones) ? `<i class="dot warn"></i>` : ""}</button>
       <button class="bell" data-act="go" data-to="notifications" aria-label="Notifications">${icon("bell")}${unread() ? `<i class="dot"></i>` : ""}</button></span></div>
     <p class="eyebrow grey">${TODAY.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}</p>
     <h1 class="title">Good morning</h1>
+    ${setupCard()}
     ${urgent.length ? `<button class="card attention" data-act="openTask" data-id="${urgent[0].id}">${gemOf(urgent[0], { size: "m" })}
         <span class="tl-txt"><span class="n">${esc(urgent[0].n)}</span><span class="m"><b class="st-urgent">Urgent</b> · ${dueLabel(urgent[0])} · ${esc(nameOf(urgent[0].who))}</span></span>
         ${urgent.length > 1 ? `<span class="count">+${urgent.length - 1}</span>` : chev}
@@ -973,6 +1022,20 @@ Object.assign(ACTIONS, {
   signOut: () => { closeSheet(); S = initialState(); S.screen = "signin"; lastDir = "back"; render(); },
   enterApp: () => { ensureAppData(); go("ready"); },
   skipToApp: () => { ensureAppData(); tabTo("home"); },
+  setupStep: (d) => {
+    const x = SETUP_STEPS.find((y) => y.id === d.id);
+    if (x.needs && !S.setup[x.needs]) { toast("Add tasks first"); return; }
+    if (d.id === "tasks") {
+      if (S.setup.tasks) { S.flowKey = S.path; go("tasks"); } else go("taskStart");
+      return;
+    }
+    if (d.id === "stones") { go("ready"); return; }
+    S.flowKey = d.id;
+    if (d.id === "split") S.sent = false;
+    go(flow()[0]);
+  },
+  finishStones: () => setupDone("stones"),
+  hideSetup: () => { S.setup.hidden = true; render(); },
   appJump: (d) => appJump(d.to),
   setupNext: () => go(SETUP[SETUP.indexOf(S.screen) + 1]),
   tab: (d) => tabTo(d.to),

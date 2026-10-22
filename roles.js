@@ -24,8 +24,8 @@ const roleTask = (id, n, who, w, k, when, extra = {}) => ({
 });
 
 // Leo, Nora, and the light or kid-friendly tasks they see, added once to whatever family is loaded.
-function ensureRoles() {
-  if (S.app.roles) return;
+// Nora, Leo, and their tasks. A sample family has them from the start; a real one gets them only when someone previews their view.
+function roleCast() {
   if (!S.people.some((p) => p.id === "nora")) S.people.push({ id: "nora", name: "Nora", img: "avatar-nora.png", tier: "trusted", cap: 2, about: "Neighbor", invited: true });
   if (!S.people.some((p) => p.id === "leo")) S.people.push({ id: "leo", name: "Leo", tier: "kid", cap: 2, about: `${L()}'s grandson, 14`, invited: true });
   const l = L();
@@ -36,6 +36,10 @@ function ensureRoles() {
   add(roleTask("rk1", `Read the paper to ${l}`, "leo", 1, "there", ["Tue", "Sat"], { y: true }));
   add(roleTask("rk2", "Water the plants", "leo", 1, "there", ["Wed"], { y: true }));
   add(roleTask("rk3", `Make a card for ${l}`, null, 1, "there", 4, { y: true }));
+}
+function ensureRoles() {
+  if (S.app.roles) return;
+  if (S.app.demo) roleCast();
   S.app.roles = {
     visits: [
       { id: "v1", day: addDays(0), time: "10:00", done: true, note: "Comfortable today. Ate a little breakfast." },
@@ -212,6 +216,7 @@ Object.assign(APP_INPUT, {
 function roleSwitch(screen) {
   ensureAppData();
   if (screen === "home") { tabTo("home"); return; }
+  roleCast();
   tabTo(screen);
 }
 

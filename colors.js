@@ -43,17 +43,35 @@ const urgentHex = () => PALETTE[stoneColors().urgent].lo;
 
 /* ---------- Picker ---------- */
 
-function colorSheet() {
+function colorRows() {
   const c = stoneColors();
-  const changed = COLOR_STATES.some((s) => c[s] !== DEFAULT_COLORS[s]);
-  openSheet(`<h3>Stone colors</h3><p class="small">Pick colors that make sense to you and are easy to tell apart. Every stone and jar in the family switches together.</p>
-    ${COLOR_STATES.map((s) => `<div class="cp-row">
+  return `${COLOR_STATES.map((s) => `<div class="cp-row">
       <div class="cp-head">${gem(s, { size: "s" })}<span><b>${STATE[s][0]}</b><small>${STATE[s][2]}</small></span></div>
       <div class="swatches" role="radiogroup" aria-label="${STATE[s][0]} color">${Object.entries(PALETTE).map(([k, p]) => `<button class="swatch ${c[s] === k ? "on" : ""}" role="radio" aria-checked="${c[s] === k}" aria-label="${p.name}" data-act="pickColor" data-id="${s}" data-color="${k}" style="--sw:${p.mid};--swlo:${p.lo}"></button>`).join("")}</div>
     </div>`).join("")}
-    <div class="cp-row"><div class="cp-head">${gem("done", { size: "s" })}<span><b>Done</b><small>Always off, so it's clear the task is finished</small></span></div></div>
+    <div class="cp-row"><div class="cp-head">${gem("done", { size: "s" })}<span><b>Done</b><small>Always off, so it's clear the task is finished</small></span></div></div>`;
+}
+const colorsChanged = () => COLOR_STATES.some((s) => stoneColors()[s] !== DEFAULT_COLORS[s]);
+
+function colorSheet() {
+  const changed = colorsChanged();
+  openSheet(`<h3>Stone colors</h3><p class="small">Pick colors that make sense to you and are easy to tell apart. Every stone and jar in the family switches together.</p>
+    ${colorRows()}
     <div class="actions">${changed ? `<button class="btn-soft" data-act="resetColors">Reset colors</button>` : ""}<button class="btn-soft" data-act="closeSheet">Done</button></div>`);
 }
+
+// Last onboarding step: the glow is explained once, in the family's own colors.
+SCREENS.colors = () => `${topbar()}
+  <div class="content">
+    ${eyebrow("Stones")}
+    <h1 class="title">Pick your stone colors</h1>
+    <p class="sub">Each stone glows to show where a task stands. Choose colors that mean something to your family.</p>
+    <div class="card r20 cp-card">${colorRows()}</div>
+    <p class="small" style="margin-top:12px">${colorsChanged() ? `<button class="linkish" data-act="resetColors">Reset colors</button> · ` : ""}You can change these anytime in Settings.</p>
+  </div>
+  ${footer("Go to Home")}`;
+
+const sheetOpen = () => document.getElementById("sheet").classList.contains("open");
 
 Object.assign(ACTIONS, {
   colorSheet,
@@ -63,7 +81,7 @@ Object.assign(ACTIONS, {
     const other = COLOR_STATES.find((s) => s !== d.id && c[s] === d.color);
     if (other) c[other] = c[d.id];
     c[d.id] = d.color;
-    render(); colorSheet();
+    render(); if (sheetOpen()) colorSheet();
   },
-  resetColors: () => { S.colors = { ...DEFAULT_COLORS }; render(); colorSheet(); },
+  resetColors: () => { S.colors = { ...DEFAULT_COLORS }; render(); if (sheetOpen()) colorSheet(); },
 });

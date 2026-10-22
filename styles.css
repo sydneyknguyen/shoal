@@ -1198,3 +1198,24 @@ button, input, textarea { touch-action: manipulation; -webkit-tap-highlight-colo
 .swatch.on { box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--blue); }
 .swatch:active { transform: scale(0.9); }
 .swatch::after { content: ""; position: absolute; inset: -6px; }
+
+/* ---------- Home setup checklist ---------- */
+.welcome-steps { margin-top: 2px; }
+.setup-card { padding: 16px 16px 4px; margin-bottom: 14px; }
+.setup-card .sc-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; }
+.setup-card .sc-head .eyebrow { margin: 0 0 2px; }
+.setup-card .sc-head b { font-size: 16px; font-weight: 600; }
+.setup-card .sc-head .small { text-align: right; max-width: 130px; }
+.setup-card .bar { margin: 12px 0 4px; }
+.sc-row + .sc-row { border-top: 1px solid var(--line); }
+.sc-row .tl-txt { flex: 1; min-width: 0; }
+.sc-check { width: 24px; height: 24px; border-radius: 12px; border: 1.5px solid rgba(110, 115, 124, 0.35); display: grid; place-items: center; flex: none; }
+.sc-row.done .sc-check { background: var(--blue); border-color: var(--blue); }
+.sc-row.done .sc-check img { width: 12px; height: 12px; filter: brightness(0) invert(1); }
+.sc-row.done .n { color: var(--muted); }
+.sc-row.locked { opacity: 0.5; }
+.setup-card.all-set { display: flex; align-items: center; gap: 12px; padding: 16px; }
+.setup-card.all-set .tl-txt { flex: 1; }
+.cp-card { padding: 4px 16px; }
+.cp-card { padding: 4px 14px; }
+.cp-card .swatches { padding-left: 0; gap: 7px; }

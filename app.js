@@ -208,17 +208,25 @@ const initialState = () => ({
   strengths: [],
   splitTouched: false,
   sent: false,
+  flowKey: "onboard", // which section the step screens belong to
+  setup: null, // Home checklist: which sections are done, set when onboarding ends
 });
 let S = initialState();
 let lastDir = "fwd";
 
 /* ---------- Flow ---------- */
 
+// Onboarding is three quick steps. Everything else is a section run from the Home checklist.
 const FLOWS = {
-  pebble: ["about", "them", "you", "tasks", "dates", "people", "calendar", "avail", "strengths", "split", "review"],
-  manual: ["about", "tasks", "dates", "people", "calendar", "avail", "strengths", "split", "review"],
+  onboard: ["about", "people", "colors"],
+  pebble: ["them", "you", "tasks"],
+  manual: ["tasks"],
+  calendar: ["calendar", "avail"],
+  schedule: ["dates"],
+  split: ["strengths", "split", "review"],
 };
-const flow = () => FLOWS[S.path || "manual"];
+const SECTION_OF = { pebble: "tasks", manual: "tasks", calendar: "calendar", schedule: "schedule", split: "split" };
+const flow = () => FLOWS[S.flowKey || "onboard"];
 const stepIndex = () => flow().indexOf(S.screen);
 
 function go(screen, dir = "fwd") {
@@ -233,7 +241,18 @@ function go(screen, dir = "fwd") {
 function next() {
   const f = flow();
   const i = f.indexOf(S.screen);
+  // A connected calendar already knows when you're busy, so the free-time step is skipped.
+  if (S.screen === "calendar" && S.cals.length) { freeFromCalendar(); finishSection(); return; }
   if (i < f.length - 1) go(f[i + 1]);
+  else finishSection();
+}
+function finishSection() {
+  if (S.flowKey === "onboard") { finishOnboarding(); return; }
+  setupDone(SECTION_OF[S.flowKey]);
+}
+// Daytime hours the calendar doesn't mark busy count as free.
+function freeFromCalendar() {
+  S.free = S.free.map((row, day) => row.map((on, h) => on || (h >= 9 && h < 19 && !S.busy[day][h])));
 }
 function back() {
   const prev = S.history.pop();
@@ -244,15 +263,17 @@ function back() {
 
 function onEnter(screen) {
   if (APP_SCREENS.has(screen)) { appEnter(screen); return; }
-  if (screen === "tasks" && !S.tasks.length) seedTasks();
+  if (screen === "tasks" && !S.tasks.some((t) => t.cat)) seedTasks();
   // Pebble proposes a split; manual starts unassigned so you can pick, or ask Pebble.
   if (screen === "split" && S.path === "pebble" && !S.splitTouched) suggestSplit();
 }
 
 // Suggests every general task plus the ones for the picked conditions.
+// Library tasks have a category; anything else (like tasks from the other views) is kept.
+const clearLibrary = () => { S.tasks = S.tasks.filter((t) => !t.cat); };
 function seedTasks() {
   let id = 0;
-  S.tasks = [];
+  clearLibrary();
   S.splitTouched = false;
   Object.entries(TASK_LIBRARY).forEach(([cat, items]) => {
     items.forEach((t) => {
@@ -326,14 +347,17 @@ const stone = (assigned) => `<img class="stone" src="${A(assigned ? "stone-progr
 function topbar({ skip = true } = {}) {
   const f = flow();
   const i = stepIndex();
-  const total = f.length - 1; // review isn't a counted step
+  const total = f.filter((s) => s !== "review").length; // review isn't a counted step
   return `<div class="topbar">
     <button class="back" data-act="back" aria-label="Back"><img src="${A("back.svg")}" alt=""></button>
     <div class="progress">${Array.from({ length: total }, (_, k) => `<span class="${k <= i ? "on" : ""}"></span>`).join("")}</div>
     ${skip ? `<button class="skip" data-act="next">Skip</button>` : ""}
   </div>`;
 }
-const eyebrow = (section) => `<p class="eyebrow">${section} · Step ${stepIndex() + 1} of ${flow().length - 1}</p>`;
+const eyebrow = (section) => {
+  const n = flow().filter((s) => s !== "review").length;
+  return `<p class="eyebrow">${section}${n > 1 ? ` · Step ${stepIndex() + 1} of ${n}` : ""}</p>`;
+};
 function footer(label = "Next", { disabled = false, act = "next", backBtn = true } = {}) {
   return `<div class="footer">
     <button class="btn-primary" data-act="${act}" ${disabled ? "disabled" : ""}>${label}</button>
@@ -358,30 +382,36 @@ SCREENS.welcome = () => {
     return `<div class="rjar"><div class="glassbox"><img class="glass" src="${A("jar.png")}" alt="">
       ${ts.map((st, i) => gem(st, { size: "s", style: `left:${pos[i].x}px;top:${pos[i].y}px` })).join("")}</div></div>`;
   }).join("")}</div>`;
+  const steps = [["Who you're caring for", "Their name and what they're facing"], ["Who's helping", "Invite family now, or later"], ["Your stone colors", "What each glow means to you"]];
   return `<div class="content no-top">
-    <h1 class="title xl">Let's set up your family's plan</h1>
-    <p class="sub" style="margin-top:10px">Pick how you'd like to start. You can switch anytime.</p>
+    <h1 class="title xl">Let's get you set up</h1>
+    <p class="sub" style="margin-top:10px">Three quick things, about 2 minutes. Tasks and the stones can wait until you're ready.</p>
     <div class="card hero">
       <div class="jars-illus" aria-label="Four jars with glowing stones">${jars}</div>
     </div>
-    <div style="position:relative">
-      <span class="badge caps path-badge">Recommended</span>
-      <button class="path rec" data-act="start" data-path="pebble">
-        <img class="path-pebble" src="${A("pebble/pebble_base_front.png")}" alt="Pebble">
-        <span><span class="t">Get help from Pebble</span><span class="d">Answer a few short questions. Pebble suggests tasks and a fair split.</span></span>
-        <img class="chev" src="${A("chevron.svg")}" alt="">
-      </button>
-      <button class="whats-pebble" data-act="go" data-to="pebbleInfo">What's Pebble?</button>
-    </div>
-    <button class="path" data-act="start" data-path="manual">
-      <span class="ico"><img src="${A("checklist.svg")}" width="20" height="18" alt=""></span>
-      <span><span class="t">Set it up myself</span><span class="d">List what needs doing first, then choose who takes each one.</span></span>
+    <div class="card steps-list welcome-steps">${steps.map(([t, d], i) => `<div class="step"><span class="num">${i + 1}</span><span><b>${t}</b><small>${d}</small></span></div>`).join("")}</div>
+    <button class="skip-onboarding" data-act="skipToApp">Skip onboarding (testing) →</button>
+  </div>
+  <div class="footer"><button class="btn-primary" data-act="begin">Start</button><span style="height:20px"></span></div>`;
+};
+
+// First stop of "Add what needs doing" on the Home checklist.
+SCREENS.taskStart = () => `${navtop("Home")}
+  <div class="content">
+    <h1 class="title">How do you want to start your list?</h1>
+    <p class="sub">Either way, you pick every task and can change it later.</p>
+    <button class="path rec" data-act="start" data-path="pebble">
+      <img class="path-pebble" src="${A("pebble/pebble_base_front.png")}" alt="">
+      <span><span class="t">Start from suggestions</span><span class="d">Faster. Two quick questions, then a starter list to trim.</span></span>
       <img class="chev" src="${A("chevron.svg")}" alt="">
     </button>
-    <p class="small foot-note">Pebble is an AI helper. You review every suggestion,<br>and nothing is shared until everyone says yes.</p>
-    <button class="skip-onboarding" data-act="skipToApp">Skip onboarding (testing) →</button>
+    <button class="path" data-act="start" data-path="manual">
+      <span class="ico"><img src="${A("checklist.svg")}" width="20" height="18" alt=""></span>
+      <span><span class="t">Write my own list</span><span class="d">Pick from the full list yourself.</span></span>
+      <img class="chev" src="${A("chevron.svg")}" alt="">
+    </button>
+    <button class="whats-pebble" data-act="go" data-to="pebbleInfo">Who suggests the tasks?</button>
   </div>`;
-};
 
 // Explains Pebble before anyone picks the Pebble path: what it is, how it works, and what it can see.
 SCREENS.pebbleInfo = () => {
@@ -446,7 +476,7 @@ SCREENS.about = () => `${topbar({ skip: false })}
 
 SCREENS.them = () => `${topbar()}
   <div class="content">
-    ${eyebrow("Pebble")}
+    ${eyebrow("Suggestions")}
     <h1 class="title">What matters most to ${esc(S.lovedOne)} right now?</h1>
     <p class="sub">Pick up to two, or write your own.</p>
     ${MATTERS_THEM.map((m) => `<button class="option ${S.them.includes(m.id) ? "on" : ""}" data-act="toggleThem" data-id="${m.id}">
@@ -473,14 +503,14 @@ function ownWords(key, placeholder) {
 
 SCREENS.you = () => `${topbar()}
   <div class="content">
-    ${eyebrow("Pebble")}
+    ${eyebrow("Suggestions")}
     <h1 class="title">What matters most to you?</h1>
     <p class="sub lock"><img src="${A("lock.svg")}" width="14" height="14" alt="">Only you see this answer.</p>
     ${MATTERS_YOU.map((m) => `<button class="option ${S.you.includes(m.id) ? "on" : ""}" data-act="toggleYou" data-id="${m.id}">
       <span class="txt"><span class="t">${m.t}</span><span class="d">${m.d}</span></span>${check(S.you.includes(m.id))}
     </button>`).join("")}
   </div>
-  ${footer("See Pebble's task ideas")}`;
+  ${footer("See suggested tasks")}`;
 
 SCREENS.tasks = () => {
   const cats = Object.keys(TASK_LIBRARY);
@@ -506,7 +536,7 @@ SCREENS.tasks = () => {
     <form class="write-own" data-form="task"><img src="${A("plus.svg")}" alt=""><input name="v" placeholder="Add your own to ${esc(tab)}"><button class="go">Add</button></form>
     ${nextCat ? `<button class="next-tab" data-act="taskTab" data-id="${esc(nextCat)}">Next: ${esc(nextCat)}<img src="${A("chevron.svg")}" alt=""></button>` : ""}
   </div>
-  ${footer(picked().length ? `Next · ${picked().length} task${picked().length > 1 ? "s" : ""}` : "Pick at least one task", { disabled: !picked().length })}`;
+  ${footer(picked().length ? `Save ${picked().length} task${picked().length > 1 ? "s" : ""}` : "Pick at least one task", { disabled: !picked().length })}`;
 };
 
 const taskPill = (t) => `<button class="tpill ${t.kind}" data-act="editDate" data-id="${t.id}">${esc(t.n)}${t.time ? `<small>${fmtTime(t.time)}</small>` : ""}</button>`;
@@ -555,7 +585,7 @@ SCREENS.dates = () => {
       <span class="legend-mini"><i class="once"></i>Once <i class="repeat"></i>Repeats</span></div>
     ${body}
   </div>
-  ${footer("Next: who's helping")}`;
+  ${footer("Done")}`;
 };
 
 SCREENS.people = () => {
@@ -609,7 +639,7 @@ SCREENS.calendar = () => `${topbar({ skip: false })}
     <p class="sub lock" style="margin-top:16px"><img src="${A("lock.svg")}" width="14" height="14" alt="">Shoal only sees busy or free, never what your events are.</p>
     <p class="small">Tap a connected calendar to disconnect it.</p>
   </div>
-  ${footer(S.cals.length ? "Next: add free time" : "Skip, I’ll fill it in")}`;
+  ${footer(S.cals.length ? "Done" : "Fill in free time by hand")}`;
 
 const DAY_PARTS = [["Morning", 6, 12], ["Afternoon", 12, 17], ["Evening", 17, 22]];
 const hourLabel = (h) => `${hour12(h)} ${meridiem(h)}`;
@@ -647,7 +677,7 @@ SCREENS.avail = () => {
     ${S.cals.length ? `<p class="small" style="margin-top:10px">Hours marked busy come from your connected calendar${S.cals.length > 1 ? "s" : ""}.</p>` : ""}
     <p class="sub lock" style="margin-top:12px"><img src="${A("lock.svg")}" width="14" height="14" alt="">Private. Everyone sets their own when they join.</p>
   </div>
-  ${footer()}`;
+  ${footer("Done")}`;
 };
 
 SCREENS.strengths = () => `${topbar({ skip: false })}
@@ -740,7 +770,7 @@ SCREENS.review = () => {
     <div class="card info"><img src="${A("lock.svg")}" alt=""><span class="small">Each pebble can read its own task aloud, so the jar works even when your phone isn't nearby. You'll get a reminder before anything is due.</span></div>
   </div>
   ${S.sent
-    ? footer("Set up the stones", { act: "enterApp", backBtn: false })
+    ? footer("Back to Home", { backBtn: false })
     : footer(invitees.length ? `Send plan to ${listNames(invitees)}` : "Finish", { act: "send" })}`;
 };
 const listWords = (n) => (n.length <= 2 ? n.join(" and ") : `${n.slice(0, -1).join(", ")}, and ${n.at(-1)}`);
@@ -824,7 +854,9 @@ function stoneSheet(t) {
 
 const NOTES = {
   pebbleInfo: ["What's Pebble?", ["Linked from the Pebble card so people know what they're opting into.", "Shows what Pebble does, how it works, what it can't do, and what it can see.", "Says plainly that it can be wrong, and to call 911 in an emergency."]],
-  welcome: ["Welcome", ["Jar art shows where you’re headed, with no caption to decode.", "Manual path copy says tasks come first."]],
+  welcome: ["Welcome", ["Onboarding is now three steps, about 2 minutes: who you're caring for, who's helping, and stone colors.", "Testers felt the old 11-step setup was too much while grieving. Tasks, calendar, the split, and the stones moved to a checklist on Home."]],
+  taskStart: ["Start your list", ["First stop of “Add what needs doing” on the Home checklist.", "No “Recommended” badge and no AI up front: “Start from suggestions” is described as faster. “Who suggests the tasks?” explains Pebble for anyone who wants to know."]],
+  colors: ["Stone colors", ["Last onboarding step. Families pick colors that mean something to them, so the glow is explained once, with their own colors.", "Changeable anytime in Settings or the Home kit."]],
   about: ["Care situation", ["Starts blank: no name or condition filled in.", "Pick more than one condition; general tasks are always suggested, plus ones for each condition."]],
   them: ["What matters to them", ["Pebble path only. Starts blank. Answers pre-pick tasks (e.g. “Their wishes in order” adds the advance-directive task)."]],
   you: ["What matters to you", ["Pebble path only. “Helping from far away” leans Pebble toward phone and paperwork tasks."]],
@@ -840,11 +872,11 @@ const NOTES = {
 
 function renderNotes() {
   if (APP_SCREENS.has(S.screen)) { renderAppNotes(); return; }
-  const all = [...PRE_SCREENS, "welcome", ...flow()];
+  const all = [...PRE_SCREENS, "welcome", ...FLOWS.onboard, ...(S.flowKey === "onboard" ? [] : flow())];
   const seen = new Set([S.screen, ...S.history]);
   const [title, bullets] = NOTES[S.screen];
   document.getElementById("notes").innerHTML = `
-    <p class="eyebrow">Shoal · onboarding v3 · ${S.path ? (S.path === "pebble" ? "Pebble path" : "Manual path") : "pick a path"}</p>
+    <p class="eyebrow">Shoal · onboarding v4 · ${S.flowKey === "onboard" ? "3 quick steps" : "Home checklist"}</p>
     <h2>${title}</h2>
     <ol>${all.map((s) => `<li><button data-act="jump" data-to="${s}" aria-current="${s === S.screen}" ${seen.has(s) || s === "welcome" || PRE_SCREENS.includes(s) ? "" : "disabled"}>${NOTES[s][0]}</button></li>`).join("")}</ol>
     <div class="why"><strong>What changed here</strong><ul>${bullets.map((b) => `<li>${b}</li>`).join("")}</ul></div>
@@ -856,6 +888,7 @@ function render() {
   const el = document.getElementById("screen");
   const prevScreen = el.dataset.s;
   const keepScroll = prevScreen === S.screen ? el.querySelector(".content")?.scrollTop : 0;
+  if (S.app) S.tasks.forEach(normTask);
   el.innerHTML = SCREENS[S.screen]();
   el.dataset.s = S.screen;
   if (prevScreen !== S.screen) {
@@ -884,11 +917,16 @@ function toast(msg) {
 
 const ACTIONS = {
   next, back,
-  start: (d) => { S.path = d.path; S.tasks = []; go("about"); },
+  begin: () => { S.flowKey = "onboard"; go("about"); },
+  start: (d) => {
+    S.path = S.flowKey = d.path;
+    if (!S.tasks.some((t) => t.on && t.cat)) clearLibrary();
+    go(flow()[0]);
+  },
   condition: (d) => {
     const i = S.conditions.indexOf(d.id);
     i >= 0 ? S.conditions.splice(i, 1) : S.conditions.push(d.id);
-    S.tasks = [];
+    clearLibrary();
     render();
   },
   toggleThem: (d) => {
@@ -896,10 +934,10 @@ const ACTIONS = {
     if (i >= 0) S.them.splice(i, 1);
     else if (S.them.length < 2) S.them.push(d.id);
     else toast("Pick up to two");
-    S.tasks = [];
+    clearLibrary();
     render();
   },
-  toggleYou: (d) => { const i = S.you.indexOf(d.id); i >= 0 ? S.you.splice(i, 1) : S.you.push(d.id); S.tasks = []; render(); },
+  toggleYou: (d) => { const i = S.you.indexOf(d.id); i >= 0 ? S.you.splice(i, 1) : S.you.push(d.id); clearLibrary(); render(); },
   editOwn: () => { S._editing = true; render(); },
   toggleTask: (d) => { const t = S.tasks.find((x) => x.id === d.id); t.on = !t.on; if (!t.on) t.who = null; render(); },
   weight: (d) => { const t = S.tasks.find((x) => x.id === d.id); t.w = (t.w % 3) + 1; render(); },

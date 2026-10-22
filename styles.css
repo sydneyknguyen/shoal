@@ -267,8 +267,8 @@ input { font: inherit; color: inherit; }
 .jars-illus .glassbox .gem { animation: none; }
 
 .path {
-  position: relative; display: flex; align-items: flex-start; gap: 16px;
-  width: 100%; height: 108px; padding: 18px 16px; text-align: left;
+  position: relative; display: flex; align-items: center; gap: 16px;
+  width: 100%; min-height: 96px; padding: 18px 44px 18px 16px; text-align: left;
   border-radius: 22px; box-shadow: var(--card-shadow);
   background: rgba(255, 255, 255, 0.6); border: 1px solid #fff;
   margin-bottom: 14px;
@@ -277,8 +277,8 @@ input { font: inherit; color: inherit; }
 .path .ico { flex: none; width: 44px; height: 44px; border-radius: 22px; background: var(--blue-tint); display: grid; place-items: center; }
 .path .ico img { display: block; }
 .path .t { font-weight: 600; font-size: 17px; display: block; }
-.path .d { font-size: 13.5px; line-height: 19px; color: var(--muted); display: block; margin-top: 6px; width: 230px; }
-.path .chev { position: absolute; right: 22px; top: 47px; width: 7px; height: 12px; }
+.path .d { font-size: 13.5px; line-height: 19px; color: var(--muted); display: block; margin-top: 4px; }
+.path .chev { position: absolute; right: 22px; top: 50%; margin-top: -6px; width: 7px; height: 12px; }
 .path-badge { position: absolute; left: 20px; top: -11px; z-index: 1; background: var(--blue); color: #fff; padding: 5px 10px; box-shadow: 0 2px 6px rgba(32, 112, 217, 0.25); }
 .foot-note { text-align: center; margin-top: 44px; }
 .skip-onboarding { display: block; margin: 10px auto 0; padding: 6px 12px; font-size: 12px; font-weight: 500; color: var(--muted); text-decoration: underline; text-underline-offset: 2px; }
@@ -814,8 +814,7 @@ input { font: inherit; color: inherit; }
 .chips.quiet { padding: 0 0 14px; }
 
 /* ---------- What's Pebble ---------- */
-.path.rec { height: 132px; }
-.whats-pebble { position: absolute; left: 77px; bottom: 26px; font-size: 13px; font-weight: 600; color: var(--blue); padding: 4px 0; }
+.whats-pebble { display: block; margin: 6px auto 0; min-height: 44px; padding: 0 12px; font-size: 14px; font-weight: 600; color: var(--blue); }
 .pebble-hero { position: relative; height: 250px; overflow: hidden; display: flex; align-items: center; justify-content: center; margin: 0 0 22px; background: linear-gradient(180deg, rgba(236, 244, 255, 0.9), rgba(255, 255, 255, 0.7)); }
 .ph-pebble { position: absolute; left: 50%; bottom: 14px; width: 150px; height: auto; transform: translateX(-68%); filter: drop-shadow(0 10px 14px rgba(90, 60, 40, 0.18)); }
 .ph-glow { position: absolute; width: 260px; height: 260px; border-radius: 50%; top: 20px; background: radial-gradient(circle, rgba(140, 196, 246, 0.35), transparent 65%); }

@@ -45,7 +45,6 @@ function ensureRoles() {
     visitFor: null, visitNote: "", asks: [],
     code: "", joined: false, volunteer: "", claimFor: null,
     open: [
-      { id: "p1", n: "A 10-minute check-in call", m: "Tue or Thu afternoon · by phone", taken: false },
       { id: "p2", n: "Mail a card", m: "Any day this week · we'll send the address privately", taken: false },
       { id: "p3", n: "Order groceries online", m: "Fridays · from anywhere", taken: false },
     ],

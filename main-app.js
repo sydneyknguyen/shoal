@@ -291,7 +291,7 @@ SCREENS.paired = () => {
   <div class="content">
     <p class="eyebrow">Step 4 of 8 · First stone</p>
     <h1 class="title">Paired. Now drop it in your jar.</h1>
-    <p class="sub">Your stone now glows ${STATE[st][1]} because ${st === "urgent" ? "the task is urgent. Once it's underway, it turns ice blue." : st === "progress" ? "someone is on it. It turns honey when it's due soon." : "no one has it yet."}</p>
+    <p class="sub">Your stone now glows ${STATE[st][1]} because ${st === "urgent" ? `the task is urgent. Once it's underway, it turns ${STATE.progress[1]}.` : st === "progress" ? `someone is on it. It turns ${STATE.urgent[1].replace("glowing ", "")} when it's due soon.` : "no one has it yet."}</p>
     <div class="card stage-card tall"><span class="okdot"><img src="${A("check.svg")}" alt=""></span>${gemOf(t, { size: "xl", cls: "breathe" })}
       <span class="badge ${st === "urgent" ? "amber" : ""}">${STATE[st][0]} · ${STATE[st][1]}</span>
       <p class="cap">${esc(t.n)} · ${esc(nameOf(t.who))}</p>
@@ -326,6 +326,7 @@ SCREENS.glow = () => `${setupTop(6)}
       <div>${gem("open", { size: "s", dark: true })}<span><b>Dark stone</b><small>Ongoing task</small></span></div>
       <p class="small">Both kinds glow the same colors.</p>
     </div>
+    <button class="btn-wide" data-act="colorSheet">Choose your own colors</button>
   </div>
   ${solo("Next", "setupNext")}`;
 
@@ -447,7 +448,7 @@ SCREENS.myjar = () => {
     <div class="card jar-hero">
       <div class="jh-jar">${familyJars({ only: "you", act: false })}</div>
       <div class="jh-ring" role="img" aria-label="${done.length} of ${all.length} done, ${urgent.length} urgent, ${today} for today">
-        ${ring([{ v: done.length, color: "#418ef3" }, { v: urgent.length, color: "#e2ad47" }, { v: live.length - urgent.length, color: "transparent" }], { size: 150, stroke: 10 })}
+        ${ring([{ v: done.length, color: "#418ef3" }, { v: urgent.length, color: urgentHex() }, { v: live.length - urgent.length, color: "transparent" }], { size: 150, stroke: 10 })}
         <div class="ring-mid"><b>${done.length}<small>/${all.length}</small></b><span>done</span></div>
       </div>
     </div>
@@ -632,6 +633,8 @@ SCREENS.settings = () => {
     <div class="card tlist">${row("Family setup", "Redo with Pebble or by hand", "redoSetup")}</div>
     <p class="section-h">Together</p>
     <div class="card tlist">${row("Thank-yous &amp; recaps", "Weekly recap on Sundays", "go", "", 'data-to="recapSettings"')}${row("Notifications", "Urgent, requests, and thank-yous", "go", "", 'data-to="notifications"')}</div>
+    <p class="section-h">Stones</p>
+    <div class="card tlist">${row("Stone colors", colorSummary(), "colorSheet")}</div>
     <p class="section-h">Other views</p>
     <div class="card tlist">${row("See Shoal as someone else", "Nurse, trusted circle, kids, public code", "roleSheet")}</div>
     <p class="section-h">Pebble</p>
@@ -674,6 +677,7 @@ SCREENS.kit = () => {
       <div class="seg big">${[["on", "On"], ["dim", "Dim"], ["off", "Off"]].map(([k, l]) => `<button class="${g === k ? "on" : ""}" aria-pressed="${g === k}" data-act="setGlow" data-id="${k}">${l}</button>`).join("")}</div>
       <div class="srow"><span class="tl-txt"><span class="n">Night hours</span><span class="m">${P.night ? `Off ${fmtTime(P.nightFrom)} – ${fmtTime(P.nightTo)}` : "Glows all night"}</span></span>${toggle(P.night, "pref", "night", "Night hours")}</div>
       ${P.night ? `<button class="srow" data-act="nightSheet"><span class="tl-txt"><span class="n">Change hours</span></span>${chev}</button>` : ""}
+      <button class="srow" data-act="colorSheet"><span class="tl-txt"><span class="n">Stone colors</span><span class="m">${colorSummary()}</span></span>${chev}</button>
       ${legend()}
     </div>
     <p class="section-h">Jars and base</p>
@@ -874,7 +878,7 @@ Object.assign(NOTES, {
   hold: ["Hold it to your phone", ["Only this screen listens for stones, so nothing pairs by accident. Pairing is simulated after ~2 seconds."]],
   paired: ["Paired", ["Pairs to your most urgent task, so the first glow means something."]],
   find: ["Find a stone", ["Tap Find stone and its stone blinks in the jar."]],
-  glow: ["What the glow means", ["Honey = urgent, ice blue = in progress, white = unassigned, off = done.", "Light stones are one-time, dark stones are ongoing."]],
+  glow: ["What the glow means", ["Honey = urgent, ice blue = in progress, white = unassigned, off = done. Families can pick their own colors in Settings.", "Light stones are one-time, dark stones are ongoing."]],
   charge: ["Charging", ["The base powers the jars, so stones charge in a jar or on the base. No moving stones around to charge.", "Only a stone left out (on a table, in a bag) runs down, and the app warns you."]],
   pairRest: ["Pair the rest", ["Optional. Anyone can pair their own stones later."]],
   home: ["Home", ["Urgent first, then the family jars and this week. No section labels, so it reads at a glance.", "The week is a bar chart of how much the family has each day. Tap a bar to see that day's tasks.", "Top right: the jar icon opens the home kit (glow, batteries, jars), the bell opens notifications."]],

@@ -597,7 +597,7 @@ SCREENS.peopleTab = () => {
         <span class="circle-ico">${icon("peopleTab")}</span>
         <span class="tl-txt"><span class="n">Trusted circle</span><span class="m"><span class="stack">${circle.slice(0, 4).map((p) => avatar(p, "s20")).join("")}</span>${circle.length ? `${esc(circle[0].name)}${circle.length > 1 ? ` + ${circle.length - 1} other${circle.length > 2 ? "s" : ""}` : ""} · ` : "No one yet · "}${((n) => `${n} task${n === 1 ? "" : "s"}`)(circle.reduce((n, p) => n + mine(p.id).length, 0))}</span></span>
         <span class="badge">On</span>${chev}</button>
-      ${S.conditions.includes("hospice") || S.app.demo ? `<button class="prow" data-act="toast" data-msg="The hospice nurse sees care tasks only"><span class="avatar s36">A</span><span class="tl-txt"><span class="n">Hospice nurse</span><span class="m">Ana · sees care tasks only</span></span>${chev}</button>` : ""}
+      ${S.conditions.includes("hospice") || S.app.demo ? `<button class="prow" data-act="roleGo" data-to="asNurse"><span class="avatar s36">A</span><span class="tl-txt"><span class="n">Hospice nurse</span><span class="m">Ana · see what she sees</span></span>${chev}</button>` : ""}
       <div class="prow"><span class="circle-ico"><img src="${A("lock.svg")}" alt=""></span><span class="tl-txt"><span class="n">Public code</span><span class="m">Remote tasks for volunteers</span></span>${toggle(S.app.prefs.publicCode, "pref", "publicCode", "Public code")}</div>
     </div>
   </div>
@@ -632,6 +632,8 @@ SCREENS.settings = () => {
     <div class="card tlist">${row("Family setup", "Redo with Pebble or by hand", "redoSetup")}</div>
     <p class="section-h">Together</p>
     <div class="card tlist">${row("Thank-yous &amp; recaps", "Weekly recap on Sundays", "go", "", 'data-to="recapSettings"')}${row("Notifications", "Urgent, requests, and thank-yous", "go", "", 'data-to="notifications"')}</div>
+    <p class="section-h">Other views</p>
+    <div class="card tlist">${row("See Shoal as someone else", "Nurse, trusted circle, kids, public code", "roleSheet")}</div>
     <p class="section-h">Pebble</p>
     <div class="card tlist">${row("What Pebble can see", "Answers and goals. Never notes.", "pebbleSees")}</div>
     <p class="section-h">Account</p>

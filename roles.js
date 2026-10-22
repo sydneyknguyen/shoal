@@ -1,16 +1,16 @@
 /* Shoal: the same family plan, seen by everyone else. Nurse or doula, trusted circle, kids and teens,
-   and volunteers with the public code each get their own small view. Uses state and helpers from app.js and main-app.js. */
+   and volunteers with the family's volunteer code each get their own small view. Uses state and helpers from app.js and main-app.js. */
 
 const ROLES = [
   { id: "main", screen: "home", who: "You", label: "Main caregiver", sees: "The whole plan: every jar, task, and stone." },
   { id: "nurse", screen: "asNurse", who: "Ana", label: "Nurse or doula", sees: "Visits, the care notes the family shares, and what she's asked for." },
   { id: "trusted", screen: "asTrusted", who: "Nora", label: "Trusted circle", sees: "Her own tasks and light ones she can pick up. No medical details." },
   { id: "kid", screen: "asKid", who: "Leo", label: "Kid or teen", sees: "Kid-friendly jobs only, in plain words." },
-  { id: "public", screen: "asPublic", who: "A volunteer", label: "Public code", sees: "Remote tasks only. No names, no address." },
+  { id: "public", screen: "asPublic", who: "A volunteer", label: "Volunteer code", sees: "Only tasks the family shares. No names, no address." },
 ];
 const ROLE_SCREENS = ROLES.filter((r) => r.id !== "main").map((r) => r.screen);
-ROLE_SCREENS.forEach((s) => APP_SCREENS.add(s));
-APP_NAV.push(...ROLE_SCREENS);
+[...ROLE_SCREENS, "volunteerCode"].forEach((s) => APP_SCREENS.add(s));
+APP_NAV.push("volunteerCode", ...ROLE_SCREENS);
 const PUBLIC_CODE = "4821";
 
 /* ---------- Data each view needs ---------- */
@@ -65,7 +65,7 @@ notifications = function () {
   if (R) {
     R.visits.filter((v) => v.done && v.id !== "v1").forEach((v) => list.push({ kind: "done", when: "Today", who: { name: "Ana" }, n: "Ana checked in after the visit", m: v.note || "Visit done", act: "", id: "" }));
     R.asks.forEach((a) => list.push({ kind: "request", needs: !task(a.task)?.who, cta: "Open", when: "Today", who: { name: "Ana" }, n: `Ana asked for “${a.n}”`, m: "It's in the open tasks", act: "openTask", id: a.task }));
-    if (R.volunteer) list.push({ kind: "done", when: "Today", who: { name: R.volunteer }, n: `${R.volunteer} picked up a task with your public code`, m: R.open.filter((x) => x.taken).map((x) => x.n).join(", "), act: "", id: "" });
+    if (R.volunteer) list.push({ kind: "done", when: "Today", who: { name: R.volunteer }, n: `${R.volunteer} picked up a task with your volunteer code`, m: R.open.filter((x) => x.taken).map((x) => x.n).join(", "), act: "", id: "" });
   }
   return [...list, ...baseNotifications()];
 };
@@ -198,13 +198,48 @@ SCREENS.asPublic = () => {
   </div>`;
 };
 
+/* ---------- Volunteer code, as the family sees it ---------- */
+
+const VC_STEPS = [
+  ["Share the code", "Text it, post it, or put it in a church bulletin."],
+  ["They enter it in Shoal", "Volunteers only see the tasks you share below."],
+  ["Someone offers to help", "You get a note with their first name, so you can say thanks."],
+];
+SCREENS.volunteerCode = () => {
+  const R = S.app.roles, on = S.app.prefs.publicCode;
+  return `${navtop("People")}
+  <div class="content">
+    <p class="eyebrow">Extended circle</p>
+    <h1 class="title">Volunteer code</h1>
+    <p class="sub">A 4-digit code for people outside the family who want to help, like neighbors, a church group, or coworkers.</p>
+    <div class="card vc-code ${on ? "" : "off"}">
+      <div class="vc-digits" aria-label="Code ${PUBLIC_CODE.split("").join(" ")}">${PUBLIC_CODE.split("").map((d) => `<span>${d}</span>`).join("")}</div>
+      <div class="vc-row"><span class="tl-txt"><span class="n">${on ? "Code is on" : "Code is off"}</span><span class="m">${on ? "Anyone with it can offer help" : "No one can use it right now"}</span></span>${toggle(on, "pref", "publicCode", "Volunteer code")}</div>
+      ${on ? `<div class="actions"><button class="btn-soft" data-act="vcShare">Share code</button><button class="btn-soft" data-act="vcNew">Make a new one</button></div>` : ""}
+    </div>
+    <p class="section-h">How it works</p>
+    <div class="card steps-list">${VC_STEPS.map(([t, d], i) => `<div class="step"><span class="num">${i + 1}</span><span><b>${t}</b><small>${d}</small></span></div>`).join("")}</div>
+    <p class="section-h">Shared with volunteers</p>
+    <div class="card tlist">${R.open.map((x) => `<div class="tline"><div class="tl-main">${gem(x.taken ? "progress" : "open")}
+        <span class="tl-txt"><span class="n">${esc(x.n)}</span><span class="m">${x.taken ? `${esc(R.volunteer || "A volunteer")} has this one` : esc(x.m)}</span></span></div>
+        ${x.taken ? "" : `<button class="pill-btn" data-act="vcUnshare" data-id="${x.id}">Stop</button>`}</div>`).join("") || `<p class="small empty">Nothing shared yet.</p>`}
+      <button class="more" data-act="vcAddSheet">Share another task${chev}</button></div>
+    <div class="can-grid">
+      <div class="card can"><p class="eyebrow">Volunteers see</p><p class="ci yes">Tasks you share here</p><p class="ci yes">That a family needs help</p></div>
+      <div class="card can"><p class="eyebrow grey">They never see</p><p class="ci no">Names or the address</p><p class="ci no">Medical details or jars</p></div>
+    </div>
+    <button class="btn-wide" data-act="roleGo" data-to="asPublic">See what volunteers see</button>
+  </div>`;
+};
+
 /* ---------- Actions ---------- */
 
 Object.assign(NOTES, {
+  volunteerCode: ["Volunteer code", ["Renamed from “Public code”: testers didn't know what that meant.", "Explains who it's for, how it works, and what volunteers can and can't see. The family picks which tasks to share."]],
   asNurse: ["View: nurse or doula", ["Ana, the hospice nurse, sees visits and the notes the family shares with her.", "Checking in after a visit sends a note to the family. Asking for something adds an open task to the family's plan."]],
   asTrusted: ["View: trusted circle", ["Nora gets a text link, not the app. She sees her own tasks and light ones she can pick up.", "Taking one puts it in her name for the whole family."]],
   asKid: ["View: kid or teen", ["Leo sees kid-friendly jobs only, in plain words, with a count of how much he's helped.", "No medical details or due-date pressure."]],
-  asPublic: ["View: public code", ["Anyone with the family's code can help with remote tasks. They never see names or the address.", "The code only works while the family has it on in People."]],
+  asPublic: ["View: volunteer code", ["Anyone with the family's code can help with remote tasks. They never see names or the address.", "The code only works while the family has it on in People."]],
 });
 
 Object.assign(APP_INPUT, {
@@ -267,7 +302,21 @@ Object.assign(ACTIONS, {
     if (!S.app.prefs.publicCode) { toast("This family's code is off right now"); return; }
     R.joined = true; render();
   },
-  rolePublicOn: () => { S.app.prefs.publicCode = true; render(); toast("Public code is on"); },
+  vcShare: () => toast(`Copied: “Want to help? Enter code ${PUBLIC_CODE} in Shoal.”`),
+  vcNew: () => toast("New code made. The old one stops working."),
+  vcUnshare: (d) => { const R = S.app.roles; R.open = R.open.filter((x) => x.id !== d.id); render(); toast("No longer shared with volunteers"); },
+  vcAddSheet: () => {
+    const shared = new Set(S.app.roles.open.map((x) => x.from));
+    const list = active().filter((t) => !shared.has(t.id) && t.w === 1).slice(0, 8);
+    openSheet(`<h3>Share a task with volunteers</h3><p class="small">Light tasks someone could do without visiting. Volunteers won't see who it's for.</p>
+      <div class="card tlist">${list.map((t) => `<button class="srow" data-act="vcShareTask" data-id="${t.id}">${gemOf(t)}<span class="tl-txt"><span class="n">${esc(t.n)}</span></span><span class="paired-tag">Share</span></button>`).join("") || `<p class="small empty">No light tasks to share yet.</p>`}</div>`);
+  },
+  vcShareTask: (d) => {
+    const t = S.tasks.find((x) => x.id === d.id);
+    S.app.roles.open.push({ id: `s${t.id}`, from: t.id, n: t.n, m: "From anywhere · first come", taken: false });
+    closeSheet(); render(); toast("Shared with volunteers");
+  },
+  rolePublicOn: () => { S.app.prefs.publicCode = true; render(); toast("Volunteer code is on"); },
   publicClaim: (d) => {
     const R = S.app.roles; R.claimFor = d.id;
     if (R.volunteer) { ACTIONS.publicConfirm(); return; }

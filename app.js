@@ -193,7 +193,7 @@ const initialState = () => ({
   lovedOne: "",
   conditions: [],
   them: [],
-  themOwn: "",
+  own: { cond: [], them: [], you: [], strengths: [] }, // write-in answers per question
   you: [],
   tasks: [], // {id, n, w, k, cat, on, pebble, kind:"once"|"repeat", days, date, time, who}
   taskTab: null,
@@ -468,37 +468,31 @@ SCREENS.about = () => `${topbar({ skip: false })}
     ${CONDITIONS.map((c) => {
       const on = S.conditions.includes(c.id);
       return `<button class="option ${on ? "on" : ""}" data-act="condition" data-id="${c.id}">
-      <span class="txt"><span class="t">${c.t}</span><span class="d">${c.d}</span></span>${check(on)}
+      <span class="txt"><span class="t">${c.t}</span></span>${check(on)}
     </button>`;
     }).join("")}
+    ${writeIns("cond", "Write your own")}
   </div>
-  ${footer("Next", { disabled: !S.lovedOne.trim() || !S.conditions.length })}`;
+  ${footer("Next", { disabled: !S.lovedOne.trim() || !(S.conditions.length || S.own.cond.length) })}`;
 
 SCREENS.them = () => `${topbar()}
   <div class="content">
     ${eyebrow("Suggestions")}
     <h1 class="title">What matters most to ${esc(S.lovedOne)} right now?</h1>
-    <p class="sub">Pick up to two, or write your own.</p>
+    <p class="sub">Pick any, or write your own.</p>
     ${MATTERS_THEM.map((m) => `<button class="option ${S.them.includes(m.id) ? "on" : ""}" data-act="toggleThem" data-id="${m.id}">
-      <span class="txt"><span class="t">${m.t}</span><span class="d">${m.d}</span></span>${check(S.them.includes(m.id))}
+      <span class="txt"><span class="t">${m.t}</span></span>${check(S.them.includes(m.id))}
     </button>`).join("")}
-    ${ownWords("themOwn", "Something only your family would know")}
+    ${writeIns("them", "Write your own")}
   </div>
   ${footer()}`;
 
-function ownWords(key, placeholder) {
-  const v = S[key];
-  if (v && !S._editing) {
-    return `<div class="option on" style="display:block;min-height:92px">
-      <p class="eyebrow" style="margin:0 0 6px">Your words</p>
-      <p style="margin:0;font-weight:500;font-size:15px;line-height:21px;padding-right:44px">“${esc(v)}”</p>
-      <span style="position:absolute;right:16px;top:14px">${check(true)}</span>
-      <button data-act="editOwn" style="position:absolute;right:16px;bottom:12px;font-weight:600;font-size:13px;color:var(--blue)">Edit</button>
-    </div>`;
-  }
-  return `<form class="write-own editing" data-form="own" data-key="${key}">
-    <img src="${A("plus.svg")}" alt=""><input name="v" placeholder="${placeholder}" value="${esc(v || "")}" autofocus>
-    <button class="go">Save</button></form>`;
+// Your own answers sit with the others as picked options. Tap one to remove it.
+function writeIns(key, placeholder) {
+  const list = S.own[key];
+  return `${list.map((v, i) => `<button class="option on own" data-act="dropOwn" data-key="${key}" data-i="${i}" aria-label="Remove ${esc(v)}">
+      <span class="txt"><span class="t">${esc(v)}</span></span>${check(true)}</button>`).join("")}
+    <form class="write-own" data-form="own" data-key="${key}"><img src="${A("plus.svg")}" alt=""><input name="v" placeholder="${placeholder}" aria-label="${placeholder}"><button class="go">Add</button></form>`;
 }
 
 SCREENS.you = () => `${topbar()}
@@ -507,8 +501,9 @@ SCREENS.you = () => `${topbar()}
     <h1 class="title">What matters most to you?</h1>
     <p class="sub lock"><img src="${A("lock.svg")}" width="14" height="14" alt="">Only you see this answer.</p>
     ${MATTERS_YOU.map((m) => `<button class="option ${S.you.includes(m.id) ? "on" : ""}" data-act="toggleYou" data-id="${m.id}">
-      <span class="txt"><span class="t">${m.t}</span><span class="d">${m.d}</span></span>${check(S.you.includes(m.id))}
+      <span class="txt"><span class="t">${m.t}</span></span>${check(S.you.includes(m.id))}
     </button>`).join("")}
+    ${writeIns("you", "Write your own")}
   </div>
   ${footer("See suggested tasks")}`;
 
@@ -588,31 +583,30 @@ SCREENS.dates = () => {
   ${footer("Done")}`;
 };
 
+// One card per group, each with its own "Add" row, so where a person lands is never a second question.
+const PEOPLE_GROUPS = [
+  { tier: "main", t: "Main caregivers", hint: "Get the app, a jar, and stones", add: "Add a caregiver" },
+  { tier: "trusted", t: "Trusted circle", hint: "Friends and neighbors · light tasks", add: "Add a friend or neighbor" },
+  { tier: "kid", t: "Kids & teens", hint: "Kid-friendly tasks only", add: "Add a kid or teen" },
+];
 SCREENS.people = () => {
-  const main = S.people.filter((p) => p.tier === "main");
-  const trusted = S.people.filter((p) => p.tier === "trusted");
-  const kids = S.people.filter((p) => p.tier === "kid");
-  const line = (p) => `<div class="person">${avatar(p)}
-      <span class="main"><span class="n">${esc(p.name)}</span><span class="m">${esc(p.note)}</span></span>
-      ${p.id === "you" || p.joined ? stone(true) : `<span class="badge">Invited</span>`}
+  const line = (p) => `<div class="person">${avatar(p, "s36")}
+      <span class="main"><span class="n">${esc(p.name)}</span>${p.id === "you" ? `<span class="m">That's you</span>` : ""}</span>
+      ${p.id === "you" || p.joined ? "" : `<span class="badge">Invited</span>`}
     </div>`;
   return `${topbar({ skip: false })}
   <div class="content">
     ${eyebrow("People")}
     <h1 class="title">Who's helping?</h1>
-    <p class="sub">Main caregivers each get the Shoal app, a jar, and stones. We'll text them a link to download it.</p>
-    <p class="eyebrow grey" style="margin:4px 0 10px">Main circle · gets a jar</p>
-    <div class="card">${main.map(line).join("")}</div>
-    <p class="eyebrow grey" style="margin:22px 0 10px">Trusted circle · helps with light tasks</p>
-    <div class="card">${trusted.map(line).join("") || `<div class="person"><span class="small">No one yet</span></div>`}</div>
-    <p class="eyebrow grey" style="margin:22px 0 10px">Kids &amp; teens · kid-friendly tasks</p>
-    <div class="card">${kids.map(line).join("") || `<div class="person"><span class="small">Grandkids can help too: calls, games, pets, the mail.</span></div>`}</div>
-    ${S._adding ? `<form class="write-own editing" data-form="person" style="height:auto;padding:10px 12px 10px 17px;flex-wrap:wrap;gap:10px">
-        <input name="v" placeholder="Name or phone number" autofocus style="min-width:150px">
-        <span class="seg">${[["main", "Main"], ["trusted", "Trusted"], ["kid", "Kid or teen"]].map(([k, l]) => `<button type="button" class="${S._addTier === k ? "on" : ""}" data-act="addTier" data-tier="${k}">${l}</button>`).join("")}</span>
-        <button class="go">Invite</button></form>`
-      : `<button class="write-own" data-act="addPerson"><img src="${A("plus.svg")}" alt="">Add a person</button>`}
-    <p class="small" style="margin-top:16px">Anyone else can help through a public link later: wishlists, meal trains, donations.</p>
+    <p class="sub">We'll text each person a link. You can add more later.</p>
+    ${PEOPLE_GROUPS.map((g) => `<div class="pgroup">
+      <div class="pg-head"><b>${g.t}</b><span>${g.hint}</span></div>
+      <div class="card pg-card">${S.people.filter((p) => p.tier === g.tier).map(line).join("")}
+        ${S._adding === g.tier
+          ? `<form class="pg-form" data-form="person"><input name="v" placeholder="Name or phone number" aria-label="Name or phone number" autofocus><button class="go">Invite</button><button type="button" class="x-btn" data-act="cancelAdd" aria-label="Cancel"><span aria-hidden="true">×</span></button></form>`
+          : `<button class="pg-add" data-act="addPerson" data-tier="${g.tier}"><span class="pg-plus" aria-hidden="true">+</span>${g.add}</button>`}
+      </div>
+    </div>`).join("")}
   </div>
   ${footer()}`;
 };
@@ -687,8 +681,9 @@ SCREENS.strengths = () => `${topbar({ skip: false })}
     <p class="sub">Pick all that apply. Pebble leans toward giving you tasks that fit.</p>
     ${STRENGTHS.map((s) => {
       const on = S.strengths.includes(s.id);
-      return `<button class="option ${on ? "on" : ""}" data-act="strength" data-id="${s.id}"><span class="txt"><span class="t">${s.t}</span><span class="d">${s.d}</span></span>${check(on)}</button>`;
+      return `<button class="option ${on ? "on" : ""}" data-act="strength" data-id="${s.id}"><span class="txt"><span class="t">${s.t}</span></span>${check(on)}</button>`;
     }).join("")}
+    ${writeIns("strengths", "Something else you're good at")}
     <p class="small" style="margin-top:14px">Pebble uses this to keep the split fair. Others only see the plan.</p>
   </div>
   ${footer(S.path === "pebble" ? "See Pebble's split" : "Next: split it up")}`;
@@ -931,14 +926,12 @@ const ACTIONS = {
   },
   toggleThem: (d) => {
     const i = S.them.indexOf(d.id);
-    if (i >= 0) S.them.splice(i, 1);
-    else if (S.them.length < 2) S.them.push(d.id);
-    else toast("Pick up to two");
+    i >= 0 ? S.them.splice(i, 1) : S.them.push(d.id);
     clearLibrary();
     render();
   },
   toggleYou: (d) => { const i = S.you.indexOf(d.id); i >= 0 ? S.you.splice(i, 1) : S.you.push(d.id); clearLibrary(); render(); },
-  editOwn: () => { S._editing = true; render(); },
+  dropOwn: (d) => { S.own[d.key].splice(+d.i, 1); render(); },
   toggleTask: (d) => { const t = S.tasks.find((x) => x.id === d.id); t.on = !t.on; if (!t.on) t.who = null; render(); },
   weight: (d) => { const t = S.tasks.find((x) => x.id === d.id); t.w = (t.w % 3) + 1; render(); },
   dvView: (d) => { S.dv.view = d.id; render(); },
@@ -967,7 +960,8 @@ const ACTIONS = {
   allDays: () => sheetEdit((t) => { t.days = t.days.length === 7 ? ["Mon"] : [...DAYS]; }),
   anyTime: () => sheetEdit((t) => { t.time = ""; }),
   closeSheet,
-  addPerson: () => { S._adding = true; S._addTier = "main"; render(); },
+  addPerson: (d) => { S._adding = S._addTier = d.tier || "main"; render(); },
+  cancelAdd: () => { S._adding = false; render(); },
   addTier: (d) => {
     const v = document.querySelector('[data-form="person"] input')?.value || "";
     S._addTier = d.tier; render();
@@ -1042,7 +1036,13 @@ document.addEventListener("submit", (e) => {
   e.preventDefault();
   const v = f.elements.v.value.trim();
   const kind = f.dataset.form;
-  if (kind === "own") { S[f.dataset.key] = v; S._editing = false; render(); return; }
+  if (kind === "own") {
+    if (!v) return;
+    S.own[f.dataset.key].push(v);
+    render();
+    document.querySelector(`[data-form="own"][data-key="${f.dataset.key}"] input`)?.focus();
+    return;
+  }
   if (!v) return;
   if (kind === "task") {
     S.tasks.push({ id: `c${Date.now()}`, n: v, w: 2, k: "", cat: S.taskTab, on: true, kind: "once", days: ["Sat"], date: addDays(2), time: "", who: null });

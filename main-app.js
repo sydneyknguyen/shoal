@@ -241,23 +241,31 @@ function setupCard() {
   if (n === SETUP_STEPS.length) return `<div class="card setup-card all-set">
     <span class="tl-txt"><span class="n">You're all set up</span><span class="m">Change anything from My jar, People, or Settings.</span></span>
     <button class="linkish" data-act="hideSetup">Hide</button></div>`;
-  return `<div class="card setup-card">
-    <div class="sc-head"><span><p class="eyebrow">Finish setting up</p><b>${n} of ${SETUP_STEPS.length} done</b></span><span class="small">Any order, whenever you're ready</span></div>
-    <div class="bar"><i style="width:${(n / SETUP_STEPS.length) * 100}%"></i></div>
+  const nextUp = SETUP_STEPS.find((x) => !S.setup[x.id] && (!x.needs || S.setup[x.needs]));
+  return homeSec("setup", "Finish setting up", `<span class="hs-count">${n} of ${SETUP_STEPS.length}</span>`, `<div class="card setup-card">
+    <div class="bar" aria-hidden="true"><i style="width:${Math.max(4, (n / SETUP_STEPS.length) * 100)}%"></i></div>
     <div class="tlist flat">${SETUP_STEPS.map((x) => {
       const done = S.setup[x.id], locked = x.needs && !S.setup[x.needs];
-      return `<button class="srow sc-row ${done ? "done" : ""} ${locked ? "locked" : ""}" data-act="setupStep" data-id="${x.id}">
+      return `<button class="srow sc-row ${done ? "done" : ""} ${locked ? "locked" : ""} ${x === nextUp ? "next" : ""}" data-act="setupStep" data-id="${x.id}">
         <span class="sc-check">${done ? `<img src="${A("check.svg")}" alt="Done">` : ""}</span>
         <span class="tl-txt"><span class="n">${x.t}</span><span class="m">${locked ? "Add tasks first" : done ? "Done · tap to change" : x.m}</span></span>${chev}</button>`;
     }).join("")}</div>
-  </div>`;
+  </div>`, nextUp ? `<button class="card sc-peek" data-act="setupStep" data-id="${nextUp.id}"><span class="tl-txt"><span class="m">Next up</span><span class="n">${nextUp.t}</span></span>${chev}</button>` : "");
+}
+
+// A titled Home section that folds closed. Closed, it can still show a one-line peek.
+function homeSec(id, title, right, body, peek = "") {
+  const shut = S.app.shut?.[id];
+  return `<section class="hsec ${shut ? "shut" : ""}" data-sec="${id}">
+    <button class="hsec-head" data-act="homeFold" data-id="${id}" aria-expanded="${!shut}"><span class="hs-title">${title}</span>${right}<span class="hs-chev" aria-hidden="true"></span></button>
+    ${shut ? peek : body}
+  </section>`;
 }
 
 function finishOnboarding() {
   S.setup = {};
   ensureAppData();
   tabTo("home");
-  toast("You're in. Set up the rest whenever you're ready.");
 }
 function setupDone(id) {
   if (S.setup) S.setup[id] = true;
@@ -448,11 +456,12 @@ SCREENS.home = () => {
       </button>` : ""}
     ${finished ? `<div class="finished">${avatar(person(finished.who), "s20")}<span class="fin-txt"><b>${esc(person(finished.who).name)}</b> finished “${esc(finished.n)}”</span>
       <button class="linkish" data-act="sayThanks" data-id="${finished.id}">Thank</button><button class="x-btn" data-act="dismissThanks" data-id="${finished.id}" aria-label="Dismiss"><span aria-hidden="true">×</span></button></div>` : ""}
-    <div class="card shelf">${familyJars()}</div>
-    <div class="card week">
-      ${loadChart(week)}
-      <div class="tlist flat">${today.length ? today.map((t) => taskLine(t)).join("") : `<p class="small empty">Nothing on ${DAY_FULL[dayKey(day)]}.</p>`}</div>
-    </div>
+    ${homeSec("jars", "Family jars", "", `<div class="card shelf">${familyJars()}</div>`)}
+    ${homeSec("week", "This week", "", `<div class="card week">
+      ${active().length ? `${loadChart(week)}
+      <div class="tlist flat">${today.length ? today.map((t) => taskLine(t)).join("") : `<p class="small empty">Nothing on ${DAY_FULL[dayKey(day)]}.</p>`}</div>`
+        : `<p class="small empty">No tasks yet. Once you add some, your family's week shows here.</p>`}
+    </div>`)}
   </div>
   ${tabbar()}`;
 };
@@ -648,7 +657,7 @@ SCREENS.peopleTab = () => {
         <span class="tl-txt"><span class="n">Trusted circle</span><span class="m"><span class="stack">${circle.slice(0, 4).map((p) => avatar(p, "s20")).join("")}</span>${circle.length ? `${esc(circle[0].name)}${circle.length > 1 ? ` + ${circle.length - 1} other${circle.length > 2 ? "s" : ""}` : ""} · ` : "No one yet · "}${((n) => `${n} task${n === 1 ? "" : "s"}`)(circle.reduce((n, p) => n + mine(p.id).length, 0))}</span></span>
         <span class="badge">On</span>${chev}</button>
       ${S.conditions.includes("hospice") || S.app.demo ? `<button class="prow" data-act="roleGo" data-to="asNurse"><span class="avatar s36">A</span><span class="tl-txt"><span class="n">Hospice nurse</span><span class="m">Ana · see what she sees</span></span>${chev}</button>` : ""}
-      <div class="prow"><span class="circle-ico"><img src="${A("lock.svg")}" alt=""></span><span class="tl-txt"><span class="n">Public code</span><span class="m">Remote tasks for volunteers</span></span>${toggle(S.app.prefs.publicCode, "pref", "publicCode", "Public code")}</div>
+      <button class="prow" data-act="go" data-to="volunteerCode"><span class="circle-ico"><img src="${A("lock.svg")}" alt=""></span><span class="tl-txt"><span class="n">Volunteer code</span><span class="m">${S.app.prefs.publicCode ? `On · code ${PUBLIC_CODE}` : "Let neighbors and friends help from anywhere"}</span></span><span class="badge ${S.app.prefs.publicCode ? "" : "plain"}">${S.app.prefs.publicCode ? "On" : "Off"}</span>${chev}</button>
     </div>
   </div>
   ${tabbar()}`;
@@ -685,7 +694,7 @@ SCREENS.settings = () => {
     <p class="section-h">Stones</p>
     <div class="card tlist">${row("Stone colors", colorSummary(), "colorSheet")}</div>
     <p class="section-h">Other views</p>
-    <div class="card tlist">${row("See Shoal as someone else", "Nurse, trusted circle, kids, public code", "roleSheet")}</div>
+    <div class="card tlist">${row("See Shoal as someone else", "Nurse, trusted circle, kids, volunteers", "roleSheet")}${row("Take the tour again", "A quick look at each page", "tourStart")}</div>
     <p class="section-h">Pebble</p>
     <div class="card tlist">${row("What Pebble can see", "Answers and goals. Never notes.", "pebbleSees")}</div>
     <p class="section-h">Account</p>
@@ -1036,6 +1045,7 @@ Object.assign(ACTIONS, {
   },
   finishStones: () => setupDone("stones"),
   hideSetup: () => { S.setup.hidden = true; render(); },
+  homeFold: (d) => { S.app.shut ||= {}; S.app.shut[d.id] = !S.app.shut[d.id]; render(); },
   appJump: (d) => appJump(d.to),
   setupNext: () => go(SETUP[SETUP.indexOf(S.screen) + 1]),
   tab: (d) => tabTo(d.to),

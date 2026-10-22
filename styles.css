@@ -532,9 +532,9 @@ input { font: inherit; color: inherit; }
 .gem.progress { --hi: #ffffff; --mid: #d3e9fc; --lo: #98c4ec; --glow: rgba(140, 196, 246, 0.55); }
 .gem.open { --glow: rgba(255, 255, 255, 1); box-shadow: 0 0 9px 2px var(--glow), 0 2px 5px rgba(33, 38, 46, 0.12), inset 0 -3px 5px rgba(19, 49, 93, 0.07); }
 .gem.done { --hi: #ececec; --mid: #cfcfcf; --lo: #a9abae; --glow: transparent; box-shadow: inset 0 -3px 5px rgba(19, 49, 93, 0.1); }
-.gem.dark { --hi: #d4d8dd; --mid: #959ba3; --lo: #5f656e; }
-.gem.dark.urgent { --hi: #f6e6b8; --mid: #b39a62; --lo: #615a4c; }
-.gem.dark.progress { --hi: #e4eef8; --mid: #8fa5bb; --lo: #56616e; }
+.gem.dark { --hi: #ffffff; --mid: #aab2bd; --lo: #5b626c; }
+.gem.dark.urgent { --hi: #ffe9a8; --mid: #d9a23a; --lo: #7a5a1c; }
+.gem.dark.progress { --hi: #e6f2ff; --mid: #6fa3d6; --lo: #33597f; }
 .gem.dark.done { --hi: #b3b7bd; --mid: #8e939a; --lo: #6a7078; }
 .gem.none { background: none; border: 1.4px dashed var(--dash); box-shadow: none; }
 .gem.dim { opacity: 0.55; box-shadow: inset 0 -3px 5px rgba(19, 49, 93, 0.07); }

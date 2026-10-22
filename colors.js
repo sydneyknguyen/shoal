@@ -1,15 +1,16 @@
 /* Shoal: stone colors each family picks for themselves. Done always means the light is off;
    urgent, in progress, and unassigned can each be any color, as long as no two match. */
 
+// dark: the ongoing-task colorway. A deeper rim, but the core keeps the state's color so it still reads as lit.
 const PALETTE = {
-  honey: { name: "honey", hi: "#fff5d6", mid: "#f6d27c", lo: "#d9a23a", glow: "rgba(246, 196, 92, 0.6)", dark: ["#f6e6b8", "#b39a62", "#615a4c"] },
-  orange: { name: "orange", hi: "#ffe9d6", mid: "#f9ad6b", lo: "#e07a2c", glow: "rgba(247, 150, 70, 0.55)", dark: ["#f7dcc4", "#b98458", "#66503f"] },
-  red: { name: "red", hi: "#ffe1dc", mid: "#f28a7b", lo: "#cf4a37", glow: "rgba(236, 100, 84, 0.5)", dark: ["#f5d0ca", "#b4766d", "#694643"] },
-  pink: { name: "pink", hi: "#ffe6f1", mid: "#f4a6c8", lo: "#d9669a", glow: "rgba(240, 140, 190, 0.5)", dark: ["#f4d6e3", "#b88aa0", "#664957"] },
-  purple: { name: "purple", hi: "#efe8ff", mid: "#bba5f2", lo: "#8a6ad8", glow: "rgba(170, 140, 240, 0.5)", dark: ["#e2daf6", "#9a8ab8", "#57496e"] },
-  ice: { name: "ice blue", hi: "#ffffff", mid: "#d3e9fc", lo: "#98c4ec", glow: "rgba(140, 196, 246, 0.55)", dark: ["#e4eef8", "#8fa5bb", "#56616e"] },
-  green: { name: "green", hi: "#e9fbe6", mid: "#a6dd9a", lo: "#5fae55", glow: "rgba(120, 210, 110, 0.5)", dark: ["#d8eed3", "#8aa985", "#4c6249"] },
-  white: { name: "white", hi: "#ffffff", mid: "#eef1f5", lo: "#cfd5dd", glow: "rgba(255, 255, 255, 0.95)", dark: ["#d4d8dd", "#959ba3", "#5f656e"] },
+  honey: { name: "honey", hi: "#fff5d6", mid: "#f6d27c", lo: "#d9a23a", glow: "rgba(246, 196, 92, 0.6)", dark: ["#ffe9a8", "#d9a23a", "#7a5a1c"] },
+  orange: { name: "orange", hi: "#ffe9d6", mid: "#f9ad6b", lo: "#e07a2c", glow: "rgba(247, 150, 70, 0.55)", dark: ["#ffd0a6", "#e07a2c", "#7d3f12"] },
+  red: { name: "red", hi: "#ffe1dc", mid: "#f28a7b", lo: "#cf4a37", glow: "rgba(236, 100, 84, 0.5)", dark: ["#ffc2b8", "#cf4a37", "#74251b"] },
+  pink: { name: "pink", hi: "#ffe6f1", mid: "#f4a6c8", lo: "#d9669a", glow: "rgba(240, 140, 190, 0.5)", dark: ["#ffd0e4", "#d9669a", "#7a2f52"] },
+  purple: { name: "purple", hi: "#efe8ff", mid: "#bba5f2", lo: "#8a6ad8", glow: "rgba(170, 140, 240, 0.5)", dark: ["#ddd0ff", "#8a6ad8", "#46317e"] },
+  ice: { name: "ice blue", hi: "#ffffff", mid: "#d3e9fc", lo: "#98c4ec", glow: "rgba(140, 196, 246, 0.55)", dark: ["#e6f2ff", "#6fa3d6", "#33597f"] },
+  green: { name: "green", hi: "#e9fbe6", mid: "#a6dd9a", lo: "#5fae55", glow: "rgba(120, 210, 110, 0.5)", dark: ["#d6f5cf", "#5fae55", "#2f5e2a"] },
+  white: { name: "white", hi: "#ffffff", mid: "#eef1f5", lo: "#cfd5dd", glow: "rgba(255, 255, 255, 0.95)", dark: ["#ffffff", "#aab2bd", "#5b626c"] },
 };
 const COLOR_STATES = ["urgent", "progress", "open"];
 const DEFAULT_COLORS = { urgent: "honey", progress: "ice", open: "white" };

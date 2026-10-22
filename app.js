@@ -237,7 +237,9 @@ function next() {
 }
 function back() {
   const prev = S.history.pop();
-  if (prev) { lastDir = "back"; closeSheet(); S.screen = prev; render(); }
+  if (prev) { lastDir = "back"; closeSheet(); S.screen = prev; render(); return; }
+  // Screens opened like a tab have no history; Back still has to go somewhere.
+  if (APP_SCREENS.has(S.screen) && S.screen !== "home") tabTo("home");
 }
 
 function onEnter(screen) {

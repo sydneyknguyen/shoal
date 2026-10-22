@@ -1139,3 +1139,6 @@ button, input, textarea { touch-action: manipulation; -webkit-tap-highlight-colo
 .jh-stats span { font-size: 14px; color: var(--muted); }
 .jh-stats span + span { border-left: 1px solid var(--line); }
 .jh-stats b { display: block; font-size: 22px; font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums; }
+
+/* Settings account card */
+.card.account { display: flex; align-items: center; gap: 12px; padding: 14px 16px; margin-bottom: 4px; }

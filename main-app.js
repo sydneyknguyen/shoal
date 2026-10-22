@@ -165,7 +165,7 @@ function tabbar() {
   return `<nav class="tabbar">${TABS.map(([id, l]) => `<button class="${tab === id ? "on" : ""}" ${tab === id ? 'aria-current="page"' : ""} data-act="tab" data-to="${id}">${icon(id)}<span>${l}</span></button>`).join("")}</nav>`;
 }
 function navtop(label, right = "") {
-  return `<div class="navtop"><button class="navback" data-act="back"><img src="${A("back.svg")}" alt="">${esc(label)}</button>${right}</div>`;
+  return `<div class="navtop"><button class="navback" data-act="back" aria-label="Back"><img src="${A("back.svg")}" alt="">${esc(label)}</button>${right}</div>`;
 }
 function setupTop(n) {
   return `<div class="topbar">
@@ -214,8 +214,8 @@ function taskLine(t, { meta, trail = "", act = "openTask", showWho = true } = {}
   const p = t.who && person(t.who);
   const m = meta ?? `${showWho && p ? `${avatar(p, "s20")} ${esc(p.name)} · ` : showWho && !p ? "Unassigned · " : ""}${dueLabel(t)}${t.time ? ` · ${fmtTime(t.time)}` : ""}${t.remote ? " · remote" : ""}`;
   return `<div class="tline ${t.done ? "is-done" : ""}">
-    <button class="tl-main" data-act="${act}" data-id="${t.id}">${gemOf(t)}<span class="sr-only">${STATE[stateOf(t)][0]}:</span>
-      <span class="tl-txt"><span class="n">${esc(t.n)}</span><span class="m">${m}</span></span></button>${trail}
+    <${act === "noop" ? "div" : "button"} class="tl-main" ${act === "noop" ? "" : `data-act="${act}" data-id="${t.id}"`}>${gemOf(t)}<span class="sr-only">${STATE[stateOf(t)][0]}:</span>
+      <span class="tl-txt"><span class="n">${esc(t.n)}</span><span class="m">${m}</span></span></${act === "noop" ? "div" : "button"}>${trail}
   </div>`;
 }
 
@@ -627,16 +627,26 @@ SCREENS.settings = () => {
   const row = (t, d, act, extra = "", attrs = "") => `<button class="srow" data-act="${act}" ${attrs}><span class="tl-txt"><span class="n">${t}</span><span class="m">${d}</span></span>${extra}${chev}</button>`;
   return `<div class="content app">
     <div class="apphead"><h1 class="title">Settings</h1></div>
+    <div class="card account">${avatar(person("you"), "s36")}<span class="tl-txt"><span class="n">${esc(person("you").name)}</span><span class="m">${signedInAs()}</span></span></div>
     <p class="section-h">Family</p>
     <div class="card tlist">${row("Family setup", "Redo with Pebble or by hand", "redoSetup")}</div>
     <p class="section-h">Together</p>
     <div class="card tlist">${row("Thank-yous &amp; recaps", "Weekly recap on Sundays", "go", "", 'data-to="recapSettings"')}${row("Notifications", "Urgent, requests, and thank-yous", "go", "", 'data-to="notifications"')}</div>
     <p class="section-h">Pebble</p>
     <div class="card tlist">${row("What Pebble can see", "Answers and goals. Never notes.", "pebbleSees")}</div>
+    <p class="section-h">Account</p>
+    <div class="card tlist">${row("Sign out", "Back to the sign-in screen", "signOutSheet")}</div>
     <button class="btn-text center" data-act="restart">Restart prototype</button>
   </div>
   ${tabbar()}`;
 };
+
+function signedInAs() {
+  const a = S.auth || {};
+  if (a.via === "google") return "Signed in with Google";
+  if (a.via === "facebook") return "Signed in with Facebook";
+  return a.phone ? `Signed in as +1 ${fmtPhone(a.phone)}` : "Signed in with your phone";
+}
 
 // The physical side: jars, base, stones and glow, one tap from Home.
 SCREENS.kit = () => {
@@ -672,7 +682,7 @@ SCREENS.kit = () => {
     <div class="card tlist">
       <button class="srow" data-act="go" data-to="stones"><span class="tl-txt"><span class="n">All stones</span><span class="m">${KIT} stones · ${S.stones.filter((s) => s.task).length} paired · battery and location</span></span>${chev}</button>
       <button class="srow" data-act="pairSheet"><span class="tl-txt"><span class="n">Pair a stone</span><span class="m">Link a spare stone to a task</span></span>${chev}</button>
-      <button class="srow" data-act="tab" data-to="ready"><span class="tl-txt"><span class="n">Setup guide</span><span class="m">Jars, pairing and charging, step by step</span></span>${chev}</button>
+      <button class="srow" data-act="go" data-to="ready"><span class="tl-txt"><span class="n">Setup guide</span><span class="m">Jars, pairing and charging, step by step</span></span>${chev}</button>
     </div>
   </div>`;
 };
@@ -952,6 +962,9 @@ function finishDone(t) {
 
 Object.assign(ACTIONS, {
   noop: () => {},
+  signOutSheet: () => openSheet(`<h3>Sign out?</h3><p class="small">You'll go back to the sign-in screen. In this prototype, signing out also clears what you set up.</p>
+    <div class="actions"><button class="btn-soft" data-act="closeSheet">Stay signed in</button><button class="btn-soft" data-act="signOut">Sign out</button></div>`),
+  signOut: () => { closeSheet(); S = initialState(); S.screen = "signin"; lastDir = "back"; render(); },
   enterApp: () => { ensureAppData(); go("ready"); },
   skipToApp: () => { ensureAppData(); tabTo("home"); },
   appJump: (d) => appJump(d.to),

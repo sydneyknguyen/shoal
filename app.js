@@ -513,21 +513,29 @@ SCREENS.tasks = () => {
   const items = S.tasks.filter((t) => t.cat === tab);
   const nextCat = cats[cats.indexOf(tab) + 1];
   const pebbleCount = S.tasks.filter((t) => t.pebble).length;
+  // Pebble's picks and your own sit on top; the rest of the library folds away so the list isn't a wall.
+  const top = S.path === "pebble" ? items.filter((t) => t.pebble || t.mine) : [];
+  const rest = items.filter((t) => !top.includes(t)), restOn = rest.filter((t) => t.on).length;
+  const open = !top.length || S.moreOpen?.[tab];
+  const taskRow = (t) => `<div class="row ${t.on ? "on" : ""}">
+        <button data-act="toggleTask" data-id="${t.id}" style="display:flex;align-items:center;gap:12px;flex:1;text-align:left">${check(t.on)}<span class="name">${esc(t.n)}${t.y ? `<span class="tag kid">Kid-friendly</span>` : ""}</span></button>
+        <button data-act="weight" data-id="${t.id}" aria-label="Change size">${weightPill(t.w)}</button>
+      </div>`;
   return `${topbar({ skip: false })}
   <div class="content">
     ${eyebrow("Tasks")}
     <h1 class="title">What needs doing?</h1>
-    <p class="sub">Go through each tab and pick what applies. Tap the size to change how big a task is.</p>
+    <p class="sub">${S.path === "pebble" ? "Check Pebble's picks in each tab. Open More suggestions if something's missing." : "Go through each tab and pick what applies."} Tap the size to change how big a task is.</p>
     ${S.path === "pebble" ? `<div class="card r20 pebble-note"><img src="${A("pebble-icon.svg")}" alt=""><span class="small" style="color:var(--ink)">Pebble picked <b>${pebbleCount}</b> from your answers. Uncheck anything that doesn't fit.</span></div>` : ""}
     <div class="tabs" role="tablist">${cats.map((c) => {
       const n = S.tasks.filter((t) => t.cat === c && t.on).length;
       return `<button role="tab" class="${c === tab ? "on" : ""}" aria-selected="${c === tab}" data-act="taskTab" data-id="${esc(c)}">${esc(c)}${n ? `<b>${n}</b>` : ""}</button>`;
     }).join("")}</div>
-    <div class="group-head"><p class="eyebrow grey">${esc(tab)}</p><span class="count">${items.filter((t) => t.on).length} of ${items.length} picked</span></div>
-    <div class="card r20"><div class="list">${items.map((t) => `<div class="row ${t.on ? "on" : ""}">
-        <button data-act="toggleTask" data-id="${t.id}" style="display:flex;align-items:center;gap:12px;flex:1;text-align:left">${check(t.on)}<span class="name">${esc(t.n)}${t.pebble ? `<span class="tag">Suggested by Pebble</span>` : ""}${t.y ? `<span class="tag kid">Kid-friendly</span>` : ""}</span></button>
-        <button data-act="weight" data-id="${t.id}" aria-label="Change size">${weightPill(t.w)}</button>
-      </div>`).join("")}</div></div>
+    <div class="group-head"><p class="eyebrow grey">${top.length ? "Pebble's picks" : esc(tab)}</p><span class="count">${items.filter((t) => t.on).length} of ${items.length} picked</span></div>
+    ${top.length ? `<div class="card r20"><div class="list">${top.map(taskRow).join("")}</div></div>` : ""}
+    ${rest.length ? (top.length ? `<button class="more-toggle" data-act="moreTasks" aria-expanded="${open}">
+        <span>${open ? "Fewer suggestions" : `More suggestions <small>${rest.length}${restOn ? ` · ${restOn} picked` : ""}</small>`}</span><span class="hs-chev" aria-hidden="true"></span>
+      </button>` : "") + (open ? `<div class="card r20"><div class="list">${rest.map(taskRow).join("")}</div></div>` : "") : ""}
     <form class="write-own" data-form="task"><img src="${A("plus.svg")}" alt=""><input name="v" placeholder="Add your own to ${esc(tab)}"><button class="go">Add</button></form>
     ${nextCat ? `<button class="next-tab" data-act="taskTab" data-id="${esc(nextCat)}">Next: ${esc(nextCat)}<img src="${A("chevron.svg")}" alt=""></button>` : ""}
   </div>
@@ -933,6 +941,7 @@ const ACTIONS = {
   toggleYou: (d) => { const i = S.you.indexOf(d.id); i >= 0 ? S.you.splice(i, 1) : S.you.push(d.id); clearLibrary(); render(); },
   dropOwn: (d) => { S.own[d.key].splice(+d.i, 1); render(); },
   toggleTask: (d) => { const t = S.tasks.find((x) => x.id === d.id); t.on = !t.on; if (!t.on) t.who = null; render(); },
+  moreTasks: () => { S.moreOpen ||= {}; S.moreOpen[S.taskTab] = !S.moreOpen[S.taskTab]; render(); },
   weight: (d) => { const t = S.tasks.find((x) => x.id === d.id); t.w = (t.w % 3) + 1; render(); },
   dvView: (d) => { S.dv.view = d.id; render(); },
   dvSel: (d) => { S.dv.sel = d.id; render(); },
@@ -1045,7 +1054,7 @@ document.addEventListener("submit", (e) => {
   }
   if (!v) return;
   if (kind === "task") {
-    S.tasks.push({ id: `c${Date.now()}`, n: v, w: 2, k: "", cat: S.taskTab, on: true, kind: "once", days: ["Sat"], date: addDays(2), time: "", who: null });
+    S.tasks.push({ id: `c${Date.now()}`, n: v, w: 2, k: "", cat: S.taskTab, on: true, mine: true, kind: "once", days: ["Sat"], date: addDays(2), time: "", who: null });
     render();
     const c = document.querySelector(".content"); c.scrollTop = c.scrollHeight;
     toast("Added. Tap the size if it's bigger or smaller.");

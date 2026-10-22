@@ -1290,3 +1290,9 @@ button, input, textarea { touch-action: manipulation; -webkit-tap-highlight-colo
 .tour-btns .btn-text { padding: 0; height: 40px; }
 .tour-nav { display: flex; gap: 8px; }
 .tour-nav .btn-soft { height: 40px; padding: 0 14px; }
+
+/* Tasks: the rest of the library folds under Pebble's picks */
+.more-toggle { display: flex; align-items: center; justify-content: space-between; width: 100%; min-height: 48px; margin: 10px 0 4px; padding: 0 4px; font-weight: 600; font-size: 15px; color: var(--blue); }
+.more-toggle small { font-weight: 500; font-size: 13px; color: var(--muted); margin-left: 6px; }
+.more-toggle[aria-expanded="true"] .hs-chev { transform: rotate(225deg) translate(-2px, -2px); }
+.more-toggle + .card { margin-top: 4px; }

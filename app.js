@@ -142,6 +142,7 @@ function fmtTime(t) {
 }
 function repeatLabel(days) {
   const set = DAYS.filter((d) => days.includes(d));
+  if (!set.length) return "When needed";
   if (set.length === 7) return "Every day";
   if (set.join() === "Mon,Tue,Wed,Thu,Fri") return "Weekdays";
   if (set.join() === "Sat,Sun") return "Weekends";
@@ -193,7 +194,7 @@ const initialState = () => ({
   lovedOne: "",
   conditions: [],
   them: [],
-  own: { cond: [], them: [], you: [], strengths: [] }, // write-in answers per question
+  own: { cond: [], them: [], you: [], strengths: [], avoid: [] }, // write-in answers per question
   you: [],
   tasks: [], // {id, n, w, k, cat, on, pebble, kind:"once"|"repeat", days, date, time, who}
   taskTab: null,
@@ -206,6 +207,7 @@ const initialState = () => ({
   busy: weekOf({}),
   free: weekOf({}),
   strengths: [],
+  avoid: [], // task kinds "you" would rather not get; Pebble steers them elsewhere
   splitTouched: false,
   sent: false,
   flowKey: "onboard", // which section the step screens belong to
@@ -313,7 +315,7 @@ function hoursOf(t) {
 const canTake = (p, t) => (p.tier === "trusted" ? t.w === 1 : p.tier === "kid" ? t.y : true);
 const TIER_NOTE = { main: "Invite sent by text", trusted: "Invite sent by text", kid: "Kid-friendly tasks only" };
 
-// Greedy fair split: heaviest first, to whoever has the most room left. Strengths nudge "You".
+// Greedy fair split: heaviest first, to whoever has the most room left. Preferences nudge "You" toward or away.
 function suggestSplit() {
   const load = {};
   S.people.forEach((p) => (load[p.id] = 0));
@@ -325,6 +327,7 @@ function suggestSplit() {
       const cap = capOf(p) || 0.1;
       let score = (load[p.id] + hoursOf(t)) / cap;
       if (p.id === "you" && S.strengths.includes(t.k)) score -= 0.25;
+      if (p.id === "you" && S.avoid.includes(t.k)) score += 0.6;
       if (score < bestScore) { bestScore = score; best = p; }
     });
     if (best && bestScore <= 1.05) { t.who = best.id; load[best.id] += hoursOf(t); }
@@ -544,52 +547,63 @@ SCREENS.tasks = () => {
 
 const taskPill = (t) => `<button class="tpill ${t.kind}" data-act="editDate" data-id="${t.id}">${esc(t.n)}${t.time ? `<small>${fmtTime(t.time)}</small>` : ""}</button>`;
 
+// Most care tasks are "every week" or "when it comes up", not a date, so each task gets one row of quick
+// answers. The date sheet opens only for "Pick a date" or to fine-tune; the week grid is a preview.
+const WHEN = [
+  ["week", "This week"], ["weekly", "Every week"], ["daily", "Every day"],
+  ["needed", "When needed"], ["date", "Pick a date"], ["unsure", "Not sure yet"],
+];
+const byFriday = () => { const f = shift(mondayOf(iso(TODAY)), 4); return f < iso(TODAY) ? addDays(3) : f; };
+function whenOf(t) {
+  if (t.when) return t.when;
+  if (t.kind === "once") return "date";
+  return !t.days.length ? "needed" : t.days.length === 7 ? "daily" : "weekly";
+}
+function setWhen(t, w) {
+  t.when = w === "week" || w === "unsure" ? w : null;
+  if (w === "week") { t.kind = "once"; t.date = byFriday(); }
+  if (w === "weekly") { t.kind = "repeat"; t.days = t.days.length && t.days.length < 7 ? [t.days[0]] : ["Sat"]; }
+  if (w === "daily") { t.kind = "repeat"; t.days = [...DAYS]; }
+  if (w === "needed") { t.kind = "repeat"; t.days = []; }
+  if (w === "date") t.kind = "once";
+}
+const whenLine = (t) => whenOf(t) === "unsure" ? "Pebble will fit it into free time" : `${whenOf(t) === "week" ? "By " : ""}${whenLabel(t)}`;
+
 SCREENS.dates = () => {
-  const dv = S.dv;
   const tasks = picked();
-  const on = (date) => (date < TODAY ? [] : tasks.filter((t) => occurs(t, date)));
-  let body;
-  if (dv.view === "week") {
-    const days = DAYS.map((_, i) => fromIso(shift(dv.week, i)));
-    const end = days[6];
-    body = `<div class="cal-head"><button data-act="dvMove" data-id="-1" ${dv.week <= mondayOf(iso(TODAY)) ? "disabled" : ""} aria-label="Previous week"><img src="${A("chevron.svg")}" alt="" style="transform:scaleX(-1)"></button>
-        <b>${days[0].toLocaleDateString("en-US", { month: "short", day: "numeric" })} – ${end.toLocaleDateString("en-US", { month: days[0].getMonth() === end.getMonth() ? undefined : "short", day: "numeric" })}</b>
-        <button data-act="dvMove" data-id="1" aria-label="Next week"><img src="${A("chevron.svg")}" alt=""></button></div>
-      <div class="card r20 week-list">${days.map((d) => {
-        const items = on(d);
-        return `<div class="wl-day ${iso(d) === iso(TODAY) ? "today" : ""}"><span class="wl-date"><b>${dayKey(d)}</b>${d.getDate()}</span>
-          <span class="wl-items">${items.map(taskPill).join("") || `<span class="small">Nothing yet</span>`}</span></div>`;
-      }).join("")}</div>`;
-  } else {
-    const [y, m] = dv.month;
-    const first = new Date(y, m, 1), count = new Date(y, m + 1, 0).getDate();
-    const cells = Array.from({ length: (first.getDay() + 6) % 7 }, () => `<span></span>`);
-    for (let n = 1; n <= count; n++) {
-      const d = new Date(y, m, n), id = iso(d), k = on(d).length;
-      const cls = [id === dv.sel && "on", id === iso(TODAY) && "today", d < TODAY && "past"].filter(Boolean).join(" ");
-      cells.push(`<button class="${cls}" data-act="dvSel" data-id="${id}">${n}<span class="dots">${"<i></i>".repeat(Math.min(k, 3))}</span></button>`);
-    }
-    const sel = fromIso(dv.sel), items = on(sel);
-    body = `<div class="card r20 month">
-        <div class="cal-head"><button data-act="dvMove" data-id="-1" ${y === TODAY.getFullYear() && m === TODAY.getMonth() ? "disabled" : ""} aria-label="Previous month"><img src="${A("chevron.svg")}" alt="" style="transform:scaleX(-1)"></button>
-          <b>${first.toLocaleDateString("en-US", { month: "long", year: "numeric" })}</b>
-          <button data-act="dvMove" data-id="1" aria-label="Next month"><img src="${A("chevron.svg")}" alt=""></button></div>
-        <div class="cal-grid month-grid">${["M", "T", "W", "T", "F", "S", "S"].map((d) => `<i>${d}</i>`).join("")}${cells.join("")}</div>
-      </div>
-      <p class="eyebrow grey" style="margin:18px 0 10px">${fmtDate(dv.sel)}</p>
-      <div class="wl-items">${items.map(taskPill).join("") || `<span class="small">Nothing on this day.</span>`}</div>`;
-  }
   return `${topbar({ skip: false })}
   <div class="content">
     ${eyebrow("Tasks")}
-    <h1 class="title">When is each due?</h1>
-    <p class="sub">Tap a task to set its date, repeats, or time. Pebble uses this to match tasks to free time.</p>
-    <div class="dv-bar"><span class="seg"><button class="${dv.view === "week" ? "on" : ""}" data-act="dvView" data-id="week">Week</button><button class="${dv.view === "month" ? "on" : ""}" data-act="dvView" data-id="month">Month</button></span>
-      <span class="legend-mini"><i class="once"></i>Once <i class="repeat"></i>Repeats</span></div>
-    ${body}
+    <h1 class="title">How often does each happen?</h1>
+    <p class="sub">One tap per task. Pebble uses this to fit tasks into everyone's free time.</p>
+    <div class="when-list">${tasks.map((t) => {
+      const w = whenOf(t);
+      return `<div class="card when-row">
+        <div class="wr-head"><b>${esc(t.n)}</b><button class="linkish" data-act="editDate" data-id="${t.id}" aria-label="Fine-tune ${esc(t.n)}">${esc(whenLine(t))}${chev}</button></div>
+        <div class="wr-chips">${WHEN.map(([k, l]) => `<button class="chip sm ${w === k ? "on" : ""}" aria-pressed="${w === k}" data-act="setWhen" data-id="${t.id}" data-w="${k}">${l}</button>`).join("")}</div>
+      </div>`;
+    }).join("")}</div>
+    <button class="next-tab" data-act="weekPreview">Preview the week${chev}</button>
   </div>
   ${footer("Done")}`;
 };
+
+function weekPreview() {
+  const days = DAYS.map((_, i) => fromIso(shift(S.dv.week, i))), end = days[6];
+  const fmt = (d, month) => d.toLocaleDateString("en-US", { month: month ? "short" : undefined, day: "numeric" });
+  const loose = picked().filter((t) => !t.days.length && t.kind === "repeat");
+  openSheet(`<h3>Your week</h3>
+    <div class="cal-head"><button data-act="pvMove" data-id="-1" ${S.dv.week <= mondayOf(iso(TODAY)) ? "disabled" : ""} aria-label="Previous week"><img src="${A("chevron.svg")}" alt="" style="transform:scaleX(-1)"></button>
+      <b>${fmt(days[0], true)} – ${fmt(end, days[0].getMonth() !== end.getMonth())}</b>
+      <button data-act="pvMove" data-id="1" aria-label="Next week"><img src="${A("chevron.svg")}" alt=""></button></div>
+    <div class="card r20 week-list">${days.map((d) => {
+      const items = d < TODAY ? [] : picked().filter((t) => occurs(t, d));
+      return `<div class="wl-day ${iso(d) === iso(TODAY) ? "today" : ""}"><span class="wl-date"><b>${dayKey(d)}</b>${d.getDate()}</span>
+        <span class="wl-items">${items.map(taskPill).join("") || `<span class="small">Nothing yet</span>`}</span></div>`;
+    }).join("")}</div>
+    ${loose.length ? `<p class="small" style="margin-top:12px">When needed: ${esc(listWords(loose.map((t) => t.n)))}</p>` : ""}
+    <button class="btn-primary" data-act="closeSheet">Done</button>`);
+}
 
 // One card per group, each with its own "Add" row, so where a person lands is never a second question.
 const PEOPLE_GROUPS = [
@@ -682,19 +696,29 @@ SCREENS.avail = () => {
   ${footer("Done")}`;
 };
 
-SCREENS.strengths = () => `${topbar({ skip: false })}
+// Asked as preference, not skill, so no one has to claim they're good at something to answer.
+SCREENS.strengths = () => {
+  const any = S.strengths.includes("any");
+  return `${topbar({ skip: false })}
   <div class="content">
-    ${eyebrow("About you")}
-    <h1 class="title">What are you good at?</h1>
-    <p class="sub">Pick all that apply. Pebble leans toward giving you tasks that fit.</p>
+    ${eyebrow("Your preferences")}
+    <h1 class="title">What do you like helping with?</h1>
+    <p class="sub">Pick any. Pebble leans toward giving you these.</p>
     ${STRENGTHS.map((s) => {
       const on = S.strengths.includes(s.id);
       return `<button class="option ${on ? "on" : ""}" data-act="strength" data-id="${s.id}"><span class="txt"><span class="t">${s.t}</span></span>${check(on)}</button>`;
     }).join("")}
-    ${writeIns("strengths", "Something else you're good at")}
-    <p class="small" style="margin-top:14px">Pebble uses this to keep the split fair. Others only see the plan.</p>
+    ${writeIns("strengths", "Something else you'd like to do")}
+    <button class="option ${any ? "on" : ""}" data-act="strength" data-id="any"><span class="txt"><span class="t">No preference, split it evenly</span></span>${check(any)}</button>
+    <div class="pref-avoid">
+      <p class="label">Anything you'd rather avoid? <span class="small">Optional</span></p>
+      <div class="chips">${STRENGTHS.map((s) => chip(s.t, S.avoid.includes(s.id), "avoid", s.id)).join("")}${S.own.avoid.map((v, i) => `<button class="chip on" data-act="dropOwn" data-key="avoid" data-i="${i}" aria-label="Remove ${esc(v)}"><img src="${A("chip-check.svg")}" alt="">${esc(v)}</button>`).join("")}</div>
+      <form class="write-own" data-form="own" data-key="avoid"><img src="${A("plus.svg")}" alt=""><input name="v" placeholder="Something else, like medical care" aria-label="Something else to avoid"><button class="go">Add</button></form>
+    </div>
+    <p class="small" style="margin-top:14px">Only Pebble sees this. Others just see the plan.</p>
   </div>
   ${footer(S.path === "pebble" ? "See Pebble's split" : "Next: split it up")}`;
+};
 
 const chip = (label, on, act, id) => `<button class="chip ${on ? "on" : ""}" data-act="${act}" data-id="${esc(id)}">${on ? `<img src="${A("chip-check.svg")}" alt="">` : ""}${esc(label)}</button>`;
 
@@ -753,12 +777,13 @@ SCREENS.review = () => {
   const loose = picked().filter((t) => !t.who);
   let delay = 0;
   const peb = (t, pos) => `<button class="pebble-btn" data-act="stone" data-id="${t.id}" style="${pos ? `left:${pos.x}px;top:${pos.y}px;` : ""}animation-delay:${(delay += 0.07)}s" aria-label="${esc(t.n)}"><img src="${A(t.who ? "stone-progress.svg" : "stone-unassigned.svg")}" alt=""></button>`;
-  const invitees = S.people.filter((p) => p.invited);
+  if (S.sent) return planSent();
+  const ch = planChanges(), resend = !!S.planSnap;
   return `<div class="topbar"><button class="back" data-act="back" aria-label="Back"><img src="${A("back.svg")}" alt=""></button></div>
   <div class="content">
-    <p class="eyebrow">${S.sent ? "All set" : "Last look"}</p>
-    <h1 class="title">${S.sent ? "Invites are on their way" : `${esc(S.lovedOne)}'s plan is ready`}</h1>
-    <p class="sub">${S.sent ? "Your stones light up as soon as each person says yes." : "Tap any stone to hear it, or to make the real one glow so you can find it."}</p>
+    <p class="eyebrow">Last look</p>
+    <h1 class="title">${esc(S.lovedOne)}'s plan is ready</h1>
+    <p class="sub">Tap any stone to hear it, or to make the real one glow so you can find it.</p>
     <div class="card shelf">
       <div class="shelf-jars">${main.map((p) => {
         const mine = picked().filter((t) => t.who === p.id);
@@ -770,12 +795,38 @@ SCREENS.review = () => {
       ${loose.length ? `<div class="loose">Unassigned ${loose.map((t) => peb(t)).join("")}</div>` : ""}
       <div class="legend"><span><img src="${A("stone-progress.svg")}" alt="">Assigned</span><span><img src="${A("stone-unassigned.svg")}" alt="">Needs someone</span></div>
     </div>
-    <div class="card info"><img src="${A("lock.svg")}" alt=""><span class="small">Each pebble can read its own task aloud, so the jar works even when your phone isn't nearby. You'll get a reminder before anything is due.</span></div>
+    ${ch.length ? `<p class="small">${resend ? "Only people whose tasks changed" : "Everyone"} gets a notification with their tasks${resend ? "" : ". Anyone who hasn't joined yet gets it with their invite"}.</p>` : `<p class="small">No one's tasks changed, so there's nothing to send.</p>`}
   </div>
-  ${S.sent
-    ? footer("Back to Home", { backBtn: false })
-    : footer(invitees.length ? `Send plan to ${listNames(invitees)}` : "Finish", { act: "send" })}`;
+  ${ch.length
+    ? footer(`${resend ? "Send changes to" : "Send plan to"} ${listNames(ch)}`, { act: "send" })
+    : footer("Done")}`;
 };
+
+// What each person has, so a re-send only pings the people whose list changed.
+const planKey = (p) => picked().filter((t) => t.who === p.id).map((t) => t.id).sort().join();
+const planOthers = () => S.people.filter((p) => p.id !== "you");
+const planChanges = () => planOthers().filter((p) => !S.planSnap || S.planSnap[p.id] !== planKey(p));
+
+function planSent() {
+  const sent = S.lastSent || [];
+  const row = (p) => {
+    const n = picked().filter((t) => t.who === p.id).length, got = sent.includes(p.id);
+    const status = !got ? "No changes" : S.resent ? "Changes sent" : p.joined ? "Notified" : "Invite and tasks sent";
+    return `<div class="person">${avatar(p, "s36")}
+      <span class="main"><span class="n">${esc(p.name)}</span><span class="m">${n ? `${n} task${n === 1 ? "" : "s"}` : "No tasks yet"} · ${status}</span></span>
+      ${got && !p.joined ? `<button class="btn-soft sm" data-act="resendInvite" data-id="${p.id}">Resend</button>` : ""}
+    </div>`;
+  };
+  return `<div class="topbar"></div>
+  <div class="content">
+    <p class="eyebrow">Sent</p>
+    <h1 class="title">${S.resent ? "Changes sent" : "Everyone has their tasks"}</h1>
+    <p class="sub">${S.resent ? "Only people whose tasks changed got a notification." : "Each person got a notification with their tasks. They can accept them or say they can't."}</p>
+    <div class="card pg-card plan-sent">${planOthers().map(row).join("")}</div>
+    <p class="small">You'll get an update when someone accepts, finishes, or hands back a task.</p>
+  </div>
+  ${footer("Back to Home", { backBtn: false })}`;
+}
 const listWords = (n) => (n.length <= 2 ? n.join(" and ") : `${n.slice(0, -1).join(", ")}, and ${n.at(-1)}`);
 const listNames = (ps) => listWords(ps.map((p) => p.name));
 
@@ -838,6 +889,7 @@ const sheetTask = () => S.tasks.find((x) => x.id === S._sheetTask);
 function sheetEdit(fn) {
   const t = sheetTask();
   fn(t);
+  t.when = null;
   render();
   dateSheet(t);
 }
@@ -864,13 +916,13 @@ const NOTES = {
   them: ["What matters to them", ["Pebble path only. Starts blank. Answers pre-pick tasks (e.g. “Their wishes in order” adds the advance-directive task)."]],
   you: ["What matters to you", ["Pebble path only. “Helping from far away” leans Pebble toward phone and paperwork tasks."]],
   tasks: ["Tasks before people", ["Five category tabs: Medical, Care & visits, Home & meals, Rides & errands, Money & paperwork. “Company” folded into Care & visits.", "About 10–15 suggestions per tab, plus a write-in. Kid-friendly tasks are tagged.", "Each task has a size (light, medium, heavy) that feeds the fair split."]],
-  dates: ["Dates on a calendar", ["Week or month view instead of a list. Repeating tasks show on each of their days.", "Tap a task to pick a date, repeat days, or a time."]],
+  dates: ["How often, not which day", ["One row of quick answers per task: This week, Every week, Every day, When needed, Pick a date, Not sure yet.", "The date sheet opens only for Pick a date or to fine-tune. The week grid moved to Preview the week."]],
   calendar: ["Calendar sync", ["Optional. Connect any mix of Google, Apple, and Outlook; busy times merge.", "Only busy/free is read, never event details. Connecting here is simulated."]],
   people: ["Who's helping", ["Starts with just you. Each main caregiver gets the app and a link by text.", "Trusted circle: light tasks only.", "New: kids & teens, who only get kid-friendly tasks (calls, games, pets, the mail)."]],
   avail: ["Free time, one day at a time", ["Pick a day, then tap big hour buttons, grouped into morning, afternoon, and evening.", "Copy a day to weekdays or every day. A summary shows the whole week.", "Starts blank. Busy calendar hours can’t be picked."]],
-  strengths: ["What you're good at", ["Split out from the free-time screen so each page asks one thing.", "Picks nudge Pebble's split toward tasks that match."]],
+  strengths: ["Preferences, not skills", ["Asks what you like helping with, so no one has to claim they're good at something.", "“No preference” is a real answer. The optional avoid list steers Pebble away, e.g. medical care.", "Write-ins for both."]],
   split: ["The split, last", ["Totals stay pinned at the top while the tasks scroll.", "Load bars count heavier tasks as more hours. Pebble path arrives pre-split.", "If no one has room, it suggests the trusted circle or paid help instead of overloading someone."]],
-  review: ["Jars, now earned", ["Jars fill with the tasks you just made.", "Tap a stone: voice playback and “make it glow” (locate) are shown up front, so the jar works without the app."]],
+  review: ["Send the plan", ["Jars fill with the tasks you just made. Tap a stone to hear it or make it glow.", "Sending notifies each person with their tasks; people not yet joined get it with their invite.", "Redoing the split only notifies people whose tasks changed."]],
 };
 
 function renderNotes() {
@@ -956,6 +1008,14 @@ const ACTIONS = {
     render();
     document.querySelector(".content").scrollTop = 0;
   },
+  setWhen: (d) => {
+    const t = S.tasks.find((x) => x.id === d.id);
+    setWhen(t, d.w);
+    render();
+    if (d.w === "date") { S._cal = null; dateSheet(t); }
+  },
+  weekPreview,
+  pvMove: (d) => { S.dv.week = shift(S.dv.week, 7 * +d.id); weekPreview(); },
   editDate: (d) => { S._cal = null; dateSheet(S.tasks.find((x) => x.id === d.id)); },
   setKind: (d) => sheetEdit((t) => { t.kind = d.id; }),
   pickDate: (d) => sheetEdit((t) => { t.date = d.id; }),
@@ -1003,7 +1063,13 @@ const ACTIONS = {
     render();
     toast(`Copied ${DAY_FULL[DAYS[from]]} to ${d.id === "weekdays" ? "weekdays" : "every day"}${skipped ? ", skipping busy hours" : ""}`);
   },
-  strength: (d) => { const i = S.strengths.indexOf(d.id); i >= 0 ? S.strengths.splice(i, 1) : S.strengths.push(d.id); render(); },
+  strength: (d) => {
+    // "No preference" and specific picks rule each other out.
+    if (d.id === "any") S.strengths = S.strengths.includes("any") ? [] : ["any"];
+    else { S.strengths = S.strengths.filter((x) => x !== "any"); S.avoid = S.avoid.filter((x) => x !== d.id); const i = S.strengths.indexOf(d.id); i >= 0 ? S.strengths.splice(i, 1) : S.strengths.push(d.id); }
+    render();
+  },
+  avoid: (d) => { S.strengths = S.strengths.filter((x) => x !== d.id); const i = S.avoid.indexOf(d.id); i >= 0 ? S.avoid.splice(i, 1) : S.avoid.push(d.id); render(); },
   assign: (d) => { const t = S.tasks.find((x) => x.id === d.id); t.who = d.who || null; S.splitTouched = true; render(); },
   suggest: () => { suggestSplit(); render(); toast("Pebble balanced it by size and free time"); },
   stone: (d) => stoneSheet(S.tasks.find((x) => x.id === d.id)),
@@ -1020,7 +1086,14 @@ const ACTIONS = {
     if (b) { b.classList.remove("pulse"); void b.offsetWidth; b.classList.add("pulse"); }
     toast("Your pebble is glowing");
   },
-  send: () => { S.sent = true; render(); toast("Plan sent"); },
+  send: () => {
+    S.resent = !!S.planSnap;
+    S.lastSent = planChanges().map((p) => p.id);
+    S.planSnap = Object.fromEntries(planOthers().map((p) => [p.id, planKey(p)]));
+    S.planSentAt = "Today";
+    S.sent = true; render();
+  },
+  resendInvite: (d) => toast(`Sent ${person(d.id).name} another link`),
   restart: () => { S = initialState(); lastDir = "back"; render(); },
   jump: (d) => {
     if (d.to === S.screen) return;

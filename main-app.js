@@ -881,6 +881,7 @@ const NOTIF = {
   urgent: ["Urgent", `<path d="M12 7v6M12 16.5v.5"/>`],
   request: ["Handoff request", `<path d="M4 9h13l-3.5-3.5M20 15H7l3.5 3.5"/>`],
   done: ["Finished", `<path d="m6 12.5 4 4 8-9"/>`],
+  plan: ["Plan", `<path d="M20 4 3 11l7 2.5L12.5 21z"/><path d="m10 13.5 4-4"/>`],
   thanks: ["Thank-you", `<path d="M12 19s-7-4.3-7-9.2A3.8 3.8 0 0 1 12 7.5a3.8 3.8 0 0 1 7 2.3C19 14.7 12 19 12 19z"/>`],
 };
 const nfBadge = (k) => `<span class="nf-badge nb-${k}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">${NOTIF[k][1]}</svg></span>`;
@@ -892,6 +893,10 @@ function notifications() {
   S.app.requests.forEach((r) => list.push({ kind: "request", needs: true, cta: "Review", when: "Today", who: person(r.from), n: `${nameOf(r.from)} asked you to take “${r.n}”`, m: r.note, act: "review", id: r.id }));
   active().filter(isUrgent).slice(0, 2).forEach((t) => list.push({ kind: "urgent", needs: t.who === "you" || !t.who, cta: "Open", when: "Now", gem: gemOf(t, { size: "s" }), n: `${t.n} is ${dueLabel(t)}`, m: t.who ? `${t.who === "you" ? "You have" : `${nameOf(t.who)} has`} it` : "No one has it yet", act: "openTask", id: t.id }));
   S.tasks.filter((t) => t.done && t.doneAt && t.who !== "you").forEach((t) => list.push({ kind: "done", when: t.doneAt.split(",")[0], who: person(t.who), n: `${nameOf(t.who)} finished “${t.n}”`, m: S.app.thanked[t.id] ? "You said thanks" : "Tap to say thanks", act: S.app.thanked[t.id] ? "openTask" : "sayThanks", id: t.id }));
+  if (S.planSentAt) {
+    const who = others.filter((p) => S.lastSent?.includes(p.id)).map((p) => { const n = mine(p.id).length; return `${p.name}, ${n} task${n === 1 ? "" : "s"}`; });
+    list.push({ kind: "plan", when: S.planSentAt, n: S.resent ? "You sent plan changes" : "You sent the plan", m: who.join(" · ") || "No one's tasks changed", gem: gem("progress", { size: "s" }) });
+  }
   if (others[1] || others[0]) list.push({ kind: "thanks", when: "Today", who: others[1] || others[0], n: `${(others[1] || others[0]).name} thanked you`, m: "“Thanks for covering the pharmacy call. I owe you one.”" });
   if (others[0]) list.push({ kind: "thanks", when: "Yesterday", who: others[0], n: `${others[0].name} sent you a heart`, m: "For picking up groceries" });
   return list;

@@ -1296,3 +1296,25 @@ button, input, textarea { touch-action: manipulation; -webkit-tap-highlight-colo
 .more-toggle small { font-weight: 500; font-size: 13px; color: var(--muted); margin-left: 6px; }
 .more-toggle[aria-expanded="true"] .hs-chev { transform: rotate(225deg) translate(-2px, -2px); }
 .more-toggle + .card { margin-top: 4px; }
+.nf-badge.nb-plan { background: var(--blue); }
+
+/* Dates: one row of quick answers per task */
+.when-list { display: flex; flex-direction: column; gap: 10px; }
+.when-row { padding: 14px 16px; }
+.wr-head { display: flex; flex-direction: column; gap: 2px; margin-bottom: 10px; }
+.wr-head b { font-size: 16px; font-weight: 600; }
+.wr-head .linkish { display: inline-flex; align-items: center; gap: 6px; align-self: flex-start; font-size: 13.5px; color: var(--muted); font-weight: 500; min-height: 24px; }
+.wr-head .linkish .chev { width: 6px; height: 10px; opacity: 0.6; }
+.wr-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip.sm { padding: 7px 11px; font-size: 13.5px; }
+.chip.sm.on { padding: 6.5px 10.5px; background: var(--blue-tint); color: var(--blue-label); font-weight: 600; }
+
+/* Preferences: the avoid list sits a level down from the main question */
+.pref-avoid { margin-top: 26px; }
+.pref-avoid .label { font-weight: 600; font-size: 16px; margin: 0 0 10px; }
+.pref-avoid .label .small { font-weight: 500; margin-left: 4px; }
+.pref-avoid .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+
+/* Plan sent */
+.plan-sent .btn-soft.sm { padding: 7px 12px; font-size: 13.5px; min-height: 34px; }
+.plan-sent + .small { margin-top: 12px; }

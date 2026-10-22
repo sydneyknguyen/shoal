@@ -1298,16 +1298,16 @@ button, input, textarea { touch-action: manipulation; -webkit-tap-highlight-colo
 .more-toggle + .card { margin-top: 4px; }
 .nf-badge.nb-plan { background: var(--blue); }
 
-/* Dates: one row of quick answers per task */
-.when-list { display: flex; flex-direction: column; gap: 10px; }
-.when-row { padding: 14px 16px; }
-.wr-head { display: flex; flex-direction: column; gap: 2px; margin-bottom: 10px; }
-.wr-head b { font-size: 16px; font-weight: 600; }
-.wr-head .linkish { display: inline-flex; align-items: center; gap: 6px; align-self: flex-start; font-size: 13.5px; color: var(--muted); font-weight: 500; min-height: 24px; }
-.wr-head .linkish .chev { width: 6px; height: 10px; opacity: 0.6; }
-.wr-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+/* Dates: Pebble's guesses, grouped by how each task happens */
+.when-head { margin-top: 18px; }
+.when-card { padding: 0 16px; }
+.when-item { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 60px; padding: 10px 0; text-align: left; position: relative; }
+.when-item + .when-item::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 1px; background: var(--line); }
+.when-item .tl-txt { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.when-item .n { font-size: 15.5px; font-weight: 600; }
+.when-item .m { font-size: 13.5px; color: var(--muted); }
+.how-seg { margin-top: 12px; }
 .chip.sm { padding: 7px 11px; font-size: 13.5px; }
-.chip.sm.on { padding: 6.5px 10.5px; background: var(--blue-tint); color: var(--blue-label); font-weight: 600; }
 
 /* Preferences: the avoid list sits a level down from the main question */
 .pref-avoid { margin-top: 26px; }

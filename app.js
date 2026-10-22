@@ -13,18 +13,18 @@ const CONDITIONS = [
   { id: "other", t: "Something else", d: "Surgery recovery, stroke, other" },
 ];
 
-// w = weight (1 light, 2 medium, 3 heavy). k = skill tag. r = repeats by default.
+// w = weight (1 light, 2 medium, 3 heavy). k = skill tag. r = repeats by default ("Needed" = only as it comes up).
 // c = only suggested for these conditions (none = everyone). p = Pebble pre-picks it.
 // wishes / far = Pebble pre-picks it when those answers are chosen. y = kid-friendly.
 const TASK_LIBRARY = {
   Medical: [
     { n: "Refill prescriptions", w: 1, k: "meds", p: 1 },
-    { n: "Doctor appointments", w: 2, k: "drive", p: 1 },
+    { n: "Doctor appointments", w: 2, k: "drive", p: 1, r: "Needed" },
     { n: "Keep a list of meds and doses", w: 1, k: "meds" },
     { n: "Track symptoms for the doctor", w: 1, k: "meds", r: "Daily" },
     { n: "Fill the weekly pill box", w: 1, k: "meds", r: "Sun" },
-    { n: "Sit in on appointments and take notes", w: 2, k: "there" },
-    { n: "Order medical supplies", w: 1, k: "phone", far: 1 },
+    { n: "Sit in on appointments and take notes", w: 2, k: "there", r: "Needed" },
+    { n: "Order medical supplies", w: 1, k: "phone", far: 1, r: "Needed" },
     { n: "Keep the care binder up to date", w: 1, k: "paper" },
     { n: "Be there for hospice nurse visits", w: 2, k: "there", p: 1, r: "Thu", c: ["hospice"] },
     { n: "Comfort meds schedule", w: 2, k: "meds", c: ["hospice"] },
@@ -74,21 +74,21 @@ const TASK_LIBRARY = {
     { n: "Install grab bars", w: 2, k: "there", c: ["aging"] },
   ],
   "Rides & errands": [
-    { n: "Rides to appointments", w: 2, k: "drive", p: 1 },
-    { n: "Pharmacy pickups", w: 1, k: "drive" },
+    { n: "Rides to appointments", w: 2, k: "drive", p: 1, r: "Needed" },
+    { n: "Pharmacy pickups", w: 1, k: "drive", r: "Needed" },
     { n: "Errands and post office", w: 1, k: "drive", r: "Sat" },
     { n: "Rides to church or social events", w: 1, k: "drive", r: "Sun" },
     { n: "Book a ride service or paratransit", w: 1, k: "phone", far: 1 },
     { n: "Get a disability parking placard", w: 1, k: "paper" },
-    { n: "Car upkeep", w: 1, k: "drive" },
-    { n: "Pick up visiting family", w: 2, k: "drive" },
+    { n: "Car upkeep", w: 1, k: "drive", r: "Needed" },
+    { n: "Pick up visiting family", w: 2, k: "drive", r: "Needed" },
     { n: "Come along to carry bags", w: 1, k: "there", y: 1 },
     { n: "Day program pickups", w: 2, k: "drive", r: "Tue", c: ["dementia"] },
     { n: "Take over the car keys", w: 2, k: "there", c: ["dementia", "aging"] },
   ],
   "Money & paperwork": [
     { n: "Pay bills", w: 1, k: "paper", r: "Mon" },
-    { n: "Insurance calls", w: 2, k: "phone", p: 1, far: 1 },
+    { n: "Insurance calls", w: 2, k: "phone", p: 1, far: 1, r: "Needed" },
     { n: "Sort the mail", w: 1, k: "paper", r: "Wed" },
     { n: "Track medical bills and claims", w: 2, k: "paper" },
     { n: "Medicare or benefits paperwork", w: 2, k: "paper" },
@@ -142,7 +142,7 @@ function fmtTime(t) {
 }
 function repeatLabel(days) {
   const set = DAYS.filter((d) => days.includes(d));
-  if (!set.length) return "When needed";
+  if (!set.length) return "As needed";
   if (set.length === 7) return "Every day";
   if (set.join() === "Mon,Tue,Wed,Thu,Fri") return "Weekdays";
   if (set.join() === "Sat,Sun") return "Weekends";
@@ -285,7 +285,7 @@ function seedTasks() {
       S.tasks.push({
         id: `t${id++}`, n: t.n, w: t.w, k: t.k, y: !!t.y, cat, on: pick, pebble: pick,
         kind: t.r ? "repeat" : "once",
-        days: t.r === "Daily" ? [...DAYS] : [t.r || "Sat"],
+        days: t.r === "Daily" ? [...DAYS] : t.r === "Needed" ? [] : [t.r || "Sat"],
         date: addDays(1 + (id % 9)),
         time: "",
         who: null,
@@ -547,51 +547,39 @@ SCREENS.tasks = () => {
 
 const taskPill = (t) => `<button class="tpill ${t.kind}" data-act="editDate" data-id="${t.id}">${esc(t.n)}${t.time ? `<small>${fmtTime(t.time)}</small>` : ""}</button>`;
 
-// Most care tasks are "every week" or "when it comes up", not a date, so each task gets one row of quick
-// answers. The date sheet opens only for "Pick a date" or to fine-tune; the week grid is a preview.
-const WHEN = [
-  ["week", "This week"], ["weekly", "Every week"], ["daily", "Every day"],
-  ["needed", "When needed"], ["date", "Pick a date"], ["unsure", "Not sure yet"],
-];
+// Pebble guesses when each task happens, so the screen is a check, not a quiz. Tasks are grouped
+// by how they happen, which also teaches the three kinds before anyone opens a sheet.
 const byFriday = () => { const f = shift(mondayOf(iso(TODAY)), 4); return f < iso(TODAY) ? addDays(3) : f; };
-function whenOf(t) {
-  if (t.when) return t.when;
-  if (t.kind === "once") return "date";
-  return !t.days.length ? "needed" : t.days.length === 7 ? "daily" : "weekly";
-}
-function setWhen(t, w) {
-  t.when = w === "week" || w === "unsure" ? w : null;
-  if (w === "week") { t.kind = "once"; t.date = byFriday(); }
-  if (w === "weekly") { t.kind = "repeat"; t.days = t.days.length && t.days.length < 7 ? [t.days[0]] : ["Sat"]; }
-  if (w === "daily") { t.kind = "repeat"; t.days = [...DAYS]; }
-  if (w === "needed") { t.kind = "repeat"; t.days = []; }
-  if (w === "date") t.kind = "once";
-}
-const whenLine = (t) => whenOf(t) === "unsure" ? "Pebble will fit it into free time" : `${whenOf(t) === "week" ? "By " : ""}${whenLabel(t)}`;
+const howOf = (t) => (t.kind === "once" ? "once" : t.days.length ? "repeat" : "needed");
+const HOW = [
+  ["repeat", "Repeats", "On the calendar every week"],
+  ["once", "One time", "Done once, by a date"],
+  ["needed", "As needed", "Stays off the calendar until it comes up"],
+];
+const whenLine = (t) => ({ once: `By ${fmtDate(t.date)}`, repeat: repeatLabel(t.days), needed: "When it comes up" })[howOf(t)] + (t.time ? ` · ${fmtTime(t.time)}` : "");
 
 SCREENS.dates = () => {
   const tasks = picked();
   return `${topbar({ skip: false })}
   <div class="content">
     ${eyebrow("Tasks")}
-    <h1 class="title">How often does each happen?</h1>
-    <p class="sub">One tap per task. Pebble uses this to fit tasks into everyone's free time.</p>
-    <div class="when-list">${tasks.map((t) => {
-      const w = whenOf(t);
-      return `<div class="card when-row">
-        <div class="wr-head"><b>${esc(t.n)}</b><button class="linkish" data-act="editDate" data-id="${t.id}" aria-label="Fine-tune ${esc(t.n)}">${esc(whenLine(t))}${chev}</button></div>
-        <div class="wr-chips">${WHEN.map(([k, l]) => `<button class="chip sm ${w === k ? "on" : ""}" aria-pressed="${w === k}" data-act="setWhen" data-id="${t.id}" data-w="${k}">${l}</button>`).join("")}</div>
-      </div>`;
-    }).join("")}</div>
+    <h1 class="title">When does each happen?</h1>
+    <p class="sub">${S.path === "pebble" ? "Pebble made a guess for each. Tap any that look wrong." : "Tap a task to say when it happens."}</p>
+    ${HOW.map(([k, label, hint]) => {
+      const list = tasks.filter((t) => howOf(t) === k);
+      return list.length ? `<div class="pg-head when-head"><b>${label}</b><span>${hint}</span></div>
+      <div class="card tlist when-card">${list.map((t) => `<button class="when-item" data-act="editDate" data-id="${t.id}">
+          <span class="tl-txt"><span class="n">${esc(t.n)}</span><span class="m">${esc(whenLine(t))}</span></span>${chev}</button>`).join("")}</div>` : "";
+    }).join("")}
     <button class="next-tab" data-act="weekPreview">Preview the week${chev}</button>
   </div>
-  ${footer("Done")}`;
+  ${footer("Looks right")}`;
 };
 
 function weekPreview() {
   const days = DAYS.map((_, i) => fromIso(shift(S.dv.week, i))), end = days[6];
   const fmt = (d, month) => d.toLocaleDateString("en-US", { month: month ? "short" : undefined, day: "numeric" });
-  const loose = picked().filter((t) => !t.days.length && t.kind === "repeat");
+  const loose = picked().filter((t) => howOf(t) === "needed");
   openSheet(`<h3>Your week</h3>
     <div class="cal-head"><button data-act="pvMove" data-id="-1" ${S.dv.week <= mondayOf(iso(TODAY)) ? "disabled" : ""} aria-label="Previous week"><img src="${A("chevron.svg")}" alt="" style="transform:scaleX(-1)"></button>
       <b>${fmt(days[0], true)} – ${fmt(end, days[0].getMonth() !== end.getMonth())}</b>
@@ -601,7 +589,7 @@ function weekPreview() {
       return `<div class="wl-day ${iso(d) === iso(TODAY) ? "today" : ""}"><span class="wl-date"><b>${dayKey(d)}</b>${d.getDate()}</span>
         <span class="wl-items">${items.map(taskPill).join("") || `<span class="small">Nothing yet</span>`}</span></div>`;
     }).join("")}</div>
-    ${loose.length ? `<p class="small" style="margin-top:12px">When needed: ${esc(listWords(loose.map((t) => t.n)))}</p>` : ""}
+    ${loose.length ? `<p class="small" style="margin-top:12px">As needed: ${esc(listWords(loose.map((t) => t.n)))}</p>` : ""}
     <button class="btn-primary" data-act="closeSheet">Done</button>`);
 }
 
@@ -870,18 +858,24 @@ function monthGrid(t) {
 function dateSheet(t) {
   S._sheetTask = t.id;
   if (!S._cal) { const d = fromIso(t.date); S._cal = [d.getFullYear(), d.getMonth()]; }
+  const how = howOf(t);
+  const quick = [["Today", addDays(0)], ["Tomorrow", addDays(1)], ["This week", byFriday()]];
+  const detail = {
+    once: `<p class="label" style="margin-top:16px">Due by</p>
+      <div class="row-opts">${quick.map(([l, d]) => chip(l, t.date === d, "pickDate", d)).join("")}</div>
+      ${monthGrid(t)}`,
+    repeat: `<p class="label" style="margin-top:16px">Which days? <button class="linkish" data-act="allDays">${t.days.length === 7 ? "Just one day" : "Every day"}</button></p>
+      <div class="day-pick">${DAYS.map((d) => `<button class="${t.days.includes(d) ? "on" : ""}" data-act="toggleDay" data-id="${d}">${d[0]}<small>${d}</small></button>`).join("")}</div>`,
+    needed: `<p class="small" style="margin-top:14px">It won't go on the calendar. Whoever has it does it when it comes up, like a doctor calling to book a visit.</p>`,
+  }[how];
   openSheet(`<h3>${esc(t.n)}</h3>
-    <p class="small">How often does this happen?</p>
-    <div class="row-opts">${chip("Once", t.kind === "once", "setKind", "once")}${chip("Repeats", t.kind === "repeat", "setKind", "repeat")}</div>
-    ${t.kind === "once"
-      ? `<p class="label" style="margin-top:16px">Due <span class="small">${fmtDate(t.date)}</span></p>${monthGrid(t)}`
-      : `<p class="label" style="margin-top:16px">On these days <button class="linkish" data-act="allDays">${t.days.length === 7 ? "Just one day" : "Every day"}</button></p>
-         <div class="day-pick">${DAYS.map((d) => `<button class="${t.days.includes(d) ? "on" : ""}" data-act="toggleDay" data-id="${d}">${d[0]}<small>${d}</small></button>`).join("")}</div>`}
-    <p class="label" style="margin-top:16px">Time</p>
+    <div class="seg big how-seg">${HOW.map(([k, l]) => `<button class="${how === k ? "on" : ""}" aria-pressed="${how === k}" data-act="setHow" data-id="${k}">${l}</button>`).join("")}</div>
+    ${detail}
+    ${how !== "needed" ? `<p class="label" style="margin-top:16px">Time <span class="small">Optional</span></p>
     <div class="row-opts" style="align-items:center">
       ${chip("Any time", !t.time, "anyTime", "")}
       <label class="time-input ${t.time ? "on" : ""}"><input type="time" step="900" value="${t.time}" data-input="taskTime" aria-label="Time"></label>
-    </div>
+    </div>` : ""}
     <button class="btn-primary" data-act="closeSheet">Done</button>`);
 }
 
@@ -889,7 +883,6 @@ const sheetTask = () => S.tasks.find((x) => x.id === S._sheetTask);
 function sheetEdit(fn) {
   const t = sheetTask();
   fn(t);
-  t.when = null;
   render();
   dateSheet(t);
 }
@@ -916,7 +909,7 @@ const NOTES = {
   them: ["What matters to them", ["Pebble path only. Starts blank. Answers pre-pick tasks (e.g. “Their wishes in order” adds the advance-directive task)."]],
   you: ["What matters to you", ["Pebble path only. “Helping from far away” leans Pebble toward phone and paperwork tasks."]],
   tasks: ["Tasks before people", ["Five category tabs: Medical, Care & visits, Home & meals, Rides & errands, Money & paperwork. “Company” folded into Care & visits.", "About 10–15 suggestions per tab, plus a write-in. Kid-friendly tasks are tagged.", "Each task has a size (light, medium, heavy) that feeds the fair split."]],
-  dates: ["How often, not which day", ["One row of quick answers per task: This week, Every week, Every day, When needed, Pick a date, Not sure yet.", "The date sheet opens only for Pick a date or to fine-tune. The week grid moved to Preview the week."]],
+  dates: ["Check Pebble's guesses", ["Pebble guesses when each task happens; you only fix the wrong ones.", "Grouped as Repeats, One time, As needed, so the three kinds are clear before you tap.", "The sheet asks one thing at a time: which kind, then only the detail it needs. The week grid is a preview."]],
   calendar: ["Calendar sync", ["Optional. Connect any mix of Google, Apple, and Outlook; busy times merge.", "Only busy/free is read, never event details. Connecting here is simulated."]],
   people: ["Who's helping", ["Starts with just you. Each main caregiver gets the app and a link by text.", "Trusted circle: light tasks only.", "New: kids & teens, who only get kid-friendly tasks (calls, games, pets, the mail)."]],
   avail: ["Free time, one day at a time", ["Pick a day, then tap big hour buttons, grouped into morning, afternoon, and evening.", "Copy a day to weekdays or every day. A summary shows the whole week.", "Starts blank. Busy calendar hours can’t be picked."]],
@@ -1008,16 +1001,13 @@ const ACTIONS = {
     render();
     document.querySelector(".content").scrollTop = 0;
   },
-  setWhen: (d) => {
-    const t = S.tasks.find((x) => x.id === d.id);
-    setWhen(t, d.w);
-    render();
-    if (d.w === "date") { S._cal = null; dateSheet(t); }
-  },
   weekPreview,
   pvMove: (d) => { S.dv.week = shift(S.dv.week, 7 * +d.id); weekPreview(); },
   editDate: (d) => { S._cal = null; dateSheet(S.tasks.find((x) => x.id === d.id)); },
-  setKind: (d) => sheetEdit((t) => { t.kind = d.id; }),
+  setHow: (d) => sheetEdit((t) => {
+    if (d.id === "once") t.kind = "once";
+    else { t.kind = "repeat"; t.days = d.id === "needed" ? [] : t.days.length ? t.days : ["Sat"]; }
+  }),
   pickDate: (d) => sheetEdit((t) => { t.date = d.id; }),
   calMove: (d) => { const [y, m] = S._cal; const n = new Date(y, m + +d.id, 1); S._cal = [n.getFullYear(), n.getMonth()]; dateSheet(sheetTask()); },
   toggleDay: (d) => sheetEdit((t) => {

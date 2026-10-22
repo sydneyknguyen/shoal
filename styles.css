@@ -1318,3 +1318,7 @@ button, input, textarea { touch-action: manipulation; -webkit-tap-highlight-colo
 /* Plan sent */
 .plan-sent .btn-soft.sm { padding: 7px 12px; font-size: 13.5px; min-height: 34px; }
 .plan-sent + .small { margin-top: 12px; }
+
+/* Write-ins sit one even step below the options; "No preference" is set apart as the alternative */
+.option + .write-own { margin-top: 0; }
+.write-own + .opt-none { margin-top: 22px; }

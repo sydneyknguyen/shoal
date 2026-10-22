@@ -697,7 +697,7 @@ SCREENS.strengths = () => {
       return `<button class="option ${on ? "on" : ""}" data-act="strength" data-id="${s.id}"><span class="txt"><span class="t">${s.t}</span></span>${check(on)}</button>`;
     }).join("")}
     ${writeIns("strengths", "Something else you'd like to do")}
-    <button class="option ${any ? "on" : ""}" data-act="strength" data-id="any"><span class="txt"><span class="t">No preference, split it evenly</span></span>${check(any)}</button>
+    <button class="option opt-none ${any ? "on" : ""}" data-act="strength" data-id="any"><span class="txt"><span class="t">No preference, split it evenly</span></span>${check(any)}</button>
     <div class="pref-avoid">
       <p class="label">Anything you'd rather avoid? <span class="small">Optional</span></p>
       <div class="chips">${STRENGTHS.map((s) => chip(s.t, S.avoid.includes(s.id), "avoid", s.id)).join("")}${S.own.avoid.map((v, i) => `<button class="chip on" data-act="dropOwn" data-key="avoid" data-i="${i}" aria-label="Remove ${esc(v)}"><img src="${A("chip-check.svg")}" alt="">${esc(v)}</button>`).join("")}</div>

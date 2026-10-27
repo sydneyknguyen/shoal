@@ -29,9 +29,9 @@ SEAT_RIM = 3.0                      # flat rim outside the largest seat
 # Stones: pebbles with a domed top and a flat bottom, big enough to hold a light.
 # The small stone is the smallest that fits LIGHT inside; medium and large step up
 # from it (closer together than the app's x0.74 and x1.3, so large stones still fit the vase).
-STONE_M = (99.0, 89.0, 51.0)     # medium: length, width, height
+STONE_M = (77.0, 69.0, 40.0)     # medium: length, width, height
 STONE_SCALE = {"small": 0.87, "medium": 1.0, "large": 1.13}
-LIGHT = (61.0, 31.0)  # EverBrite round tap light: diameter, height
+LIGHT = (43.0, 27.0)  # Aluckyying mini submersible light (listed 41 x 25), with slack
 LIGHT_GAP = 0.5       # room around it
 # Hollow stones print as two halves that glue around a light.
 STONE_WALL = 1.2      # three lines of a 0.4 mm nozzle; thin enough to glow through

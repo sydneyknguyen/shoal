@@ -1,0 +1,91 @@
+/* Pebble, after setup: the Home header button, "Pebble noticed", talk, drafts, task help, costs,
+   the monthly check-in and "What Pebble did". Uses the tokens in styles.css. */
+
+/* Pebble figures. Sizes win over the generic img rules in cards and rows. */
+.peb-fig { display: block; flex: none; height: auto !important; filter: drop-shadow(0 4px 6px rgba(90, 60, 40, 0.16)); }
+.peb-fig.s28 { width: 28px !important; }
+.peb-fig.s36 { width: 36px !important; }
+.peb-fig.s44 { width: 44px !important; }
+.peb-fig.s56 { width: 56px !important; }
+.peb-fig.xl { width: 150px !important; margin: 0 auto; filter: drop-shadow(0 12px 16px rgba(90, 60, 40, 0.18)); }
+
+/* Home header */
+.ask-peb { display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 12px 0 6px; margin-right: 4px; border-radius: 17px; background: rgba(255, 255, 255, 0.85); border: 1px solid #fff; box-shadow: var(--chip-shadow); font-size: 13px; font-weight: 600; color: var(--navy); }
+.ask-peb img { width: 24px; height: 24px; object-fit: contain; }
+.head-btns { display: inline-flex; align-items: center; }
+
+/* Pebble noticed */
+.peb-notice { padding: 14px 16px 16px; margin: 12px 0; }
+.peb-notice .pn-row { display: flex; gap: 12px; align-items: flex-start; }
+.peb-notice .eyebrow { margin: 2px 0 4px; }
+.pn-txt { font-size: 15px; line-height: 21px; color: var(--ink); text-wrap: pretty; }
+.pn-btns { display: flex; gap: 10px; margin-top: 14px; }
+.pn-btns > * { flex: 1; }
+.btn-primary.sm { height: 42px; border-radius: 21px; font-size: 14.5px; }
+
+/* Shared header for Pebble screens */
+.peb-head { display: flex; gap: 14px; align-items: center; margin: 4px 0 16px; }
+.peb-head .eyebrow { margin-bottom: 4px; }
+.peb-head .badge { margin-bottom: 6px; padding: 4px 10px; font-size: 12px; }
+.title.sm { font-size: 25px; line-height: 30px; letter-spacing: -0.4px; }
+
+/* Talk */
+.peb-stage { width: 180px; height: 180px; margin: 10px auto 12px; border-radius: 50%; display: grid; place-items: center; background: radial-gradient(circle, rgba(246, 223, 160, 0.55) 0%, rgba(246, 223, 160, 0.2) 55%, rgba(246, 223, 160, 0) 72%); }
+.peb-stage.live { animation: peb-breathe 2.4s ease-in-out infinite; }
+.peb-stage.quiet { background: radial-gradient(circle, rgba(200, 210, 225, 0.45) 0%, rgba(200, 210, 225, 0) 70%); }
+@keyframes peb-breathe { 50% { transform: scale(1.04); } }
+@media (prefers-reduced-motion: reduce) { .peb-stage.live { animation: none; } }
+.badge.live { background: var(--blue-tint); color: var(--blue); font-weight: 600; }
+.peb-say { display: block; width: 100%; min-height: 140px; margin: 12px 0 6px; padding: 4px 2px; resize: none; border: 0; outline: none; background: transparent; font-family: "Fraunces", serif; font-variation-settings: "SOFT" 0, "WONK" 1; font-size: 21px; line-height: 29px; color: var(--navy); }
+.peb-say::placeholder { color: #9aa3ae; }
+.peb-try { margin: 10px 0 8px !important; }
+.peb-mic { width: 64px; height: 64px; border-radius: 32px; margin-bottom: 12px; display: grid; place-items: center; background: var(--blue); color: #fff; box-shadow: var(--btn-shadow); }
+.peb-mic .sq { width: 18px; height: 18px; border-radius: 4px; background: #fff; }
+.peb-mic.on { animation: peb-breathe 1.6s ease-in-out infinite; }
+.peb-foot { display: block; margin-top: 8px; }
+
+/* Review */
+.peb-prop { display: flex; gap: 12px; align-items: flex-start; width: 100%; padding: 14px 16px; margin-bottom: 10px; text-align: left; }
+.peb-prop .check, .peb-prop .gem { margin-top: 1px; }
+.peb-prop.off .tl-txt { opacity: 0.5; }
+.peb-prop:disabled { cursor: default; }
+.tl-txt .m.amber { color: #8a5a07; }
+.peb-skip { align-items: center; margin-bottom: 12px; }
+.peb-done .srow { gap: 12px; }
+
+/* Draft */
+.peb-tones { margin-bottom: 12px; }
+.peb-draft { min-height: 170px; font-size: 15.5px; line-height: 23px; }
+.peb-to { padding: 12px 16px; margin: 12px 0 8px; }
+.peb-to p:not(.eyebrow) { margin: 4px 0 0; font-size: 14.5px; }
+.footer.peb-foot-duo { flex-wrap: wrap; }
+.footer.peb-foot-duo .peb-foot { flex-basis: 100%; margin-top: 2px; }
+
+/* Task help */
+.peb-help { display: flex; flex-wrap: wrap; gap: 10px 12px; align-items: center; padding: 12px 16px; margin-bottom: 12px; }
+.peb-help .ph-btns { flex-basis: 100%; display: flex; gap: 8px; padding-left: 48px; }
+.peb-term { display: inline; font: inherit; color: inherit; text-decoration: underline; text-decoration-color: var(--blue); text-decoration-thickness: 1.5px; text-underline-offset: 3px; }
+.peb-term-head { display: flex; gap: 12px; align-items: center; }
+.peb-term-head .eyebrow { margin-bottom: 2px; }
+.peb-def { font-size: 16px; line-height: 23px; margin: 14px 0 10px; }
+.peb-caution { margin-top: 12px; background: rgba(239, 232, 221, 0.7); }
+
+/* Costs */
+.peb-prog { padding: 14px 16px; margin: 10px 0; }
+.peb-prog .n { font-weight: 600; font-size: 15px; margin: 0 0 4px; }
+.peb-prog .small { margin: 0; }
+.pp-foot { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; }
+
+/* My jar check-in hint */
+.peb-hint { display: flex; flex-wrap: wrap; gap: 6px 8px; align-items: center; margin: 10px 0 4px; padding: 10px 12px; border-radius: 14px; background: rgba(255, 255, 255, 0.7); text-align: left; }
+.peb-hint .small { flex: 1; min-width: 0; }
+
+/* People › monthly check-in */
+.peb-month { display: flex; gap: 12px; align-items: center; width: 100%; padding: 12px 16px; margin: 0 0 12px; text-align: left; }
+
+/* What Pebble did */
+.peb-log { align-items: center; gap: 12px; padding: 12px 0; }
+.peb-log .tl-txt .n { font-weight: 500; }
+.empty-card .peb-fig { margin: 12px auto 0; }
+.empty-card .small { text-align: center; }
+.peb-hint .linkish { flex-basis: 100%; text-align: left; padding-left: 36px; }

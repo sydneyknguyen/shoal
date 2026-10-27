@@ -10,7 +10,7 @@ const PALETTE = {
   purple: { name: "purple", hi: "#efe8ff", mid: "#bba5f2", lo: "#8a6ad8", glow: "rgba(170, 140, 240, 0.5)", dark: ["#ddd0ff", "#8a6ad8", "#46317e"] },
   ice: { name: "ice blue", hi: "#ffffff", mid: "#d3e9fc", lo: "#98c4ec", glow: "rgba(140, 196, 246, 0.55)", dark: ["#e6f2ff", "#6fa3d6", "#33597f"] },
   green: { name: "green", hi: "#e9fbe6", mid: "#a6dd9a", lo: "#5fae55", glow: "rgba(120, 210, 110, 0.5)", dark: ["#d6f5cf", "#5fae55", "#2f5e2a"] },
-  white: { name: "white", hi: "#ffffff", mid: "#eef1f5", lo: "#cfd5dd", glow: "rgba(255, 255, 255, 0.95)", dark: ["#ffffff", "#aab2bd", "#5b626c"] },
+  white: { name: "white", hi: "#ffffff", mid: "#eef1f5", lo: "#cfd5dd", glow: "rgba(255, 255, 255, 0.95)", dark: ["#ffffff", "#a9bdd6", "#41546e"] },
 };
 const COLOR_STATES = ["urgent", "progress", "open"];
 const DEFAULT_COLORS = { urgent: "honey", progress: "ice", open: "white" };

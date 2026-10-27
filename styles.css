@@ -532,7 +532,7 @@ input { font: inherit; color: inherit; }
 .gem.progress { --hi: #ffffff; --mid: #d3e9fc; --lo: #98c4ec; --glow: rgba(140, 196, 246, 0.55); }
 .gem.open { --glow: rgba(255, 255, 255, 1); box-shadow: 0 0 9px 2px var(--glow), 0 2px 5px rgba(33, 38, 46, 0.12), inset 0 -3px 5px rgba(19, 49, 93, 0.07); }
 .gem.done { --hi: #ececec; --mid: #cfcfcf; --lo: #a9abae; --glow: transparent; box-shadow: inset 0 -3px 5px rgba(19, 49, 93, 0.1); }
-.gem.dark { --hi: #ffffff; --mid: #aab2bd; --lo: #5b626c; }
+.gem.dark { --hi: #ffffff; --mid: #a9bdd6; --lo: #41546e; }
 .gem.dark.urgent { --hi: #ffe9a8; --mid: #d9a23a; --lo: #7a5a1c; }
 .gem.dark.progress { --hi: #e6f2ff; --mid: #6fa3d6; --lo: #33597f; }
 .gem.dark.done { --hi: #b3b7bd; --mid: #8e939a; --lo: #6a7078; }
@@ -1361,3 +1361,59 @@ button, input, textarea { touch-action: manipulation; -webkit-tap-highlight-colo
 .kinds.sizes { grid-template-columns: 1fr; margin-top: 12px; }
 .kind-stone { display: inline-flex; align-items: center; justify-content: center; width: 34px; flex: none; }
 .stone-card .sz { margin-left: 4px; padding: 1px 6px; border-radius: 6px; background: rgba(110, 115, 124, 0.1); font-size: 11px; font-weight: 600; color: var(--muted); vertical-align: 1px; }
+.sheet .actions.col { flex-direction: column; }
+.sheet .actions.col > * { width: 100%; justify-content: center; }
+.kit-pitch { padding: 14px 10px 10px; margin-top: 14px; }
+.jar-more { position: absolute; top: 4px; left: 50%; transform: translateX(-50%); padding: 1px 7px; border-radius: 8px; background: rgba(255, 255, 255, 0.9); box-shadow: 0 1px 3px rgba(33, 38, 46, 0.12); font-size: 11px; font-weight: 700; color: var(--muted); }
+.jh-check { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 6px; padding: 4px 4px 4px 8px; }
+.jh-check .eyebrow { margin: 0; }
+.jc-q { margin: 0; font-size: 17px; font-weight: 600; color: var(--ink); line-height: 1.3; }
+.jh-check .small { margin: 0; }
+.jc-opts { display: flex; flex-direction: column; align-items: stretch; gap: 6px; width: 100%; }
+.jc-opts .chip { justify-content: flex-start; min-height: 36px; }
+.jh-check .linkish { font-size: 13px; }
+
+/* ---------- Marks: meaning never rides on color alone ---------- */
+/* ! urgent · dashed ring = no one has it · check = done. Tiny stones (xs) skip the badge. */
+.gem.open, .gem.nobody { outline: 1.5px dashed rgba(19, 49, 93, 0.42); outline-offset: 2px; }
+.gem.xs.open, .gem.xs.nobody { outline-width: 1px; outline-offset: 1px; }
+.gem.urgent:not(.xs)::after {
+  position: absolute; top: -3px; right: -4px; display: flex; align-items: center; justify-content: center;
+  width: 11px; height: 11px; border-radius: 50%; font: 800 8px/1 "Figtree", sans-serif; color: #fff;
+}
+.gem.urgent:not(.xs)::after { content: "!"; background: #b5761a; box-shadow: 0 0 0 1.5px #fff; }
+.gem.m::after { width: 18px; height: 18px; font-size: 12px; top: -4px; right: -4px; }
+.gem.l::after, .gem.xl::after { width: 26px; height: 26px; font-size: 16px; top: 2px; right: 0; }
+.glassbox .gem::after { width: 9px; height: 9px; font-size: 7px; top: -2px; right: -3px; }
+.glassbox .gem.open, .glassbox .gem.nobody { outline-offset: 1px; }
+.weight .gem { outline: none; }
+.weight .gem::after { display: none; }
+.size-opt .gem, .kit-sizes .gem, .kind-stone .gem, .wt-stone .gem { outline-color: rgba(19, 49, 93, 0.25); }
+.jar-n { display: block; font-size: 11.5px; font-weight: 500; color: var(--muted); margin-top: 1px; text-align: center; }
+.kinds.marks { grid-template-columns: 1fr; margin-top: 12px; }
+.mini-jar .jar-n { display: none; }
+.hand-card { display: flex; align-items: center; gap: 12px; padding: 12px 14px; margin-top: 10px; }
+.hand-card .tl-txt { flex: 1; min-width: 0; }
+.hand-card.pending { border: 1.5px dashed rgba(19, 49, 93, 0.25); }
+.hand-card.declined { background: color-mix(in srgb, #fff5d6 50%, white); }
+.thank-via { width: 100%; }
+.path.off { opacity: 0.6; }
+.starter-note { display: flex; gap: 12px; align-items: flex-start; padding: 14px 16px; margin-bottom: 14px; }
+.sn-ic { flex: none; color: var(--blue); display: flex; }
+.row .name .tag { display: inline-block; margin: 0 0 0 6px; padding: 1px 6px; border-radius: 6px; background: rgba(46, 108, 223, 0.08); vertical-align: 1px; }
+
+/* Invite: the helper's first run */
+.invite-lock { display: flex; flex-direction: column; align-items: stretch; }
+.invite-lock .il-time { margin: 28px 0 0; text-align: center; font-size: 64px; font-weight: 600; letter-spacing: -2px; color: var(--ink); }
+.invite-lock .il-date { margin: 0 0 26px; text-align: center; color: var(--muted); font-weight: 500; }
+.il-msg { display: flex; flex-direction: column; gap: 3px; text-align: left; padding: 14px 16px; }
+.il-msg .il-app { font-size: 12px; color: var(--muted); }
+.il-msg u { color: var(--blue); text-decoration: none; }
+.il-hint { margin-top: 12px; color: var(--muted); }
+.lock-line { display: flex; gap: 8px; align-items: flex-start; margin-top: 14px; color: var(--muted); }
+.lock-line img { margin-top: 2px; flex: none; }
+.inv-task { gap: 10px; }
+.inv-task.is-no .tl-main { opacity: 0.5; }
+.inv-task.is-no .n { text-decoration: line-through; }
+.seg.yn { flex: none; }
+.seg.yn button { min-height: 32px; }

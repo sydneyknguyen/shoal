@@ -259,7 +259,8 @@ Object.assign(ACTIONS, {
   roleSheet: () => openSheet(`<h3>See Shoal as…</h3><p class="small">Everyone helps from their own view. Pick one to see what they see.</p>
     <div class="card tlist role-pick">${ROLES.map((r) => `<button class="srow ${S.screen === r.screen ? "on" : ""}" data-act="roleGo" data-to="${r.screen}">
       ${avatar({ name: r.who, img: r.id === "main" ? "avatar-you.png" : r.id === "trusted" ? "avatar-nora.png" : "" }, "s36")}
-      <span class="tl-txt"><span class="n">${r.label}${r.id === "main" ? "" : ` · ${esc(r.who)}`}</span><span class="m">${r.sees}</span></span>${chev}</button>`).join("")}</div>`),
+      <span class="tl-txt"><span class="n">${r.label}${r.id === "main" ? "" : ` · ${esc(r.who)}`}</span><span class="m">${r.sees}</span></span>${chev}</button>`).join("")}</div>
+    ${typeof invitee === "function" && invitee() ? `<button class="btn-wide" data-act="invitePreview">New helper's first look: ${esc(invitee().name)} opens the invite</button>` : ""}`),
   roleGo: (d) => { closeSheet(); roleSwitch(d.to); },
   roleExit: () => roleSwitch("home"),
   visitSheet: (d) => {

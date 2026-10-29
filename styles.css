@@ -1417,3 +1417,7 @@ button, input, textarea { touch-action: manipulation; -webkit-tap-highlight-colo
 .inv-task.is-no .n { text-decoration: line-through; }
 .seg.yn { flex: none; }
 .seg.yn button { min-height: 32px; }
+
+/* Pick-many lists get a square checkbox; pick-one keeps the round one. */
+.check.box { border-radius: 6px; }
+.check.box.off { background: rgba(255, 255, 255, 0.6); box-shadow: inset 0 0 0 1.5px #c5c9cf; }

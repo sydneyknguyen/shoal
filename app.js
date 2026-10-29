@@ -16,9 +16,9 @@ const CONDITIONS = [
 // Where things are right now. Each stage has a starter set, picked with hospice nurses and doulas,
 // so first-timers see the tasks people usually miss. It's a fixed list, not Pebble, so it works with Pebble off.
 const STAGES = [
-  { id: "start", t: "Just starting", d: "A new diagnosis, or help is new" },
-  { id: "daily", t: "Day to day", d: "Ongoing care, settling into a routine" },
-  { id: "final", t: "In hospice or final months", d: "Comfort care, at home or in a facility" },
+  { id: "start", t: "Just starting", d: "A new diagnosis, or help is new", s: "families just starting out" },
+  { id: "daily", t: "Day to day", d: "Ongoing care, settling into a routine", s: "day-to-day care" },
+  { id: "final", t: "In hospice or final months", d: "Comfort care, at home or in a facility", s: "hospice and the final months" },
 ];
 const STARTER = {
   start: ["Doctor appointments", "Keep a list of meds and doses", "Keep the care binder up to date", "Insurance calls", "Set up a meal train", "Keep family updated", "Safety check: rails, rugs, lights"],
@@ -408,9 +408,12 @@ function suggestSplit() {
 
 /* ---------- Shared pieces ---------- */
 
-const check = (on) => on
-  ? `<span class="check on"><img src="${A("check.svg")}" alt=""></span>`
-  : `<span class="check off"><img src="${A("radio-empty.svg")}" alt=""></span>`;
+// Round for pick-one, square for pick-many (box = true), so the shape says how many you can choose.
+const check = (on, box = false) => box
+  ? `<span class="check box ${on ? "on" : "off"}">${on ? `<img src="${A("check.svg")}" alt="">` : ""}</span>`
+  : on
+    ? `<span class="check on"><img src="${A("check.svg")}" alt=""></span>`
+    : `<span class="check off"><img src="${A("radio-empty.svg")}" alt=""></span>`;
 const weightPill = (w) => `<span class="weight" title="${WEIGHT_LABEL[w]} task"><span class="wt-stone">${gem("open", { size: "xs", cls: `w${w}` })}</span>${WEIGHT_LABEL[w]}</span>`;
 const hasKit = () => S.kit === "yes";
 // How big is this task? Pebble's pick is tagged so people can see what it guessed.
@@ -554,7 +557,7 @@ SCREENS.about = () => `${topbar({ skip: false })}
     ${CONDITIONS.map((c) => {
       const on = S.conditions.includes(c.id);
       return `<button class="option ${on ? "on" : ""}" data-act="condition" data-id="${c.id}">
-      <span class="txt"><span class="t">${c.t}</span></span>${check(on)}
+      <span class="txt"><span class="t">${c.t}</span></span>${check(on, true)}
     </button>`;
     }).join("")}
     ${writeIns("cond", "Write your own")}
@@ -567,7 +570,7 @@ SCREENS.them = () => `${topbar()}
     <h1 class="title">What matters most to ${esc(S.lovedOne)} right now?</h1>
     <p class="sub">Pick any, or write your own.</p>
     ${MATTERS_THEM.map((m) => `<button class="option ${S.them.includes(m.id) ? "on" : ""}" data-act="toggleThem" data-id="${m.id}">
-      <span class="txt"><span class="t">${m.t}</span></span>${check(S.them.includes(m.id))}
+      <span class="txt"><span class="t">${m.t}</span></span>${check(S.them.includes(m.id), true)}
     </button>`).join("")}
     ${writeIns("them", "Write your own")}
   </div>
@@ -577,7 +580,7 @@ SCREENS.them = () => `${topbar()}
 function writeIns(key, placeholder) {
   const list = S.own[key];
   return `${list.map((v, i) => `<button class="option on own" data-act="dropOwn" data-key="${key}" data-i="${i}" aria-label="Remove ${esc(v)}">
-      <span class="txt"><span class="t">${esc(v)}</span></span>${check(true)}</button>`).join("")}
+      <span class="txt"><span class="t">${esc(v)}</span></span>${check(true, true)}</button>`).join("")}
     <form class="write-own" data-form="own" data-key="${key}"><img src="${A("plus.svg")}" alt=""><input name="v" placeholder="${placeholder}" aria-label="${placeholder}"><button class="go">Add</button></form>`;
 }
 
@@ -587,7 +590,7 @@ SCREENS.you = () => `${topbar()}
     <h1 class="title">What matters most to you?</h1>
     <p class="sub lock"><img src="${A("lock.svg")}" width="14" height="14" alt="">Only you see this answer.</p>
     ${MATTERS_YOU.map((m) => `<button class="option ${S.you.includes(m.id) ? "on" : ""}" data-act="toggleYou" data-id="${m.id}">
-      <span class="txt"><span class="t">${m.t}</span></span>${check(S.you.includes(m.id))}
+      <span class="txt"><span class="t">${m.t}</span></span>${check(S.you.includes(m.id), true)}
     </button>`).join("")}
     ${writeIns("you", "Write your own")}
   </div>
@@ -605,7 +608,7 @@ SCREENS.tasks = () => {
   const rest = items.filter((t) => !top.includes(t)), restOn = rest.filter((t) => t.on).length;
   const open = !top.length || S.moreOpen?.[tab];
   const taskRow = (t) => `<div class="row ${t.on ? "on" : ""}">
-        <button data-act="toggleTask" data-id="${t.id}" style="display:flex;align-items:center;gap:12px;flex:1;text-align:left">${check(t.on)}<span class="name">${esc(t.n)}${t.pebble ? `<span class="tag">Pebble</span>` : ""}</span></button>
+        <button data-act="toggleTask" data-id="${t.id}" style="display:flex;align-items:center;gap:12px;flex:1;text-align:left">${check(t.on, true)}<span class="name">${esc(t.n)}${t.pebble ? `<span class="tag">Pebble</span>` : ""}</span></button>
         ${t.y ? "" : `<button data-act="sizeSheet" data-id="${t.id}" aria-label="Size: ${WEIGHT_LABEL[t.w]}. Change size">${weightPill(t.w)}</button>`}
       </div>`;
   return `${topbar({ skip: false })}
@@ -613,7 +616,7 @@ SCREENS.tasks = () => {
     ${eyebrow("Tasks")}
     <h1 class="title">What needs doing?</h1>
     <p class="sub">Check the picks in each tab. Open More suggestions if something's missing. Tap a size to change it.</p>
-    <div class="card r20 starter-note"><span class="sn-ic">${icon("myjar")}</span><span class="small" style="color:var(--ink)"><b>${starterCount} starter tasks</b> for ${esc(stage.t.toLowerCase())}, put together with hospice nurses and doulas.${pebbleCount ? ` Pebble added <b>${pebbleCount}</b> from your answers.` : ""} Uncheck anything that doesn't fit.</span></div>
+    <div class="card r20 starter-note"><span class="sn-ic">${icon("myjar")}</span><span class="small" style="color:var(--ink)"><b>${starterCount} starter tasks</b> for ${stage.s}, put together with hospice nurses and doulas.${pebbleCount ? ` Pebble added <b>${pebbleCount}</b> from your answers.` : ""} Uncheck anything that doesn't fit.</span></div>
     <div class="tabs" role="tablist">${cats.map((c) => {
       const n = S.tasks.filter((t) => t.cat === c && t.on).length;
       return `<button role="tab" class="${c === tab ? "on" : ""}" aria-selected="${c === tab}" data-act="taskTab" data-id="${esc(c)}">${esc(c)}${n ? `<b>${n}</b>` : ""}</button>`;
@@ -779,10 +782,10 @@ SCREENS.strengths = () => {
     <p class="sub">Pick any. Pebble leans toward giving you these.</p>
     ${STRENGTHS.map((s) => {
       const on = S.strengths.includes(s.id);
-      return `<button class="option ${on ? "on" : ""}" data-act="strength" data-id="${s.id}"><span class="txt"><span class="t">${s.t}</span></span>${check(on)}</button>`;
+      return `<button class="option ${on ? "on" : ""}" data-act="strength" data-id="${s.id}"><span class="txt"><span class="t">${s.t}</span></span>${check(on, true)}</button>`;
     }).join("")}
     ${writeIns("strengths", "Something else you'd like to do")}
-    <button class="option opt-none ${any ? "on" : ""}" data-act="strength" data-id="any"><span class="txt"><span class="t">No preference, split it evenly</span></span>${check(any)}</button>
+    <button class="option opt-none ${any ? "on" : ""}" data-act="strength" data-id="any"><span class="txt"><span class="t">No preference, split it evenly</span></span>${check(any, true)}</button>
     <div class="pref-avoid">
       <p class="label">Anything you'd rather avoid? <span class="small">Optional</span></p>
       <div class="chips">${STRENGTHS.map((s) => chip(s.t, S.avoid.includes(s.id), "avoid", s.id)).join("")}${S.own.avoid.map((v, i) => `<button class="chip on" data-act="dropOwn" data-key="avoid" data-i="${i}" aria-label="Remove ${esc(v)}"><img src="${A("chip-check.svg")}" alt="">${esc(v)}</button>`).join("")}</div>

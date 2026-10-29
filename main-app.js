@@ -607,7 +607,7 @@ SCREENS.task = () => {
       <div class="meter-top"><b>Steps</b><span class="small">${stepsDone} of ${t.steps.length}</span></div>
       <div class="bar"><i style="width:${(stepsDone / t.steps.length) * 100}%"></i></div>
       ${t.steps.map((x, i) => `<div class="stp">
-        <button data-act="toggleStep" data-id="${i}" aria-label="Toggle step">${check(x.done)}</button>
+        <button data-act="toggleStep" data-id="${i}" aria-label="Toggle step">${check(x.done, true)}</button>
         <span class="tl-txt"><span class="n">${esc(x.n)}</span><span class="m">${x.who ? `${esc(nameOf(x.who))}${x.done ? ` · ${x.when || "Today"}` : " is on it"}` : "Open"}</span></span>
         ${x.who && x.who !== "you" ? avatar(person(x.who) || { name: "?" }, "s20") : !x.who ? `<button class="linkish" data-act="takeStep" data-id="${i}">Take step</button>` : ""}
       </div>`).join("")}

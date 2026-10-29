@@ -1566,6 +1566,33 @@ button, input, textarea { touch-action: manipulation; -webkit-tap-highlight-colo
 .k-set .m { font-size: 12.5px; color: var(--muted); }
 .kit2 .btn-text.center { margin-top: 6px; }
 
+/* Dark kit. A device screen, so it gets a night-blue ombre; overview and detail screens keep their own
+   backgrounds. Tiles turn into lifted glass panels, readings stay flat, and sheets above stay light. */
+.kit2 { --ink: #f1f5fb; --muted: rgba(214, 226, 243, 0.64); --navy: #f6f8fc; color: var(--ink);
+  background:
+    radial-gradient(120% 55% at 0% 0%, #2b5288 0%, rgba(43, 82, 136, 0) 65%),
+    radial-gradient(110% 55% at 100% 100%, #1d3d70 0%, rgba(29, 61, 112, 0) 70%),
+    linear-gradient(180deg, #142a4c 0%, #0b1730 100%); }
+.phone:has(.screen > .kit2) .statusbar { filter: invert(1); }
+.kit2 .navback img, .kit2 .chev { filter: brightness(0) invert(1); opacity: 0.7; }
+.kit2 .k-look { background: rgba(255, 255, 255, 0.1); color: var(--ink); }
+.kit2 .k-ring .trk { stroke: rgba(255, 255, 255, 0.12); }
+.kit2 .k-ring .val { stroke: #7fb1ff; }
+.kit2 .k-r.low .val { stroke: #f0a64a; }
+.kit2 .k-alert { background: rgba(240, 160, 60, 0.14); border-color: rgba(240, 170, 80, 0.38); }
+.kit2 .k-alert .m { color: #f5c47e; }
+.kit2 .k-alert-ic .trk { stroke: rgba(240, 170, 80, 0.25); }
+.kit2 .k-alert-ic .val { stroke: #f0a64a; }
+.kit2 .k-alert-ic i { color: #f5b45c; }
+.kit2 .k-pill.dark { background: #fff; color: #0f1c33; }
+.kit2 .k-tile:not(.k-hero), .kit2 .k-group { background: rgba(255, 255, 255, 0.075); border: 1px solid rgba(255, 255, 255, 0.09);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06); -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px); }
+.kit2 .k-hero { background: linear-gradient(180deg, rgba(8, 16, 32, 0.55), rgba(8, 16, 32, 0.8)); border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 14px 30px -14px rgba(0, 0, 0, 0.5); }
+.kit2 .k-set + .k-set { border-top-color: rgba(255, 255, 255, 0.08); }
+.kit2 .k-go { background: rgba(255, 255, 255, 0.1); }
+.kit2 .k-link { color: #8ab8ff; }
+.kit2 .switch:not(.on) { background: rgba(255, 255, 255, 0.18); }
+
 /* Flat stones: solid color with one soft top light and a small contact shadow. No airbrushed halo. */
 .kit2 .gem { background: linear-gradient(180deg, color-mix(in srgb, var(--hi) 55%, var(--mid)) 0%, var(--mid) 45%, color-mix(in srgb, var(--mid) 70%, var(--lo)) 100%);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7), inset 0 -1.5px 0 rgba(19, 49, 93, 0.08), 0 1px 1.5px rgba(19, 49, 93, 0.18); }

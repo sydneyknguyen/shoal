@@ -91,5 +91,5 @@ Object.assign(ACTIONS, {
 });
 
 NOTES.kit = ["Home kit", ["A test of a cleaner look. Readings (charging, battery, spares) sit flat on the background with nothing to tap. The off-power alert is a notification.",
-  "Readings are rings: how much of the kit is charging, average battery, and spares ready.", "The jar tile is dark, like a room at night, so the glow shows. Changing Glow fades the stones live.", "White tiles are things you change, in three sizes: the jars with their glow, then night hours and colors, then plain rows for what you rarely need. Every tile has its control in the top right.",
+  "Readings are rings: how much of the kit is charging, average battery, and spares ready.", "The kit is a device screen, so it is dark night blue, like the room the jars sit in, and the glow shows. Overview and detail screens keep their own backgrounds. Changing Glow fades the stones live.", "White tiles are things you change, in three sizes: the jars with their glow, then night hours and colors, then plain rows for what you rarely need. Every tile has its control in the top right.",
   "The pill at the top right switches to the old look to compare.", "Everything physical lives here: glow, night hours, colors, the base, jars and every stone's battery."]];

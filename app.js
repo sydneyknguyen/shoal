@@ -167,15 +167,33 @@ const SIZE_WORDS = [
   [2, /appointment|doctor|ride|drive|cook|meal|clean|bath|shop|grocer|walk|outing|yard|therapy|visit|repair|errand/i],
 ];
 const guessSize = (n) => (SIZE_WORDS.find(([, re]) => re.test(n)) || [1])[0];
-// Stacks stones bottom-up in a jar, as many per row as fit, odd rows nudged so they nest.
+// Drops stones into a jar one at a time, like real ones: each falls to the lowest spot it can reach,
+// resting on the curved tops of the stones below (stones are treated as ellipses), and rolls until it
+// touches a neighbor or the glass. Ties lean to the middle, with a small fixed wobble so piles don't look ruled.
 // sizes: [[w, h], ...] in px. Returns the top-left of each stone, or null once the jar is full to the top.
-function packStones(sizes, { left = 6, right = 80, base = 104, nest = 0.72, top = 18 } = {}) {
-  let row = 0, x = left, rowH = 0;
-  return sizes.map(([w, h]) => {
-    if (rowH && x + w > right) { base -= rowH * nest; row++; x = left + (row % 2 ? 4 : 0); rowH = 0; }
-    const pos = { x, y: base - h };
-    x += w - 1; rowH = Math.max(rowH, h);
-    return pos.y < top ? null : pos;
+function packStones(sizes, { left = 6, right = 80, base = 104, top = 18 } = {}) {
+  const placed = [], mid = (left + right) / 2;
+  const arc = (dx, a) => Math.sqrt(Math.max(0, 1 - (dx / a) ** 2));
+  return sizes.map(([w, h], i) => {
+    const a = w / 2, b = h / 2;
+    let best = null;
+    for (let x = left; x <= right - w; x++) {
+      const cx = x + a;
+      let cy = base - b;
+      for (const p of placed) {
+        if (Math.abs(p.cx - cx) >= p.a + a) continue;
+        // Where the two outlines would touch, sampled across their overlap.
+        const lo = Math.max(p.cx - p.a, cx - a), hi = Math.min(p.cx + p.a, cx + a);
+        for (let c = lo; c <= hi; c += 1) cy = Math.min(cy, p.cy - p.b * arc(c - p.cx, p.a) - b * arc(c - cx, a) + 1.5);
+      }
+      // A stone rolls until it touches a neighbor or the glass, so open gaps cost a little.
+      const gap = Math.min(x - left, right - w - x, ...placed.map((p) => Math.abs(p.cx - cx) - p.a - a).filter((g) => g >= -1));
+      const score = cy - Math.max(0, gap) * 0.25 - Math.abs(cx - mid) * 0.03 + Math.sin(i * 2.4 + x * 0.9) * 0.5;
+      if (!best || score > best.score) best = { x, cx, cy, score };
+    }
+    if (!best || best.cy - b < top) return null;
+    placed.push({ cx: best.cx, cy: best.cy, a, b });
+    return { x: best.x, y: best.cy - b };
   });
 }
 // A full jar shows what fits, plus a count of the rest.

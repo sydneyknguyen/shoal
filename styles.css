@@ -1374,21 +1374,17 @@ button, input, textarea { touch-action: manipulation; -webkit-tap-highlight-colo
 .jh-check .linkish { font-size: 13px; }
 
 /* ---------- Marks: meaning never rides on color alone ---------- */
-/* ! urgent · dashed ring = no one has it · check = done. Tiny stones (xs) skip the badge. */
-.gem.open, .gem.nobody { outline: 1.5px dashed rgba(19, 49, 93, 0.42); outline-offset: 2px; }
-.gem.xs.open, .gem.xs.nobody { outline-width: 1px; outline-offset: 1px; }
+/* Only urgent stones carry a mark: a ! in a deeper shade of the urgent color. Tiny stones (xs) skip it. */
 .gem.urgent:not(.xs)::after {
   position: absolute; top: -3px; right: -4px; display: flex; align-items: center; justify-content: center;
   width: 11px; height: 11px; border-radius: 50%; font: 800 8px/1 "Figtree", sans-serif; color: #fff;
 }
-.gem.urgent:not(.xs)::after { content: "!"; background: #b5761a; box-shadow: 0 0 0 1.5px #fff; }
+.gem.urgent:not(.xs)::after { content: "!"; background: color-mix(in srgb, var(--lo) 74%, #000); box-shadow: 0 0 0 1.5px #fff; }
 .gem.m::after { width: 18px; height: 18px; font-size: 12px; top: -4px; right: -4px; }
 .gem.l::after, .gem.xl::after { width: 26px; height: 26px; font-size: 16px; top: 2px; right: 0; }
 .glassbox .gem::after { width: 9px; height: 9px; font-size: 7px; top: -2px; right: -3px; }
-.glassbox .gem.open, .glassbox .gem.nobody { outline-offset: 1px; }
 .weight .gem { outline: none; }
 .weight .gem::after { display: none; }
-.size-opt .gem, .kit-sizes .gem, .kind-stone .gem, .wt-stone .gem { outline-color: rgba(19, 49, 93, 0.25); }
 .jar-n { display: block; font-size: 11.5px; font-weight: 500; color: var(--muted); margin-top: 1px; text-align: center; }
 .kinds.marks { grid-template-columns: 1fr; margin-top: 12px; }
 .mini-jar .jar-n { display: none; }

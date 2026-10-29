@@ -42,9 +42,9 @@ render = function () { applyColors(); baseRender(); };
 // Presets. Distances were checked by simulating each type of color blindness on these exact colors.
 const PRESETS = [
   { id: "shoal", t: "Shoal", d: "The original colors", c: { urgent: "honey", progress: "ice", open: "white" } },
-  { id: "clear", t: "Easy to tell apart", d: "Works for every kind of color blindness", rec: true, c: { urgent: "honey", progress: "purple", open: "white" } },
-  { id: "rg", t: "Red-green safe", d: "Protanopia and deuteranopia, the most common kinds", c: { urgent: "orange", progress: "purple", open: "white" } },
-  { id: "by", t: "Blue-yellow safe", d: "Tritanopia, which is rare", c: { urgent: "red", progress: "honey", open: "white" } },
+  { id: "clear", t: "Easy to tell apart", d: "Works for any color vision", rec: true, c: { urgent: "honey", progress: "purple", open: "white" } },
+  { id: "rg", t: "Red-green safe", d: "Protanopia and deuteranopia", c: { urgent: "orange", progress: "purple", open: "white" } },
+  { id: "by", t: "Blue-yellow safe", d: "Tritanopia", c: { urgent: "red", progress: "honey", open: "white" } },
 ];
 // Pairs that can look alike. "all" means even with typical color vision.
 const LOOK_ALIKE = [
@@ -103,7 +103,7 @@ function colorRows() {
     </div>`).join("")}
     <div class="cp-row"><div class="cp-head">${gem("done", { size: "s" })}<span><b>Done · Off</b><small>Always off, so it's clear the task is finished</small></span></div></div>
     ${warn.length ? `<div class="cp-warn" role="status">${warn.map(([a, b, who]) => `<b>${cap(PALETTE[a].name)}</b> and <b>${PALETTE[b].name}</b> can look alike${who === "all" ? ", even with typical color vision" : ` with ${who} color blindness`}.`).join(" ")} Try <button class="linkish" data-act="pickPreset" data-id="clear">Easy to tell apart</button>.</div>` : ""}
-    <p class="small cp-marks">Color is never the only signal. Urgent stones show a !, and stones no one has yet get a dashed ring.</p>`;
+    <p class="small cp-marks">Urgent stones also show a !, so color is never the only sign that something needs doing.</p>`;
 }
 const colorsChanged = () => COLOR_STATES.some((s) => stoneColors()[s] !== DEFAULT_COLORS[s]);
 

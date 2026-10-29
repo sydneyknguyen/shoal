@@ -162,7 +162,7 @@ const whyOf = (t, p) => t.why || (p.remote || t.remote ? "Can do it from anywher
 const gem = (state, { dark = false, size = "", cls = "", style = "" } = {}) =>
   `<span class="gem ${state} ${dark ? "dark" : ""} ${size} ${cls}" ${style ? `style="${style}"` : ""} aria-hidden="true"></span>`;
 // A task's stone is as big as the task: small, medium or large.
-// Urgent is separate from who has it: an urgent stone no one has gets the dashed "no one" mark too.
+// Urgent is separate from who has it. "nobody" stays as a hook, but carries no mark: only urgent stones do.
 const gemOf = (t, opts = {}) => gem(stateOf(t), { dark: t.kind === "repeat", ...opts, cls: `w${opts.w || t.w || 2} ${!t.who && !t.done ? "nobody" : ""} ${opts.cls || ""}` });
 const toggle = (on, act, id = "", label = "") => `<button class="switch ${on ? "on" : ""}" role="switch" aria-checked="${on}" ${label ? `aria-label="${label}"` : ""} data-act="${act}" data-id="${id}"><i></i></button>`;
 const chev = `<img class="chev" src="${A("chevron.svg")}" alt="">`;
@@ -1034,7 +1034,7 @@ Object.assign(NOTES, {
   glow: ["What the glow means", ["Honey = urgent, ice blue = in progress, white = unassigned, off = done. Families can pick their own colors in Settings.", "Light stones are one-time, dark stones are ongoing."]],
   charge: ["Charging", ["The base powers the jars, so stones charge in a jar or on the base. No moving stones around to charge.", "Only a stone left out (on a table, in a bag) runs down, and the app warns you."]],
   pairRest: ["Pair the rest", ["Optional. Anyone can pair their own stones later."]],
-  home: ["Home", ["Urgent first, then the family jars and this week. No section labels, so it reads at a glance.", "The week is a bar chart of how much the family has each day. Tap a bar to see that day's tasks.", "Top right: the jar icon opens the home kit (only if the family has one), the bell opens notifications.", "Stones carry marks, not just color: ! is urgent, a dashed ring means nobody has it yet. Done stones go grey with no mark, so nothing done looks like a notification. Each jar says how many are left."]],
+  home: ["Home", ["Urgent first, then the family jars and this week. No section labels, so it reads at a glance.", "The week is a bar chart of how much the family has each day. Tap a bar to see that day's tasks.", "Top right: the jar icon opens the home kit (only if the family has one), the bell opens notifications.", "Only urgent stones carry a mark: a ! in the urgent color, so it never looks like a notification on anything else. Done stones go grey. Each jar says how many are left."]],
   myjar: ["My jar", ["Your jar on the left, and a weekly check-in on the right: how's your load feeling? \"I need a break\" lets you hand tasks off right there.", "The old progress ring is optional now, under Settings › My jar.", "One list with All, One-time and Ongoing tabs. Urgent tasks sit on top. Tick to mark done."]],
   task: ["A task", ["Shows who has it, its size, steps, and notes. Hand off or mark done from here.", "Hand-offs are asks, not orders: the other person says yes or no, and everyone sees the answer.", "Every task has a stone. Linking a real stone at home is optional."]],
   handoff: ["Hand off", ["Sends a request. Trusted circle and kids are limited to the tasks they can take."]],

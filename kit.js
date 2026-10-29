@@ -14,7 +14,7 @@ function ring(f, size, w, cls = "") {
 const reading = (f, val, lab, cls = "") => `<span class="k-r ${cls}">${ring(f, 72, 5)}<b><span>${val}</span></b><em>${lab}</em></span>`;
 
 // Three sizes, one rule. Readings sit flat on the background (nothing to tap). Tiles are things you
-// change: the big one is the jars with their glow, two smaller ones are night hours and colors, and
+// change: the jars sit up top with their Glow control, two tiles are night hours and colors, and
 // every tile has its control in the top right corner. Rarely used things are plain rows at the bottom.
 function kitNew() {
   const P = S.app.prefs, g = P.glow || "on";
@@ -31,22 +31,22 @@ function kitNew() {
     <h1 class="title">Home kit</h1>
     <p class="k-status"><i></i>Base connected</p>
 
-    <div class="k-read" aria-label="Kit status">
-      ${reading(charging / S.stones.length, `${charging}<small>/${S.stones.length}</small>`, "charging")}
-      ${reading(avg / 100, `${avg}<small>%</small>`, "avg battery", avg < 30 ? "low" : "")}
-      ${reading(spares.length / KIT, spares.length, "spares ready")}
-    </div>
-
     ${out.map((st) => `<button class="k-alert" data-act="openStone" data-id="${st.id}">
       <span class="k-alert-ic" aria-hidden="true">${ring(st.battery / 100, 34, 3)}<i>!</i></span>
       ${txt(`Stone ${String(st.id).padStart(2, "0")} is ${outLabel(st)}`, `${st.battery}% · not charging`)}
       <span class="k-pill dark">Find</span></button>`).join("")}
 
-    <div class="k-tile k-hero" data-glow="${g}">
+    <section class="k-hero" data-glow="${g}" aria-label="Your jars">
       <div class="k-tile-top"><span class="k-lab">Glow</span>
         <div class="k-seg" role="radiogroup" aria-label="Glow">${[["on", "On"], ["dim", "Dim"], ["off", "Off"]].map(([k, l]) => `<button role="radio" class="${g === k ? "on" : ""}" aria-checked="${g === k}" data-act="setGlow" data-id="${k}">${l}</button>`).join("")}</div>
       </div>
       ${familyJars({ act: false })}
+    </section>
+
+    <div class="k-read" aria-label="Kit status">
+      ${reading(charging / S.stones.length, `${charging}<small>/${S.stones.length}</small>`, "charging")}
+      ${reading(avg / 100, `${avg}<small>%</small>`, "avg battery", avg < 30 ? "low" : "")}
+      ${reading(spares.length / KIT, spares.length, "spares ready")}
     </div>
 
     <div class="k-grid">
@@ -91,5 +91,5 @@ Object.assign(ACTIONS, {
 });
 
 NOTES.kit = ["Home kit", ["A test of a cleaner look. Readings (charging, battery, spares) sit flat on the background with nothing to tap. The off-power alert is a notification.",
-  "Readings are rings: how much of the kit is charging, average battery, and spares ready.", "The kit is a device screen, so it is dark night blue, like the room the jars sit in, and the glow shows. Overview and detail screens keep their own backgrounds. Changing Glow fades the stones live.", "White tiles are things you change, in three sizes: the jars with their glow, then night hours and colors, then plain rows for what you rarely need. Every tile has its control in the top right.",
+  "Readings are rings: how much of the kit is charging, average battery, and spares ready.", "The kit is a device screen, so it is dark night blue, like the room the jars sit in. The jars sit right on it at the top, under Glow, and the glow shows. Overview and detail screens keep their own backgrounds. Changing Glow fades the stones live.", "White tiles are things you change, in three sizes: the jars with their glow, then night hours and colors, then plain rows for what you rarely need. Every tile has its control in the top right.",
   "The pill at the top right switches to the old look to compare.", "Everything physical lives here: glow, night hours, colors, the base, jars and every stone's battery."]];

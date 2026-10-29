@@ -37,7 +37,7 @@ function demoTasks() {
   });
   return [
     mk(`Refill ${l}'s prescription`, "you", 1, "meds", 1, {
-      notes: "Ask for the 90-day supply. The old bottle is in the kitchen drawer.",
+      notes: "Ask for the 90-day supply. The old bottle is in the kitchen drawer. The hospice nurse said to fill the PRN dose too.",
       steps: [
         { n: "Call the pharmacy", who: "you", done: true, when: "Mon" },
         { n: "Check insurance covers it", who: "bill", done: false },
@@ -45,6 +45,7 @@ function demoTasks() {
       ],
     }),
     mk("Ask hospice about a bed", "you", 1, "phone", 4),
+    mk("Figure out help paying for care", "you", 2, "paper", 6),
     mk(`Sort ${l}'s mail`, "you", 1, "paper", ["Mon"]),
     mk("Fill the weekly pill box", "you", 1, "meds", ["Sun"]),
     mk("Book the eye exam", "you", 1, "phone", -2, { done: true }),
@@ -494,6 +495,7 @@ SCREENS.home = () => {
   const today = active().filter((t) => occurs(t, day)).sort((a, b) => (a.time || "99").localeCompare(b.time || "99"));
   return `<div class="content app">
     <div class="apphead">${shoalMark(30)}<span class="head-btns">
+      ${pebbleAskBtn()}
       ${hasKit() ? `<button class="bell" data-act="go" data-to="kit" aria-label="Home kit">${icon("kit")}${notCharging().length && (!S.setup || S.setup.stones) ? `<i class="dot warn"></i>` : ""}</button>` : ""}
       <button class="bell" data-act="go" data-to="notifications" aria-label="Notifications">${icon("bell")}${unread() ? `<i class="dot"></i>` : ""}</button></span></div>
     <p class="eyebrow grey">${TODAY.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}</p>
@@ -505,6 +507,7 @@ SCREENS.home = () => {
       </button>` : ""}
     ${finished ? `<div class="finished">${avatar(person(finished.who), "s20")}<span class="fin-txt"><b>${esc(person(finished.who).name)}</b> finished “${esc(finished.n)}”</span>
       <button class="linkish" data-act="sayThanks" data-id="${finished.id}">Thank</button><button class="x-btn" data-act="dismissThanks" data-id="${finished.id}" aria-label="Dismiss"><span aria-hidden="true">×</span></button></div>` : ""}
+    ${pebbleHomeCard()}
     ${homeSec("jars", "Family jars", "", `<div class="shelf">${familyJars()}</div>`)}
     ${homeSec("week", "This week", "", `<div class="card week">
       ${active().length ? `${loadChart(week)}
@@ -615,6 +618,7 @@ SCREENS.task = () => {
     </div>
     ${medCard(t)}
     ${handoffCard(t)}
+    ${pebbleTaskHelp(t)}
     ${t.steps.length ? `<div class="card stepsc">
       <div class="meter-top"><b>Steps</b><span class="small">${stepsDone} of ${t.steps.length}</span></div>
       <div class="bar"><i style="width:${(stepsDone / t.steps.length) * 100}%"></i></div>
@@ -624,7 +628,7 @@ SCREENS.task = () => {
         ${x.who && x.who !== "you" ? avatar(person(x.who) || { name: "?" }, "s20") : !x.who ? `<button class="linkish" data-act="takeStep" data-id="${i}">Take step</button>` : ""}
       </div>`).join("")}
     </div>` : ""}
-    ${t.notes ? `<div class="card notes-card"><p class="eyebrow grey">Notes</p><p>${esc(t.notes)}</p><span class="small">Added by you</span></div>` : ""}
+    ${t.notes ? `<div class="card notes-card"><p class="eyebrow grey">Notes</p><p>${pebbleTerms(t.notes)}</p><span class="small">Added by you</span></div>` : ""}
   </div>
   ${t.done ? solo("Mark not done", "undoDone", null, `data-id="${t.id}"`) : duo(["Hand off", "handoff"], ["Mark done", "markDone", `data-id="${t.id}"`])}`;
 };
@@ -721,6 +725,7 @@ SCREENS.peopleTab = () => {
   return `<div class="content app">
     <div class="apphead"><h1 class="title">People</h1><button class="btn-ghost sm" data-act="inviteSheet">+ Invite</button></div>
     <button class="sub linkline" data-act="go" data-to="recap">October · ${done} of ${all.length} tasks done together ›</button>
+    ${pebbleMonthEntry()}
     <div class="shelf">
       <div class="shelf-top"><span class="eyebrow grey">Family jars</span>${open ? `<span class="small">${open} unassigned</span>` : ""}</div>
       ${familyJars()}
@@ -784,8 +789,9 @@ SCREENS.settings = () => {
     <p class="section-h">Other views</p>
     <div class="card tlist">${row("See Shoal as someone else", "Nurse, trusted circle, kids, volunteers", "roleSheet")}${row("Take the tour again", "A quick look at each page", "tourStart")}</div>
     <p class="section-h">Pebble</p>
-    <div class="card tlist"><div class="srow"><span class="tl-txt"><span class="n">Pebble suggestions</span><span class="m">${pebbleOn() ? "Suggests tasks, sizes and a fair split" : "Off · you set things up by hand"}</span></span>${toggle(pebbleOn(), "pebbleToggle", "", "Pebble suggestions")}</div>
-      ${row("What Pebble can see", "Answers and goals. Never notes. No medical advice.", "pebbleSees")}</div>
+    <div class="card tlist"><div class="srow"><span class="tl-txt"><span class="n">Pebble suggestions</span><span class="m">${pebbleOn() ? "Suggests tasks and a fair split, notices what's slipping, drafts asks" : "Off · you set things up by hand"}</span></span>${toggle(pebbleOn(), "pebbleToggle", "", "Pebble suggestions")}</div>
+      ${row("What Pebble can see", "Answers, goals and what you tell it. No medical advice.", "pebbleSees")}
+      ${pebbleOn() ? row("What Pebble did", PB().log.length ? `${PB().log.length} change${PB().log.length === 1 ? "" : "s"} · undo anything` : "Nothing yet · every change shows here", "pebbleLogOpen") : ""}</div>
     <p class="section-h">Account</p>
     <div class="card tlist">${row("Sign out", "Back to the sign-in screen", "signOutSheet")}</div>
     <button class="btn-text center" data-act="restart">Restart prototype</button>
@@ -1114,7 +1120,7 @@ function checkIn() {
   const c = S.app.checkin;
   const reply = {
     fine: ["Glad to hear it.", "We'll ask again on Sunday.", ""],
-    stretched: ["That's a lot to carry.", "Handing one task off can help.", `<button class="btn-soft sm" data-act="checkinHand">Hand one off</button>`],
+    stretched: ["That's a lot to carry.", "Handing one task off can help.", `<button class="btn-soft sm" data-act="checkinHand">Hand one off</button>${pebbleCheckinHint()}`],
     break: ["You're allowed to rest.", "Want the family to know? Only if you say so.", `<button class="btn-soft sm" data-act="checkinTell">Tell the family</button>`],
   }[c];
   return `<div class="jh-check">
@@ -1438,7 +1444,8 @@ Object.assign(ACTIONS, {
   },
   checkinTell: () => { S.app.toldFamily = true; toast("Sent. The family will see you could use a hand this week."); },
   pebbleSees: () => openSheet(`<h3>What Pebble can see</h3>
-    <p class="small">Pebble uses everyone's answers from setup and ${esc(L())}'s goals to suggest a fair split. It never reads task notes, messages, medical records, or calendar event details. Only busy and free.</p>
+    <p class="small">Pebble uses everyone's answers from setup, ${esc(L())}'s goals, task names and dates, and what you tell it when you tap Ask Pebble. It never reads messages, medical records, or calendar event details. Only busy and free. Tap an underlined word in a note and it explains that word only.</p>
+    <p class="small"><b>You say yes first.</b> Pebble drafts and suggests. Nothing changes until someone says yes, and Pebble never sends a message or calls anyone itself. Settings › What Pebble did lists every change.</p>
     <p class="small"><b>No clinical role.</b> Pebble doesn't give medical advice, read symptoms, or touch medications. It only helps the family share the work.</p>
     <div class="srow"><span class="tl-txt"><span class="n">Pebble suggestions</span><span class="m">Turn off to set everything up by hand</span></span>${toggle(pebbleOn(), "pebbleToggle", "", "Pebble suggestions")}</div>
     <button class="btn-primary" data-act="closeSheet">Got it</button>`),

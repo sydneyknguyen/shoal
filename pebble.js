@@ -523,3 +523,37 @@ Object.assign(ACTIONS, {
   },
   pebbleClearLog: () => { PB().log = []; render(); },
 });
+
+/* ---------- Pebble's own tab ---------- */
+
+// Everything Pebble does, in one place. The tab shows only while Pebble is on in Settings.
+SCREENS.pebble = () => {
+  const open = active().find((t) => !t.who && !t.done), n = PB().log.length;
+  const tile = (act, to, fig, lab, note) => `<button class="h-w peb-tile" data-act="${act}" ${to ? `data-to="${to}"` : ""}>${pebFig(fig, "s44")}<span class="k-lab">${lab}</span><span class="k-note">${note}</span></button>`;
+  return `<div class="content app peb-page">
+    <div class="peb-hero">${pebFig("idle", "xl")}
+      <h1 class="title">Hi, I'm Pebble</h1>
+      <p class="sub">Tell me what's going on. I'll sort it into tasks.</p>
+      <button class="btn-primary" data-act="pebbleAsk">Talk it through</button></div>
+    ${pebbleHomeCard()}
+    <div class="k-grid">
+      ${tile("pebbleDraftOpen", "", "awaiting_confirmation", "Draft an ask", open ? esc(open.n) : "Nothing open")}
+      ${tile("go", "pebbleCosts", "researching", "Help with costs", `${PEB_PROGRAMS.length} programs`)}
+      ${tile("go", "pebbleMonth", "organizing", "Monthly check-in", "For when you're together")}
+      ${tile("pebbleLogOpen", "", "confirmed", "What I did", n ? `${n} change${n === 1 ? "" : "s"} · undo any` : "Nothing yet")}
+    </div>
+    <button class="h-w wide peb-sees" data-act="pebbleSees"><span class="k-lab">What Pebble can see</span><span class="k-go" aria-hidden="true">${chev}</span></button>
+  </div>
+  ${tabbar()}`;
+};
+ACTIONS.pebbleDraftOpen = () => {
+  const t = active().find((x) => !x.who && !x.done);
+  if (t) openDraft(t.id); else toast("Every task has someone. Nothing to ask for.");
+};
+NOTES.pebble = ["Pebble", ["Pebble's own tab. It's in the tab bar only while Pebble is on (Settings › Pebble); turn it off and the tab goes away.", "Talk it through turns what's going on into draft tasks. The tiles open the other things Pebble does: draft an ask, help with costs, the monthly check-in, and everything it changed, with Undo.", "Pebble never sees Dad's care page and never gives medical advice."]];
+// Opened straight from the side panel, there's no draft yet: start one for the first open task.
+const pebbleDraftBase = SCREENS.pebbleDraft;
+SCREENS.pebbleDraft = () => {
+  if (!PB().draft) { const t = active().find((x) => !x.who) || active()[0]; const d = { task: t.id, step: null, key: null, tone: "warm" }; d.text = draftText(d); PB().draft = d; }
+  return pebbleDraftBase();
+};

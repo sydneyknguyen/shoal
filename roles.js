@@ -3,7 +3,7 @@
 
 const ROLES = [
   { id: "main", screen: "home", who: "You", label: "Main caregiver", sees: "The whole plan: every jar, task, and stone." },
-  { id: "nurse", screen: "asNurse", who: "Ana", label: "Nurse or doula", sees: "Visits, the care notes the family shares, and what she's asked for." },
+  { id: "nurse", screen: "asNurse", who: "Ana", label: "Nurse or doula", sees: "Visits, the care notes the family shares, meds and allergies (view only), and what she's asked for." },
   { id: "trusted", screen: "asTrusted", who: "Nora", label: "Trusted circle", sees: "Her own tasks and light ones she can pick up. No medical details." },
   { id: "kid", screen: "asKid", who: "Leo", label: "Kid or teen", sees: "Their own small jobs, in plain words. Never urgent." },
   { id: "public", screen: "asPublic", who: "A volunteer", label: "Volunteer code", sees: "Only tasks the family shares. No names, no address." },
@@ -116,7 +116,7 @@ SCREENS.asNurse = () => {
     ${R.asks.length ? `<div class="card tlist">${R.asks.map((a) => { const t = task(a.task); return `<div class="tline"><div class="tl-main">${gemOf(t)}
       <span class="tl-txt"><span class="n">${esc(a.n)}</span><span class="m">${t.done ? "Done" : t.who ? `${nameOf(t.who)} has it` : "Waiting for someone to take it"}</span></span></div></div>`; }).join("")}</div>`
       : `<button class="btn-wide" data-act="askSheet">Ask the family for something</button>`}
-    ${sees("Ana sees visit times, the notes the family shares with her, and what she's asked for. She doesn't see the family's other tasks or who's doing more.")}
+    ${sees("Ana sees visit times, the notes the family shares, meds and allergies (view only), and what she's asked for. She doesn't see the family's other tasks or who's doing more.")}
   </div>`;
 };
 

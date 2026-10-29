@@ -3,23 +3,23 @@
    change, so each effect remembers where it came from and plays once on the new drawing.
    Loaded last; wraps tabbar, tabTo and render from main-app.js and app.js. */
 
-const TAB_IDS = TABS.map(([id]) => id);
+const tabIds = () => shownTabs().map(([id]) => id);
 let lastTab = -1, justDone = null, flipped = null;
 
 // The blob starts where the last tab was and stretches across to the new one, then settles.
 const tabbarApp = tabbar;
 tabbar = function () {
-  const to = TAB_IDS.indexOf(S.screen), from = lastTab >= 0 ? lastTab : to;
+  const to = tabIds().indexOf(S.screen), from = lastTab >= 0 ? lastTab : to;
   if (to >= 0) lastTab = to;
   const moved = to >= 0 && from !== to;
-  return tabbarApp().replace(`<nav class="tabbar">`, `<nav class="tabbar ${moved ? "moved" : ""}">${to >= 0 ? `<i class="tab-blob ${moved ? "move" : ""}" style="--from:${from};--to:${to}" aria-hidden="true"></i>` : ""}`);
+  return tabbarApp().replace(`<nav class="tabbar">`, `<nav class="tabbar ${moved ? "moved" : ""}">${to >= 0 ? `<i class="tab-blob ${moved ? "move" : ""}" style="--from:${from};--to:${to};--n:${tabIds().length}" aria-hidden="true"></i>` : ""}`);
 };
 
 // Switching tabs slides the page toward the side you tapped, instead of a plain fade.
 tabTo = function (screen) {
   ensureAppData();
   if (screen === S.screen) return;
-  const a = TAB_IDS.indexOf(S.screen), b = TAB_IDS.indexOf(screen);
+  const a = tabIds().indexOf(S.screen), b = tabIds().indexOf(screen);
   S.history = [];
   S.app.blink = null;
   lastDir = a >= 0 && b >= 0 ? (b > a ? "tabR" : "tabL") : "fade";

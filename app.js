@@ -1291,8 +1291,9 @@ function fit() {
   const wrap = document.getElementById("phoneWrap");
   const phone = document.getElementById("phone");
   if (window.innerWidth <= 500) return;
-  const s = Math.min(1, (window.innerHeight - 40) / 874);
+  const s = Math.min(1, (window.innerHeight - 60) / 900);
   phone.style.transform = `scale(${s})`;
+  document.getElementById("phoneFrame").style.transform = `scale(${s})`;
   wrap.style.width = `${402 * s}px`;
   wrap.style.height = `${874 * s}px`;
 }

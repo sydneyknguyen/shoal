@@ -2,7 +2,9 @@
    Shares state (S), helpers, sheets, and the render loop with app.js. */
 
 const SETUP = ["ready", "jars", "pick", "hold", "paired", "find", "glow", "charge", "pairRest"];
-const TABS = [["home", "Home"], ["myjar", "My jar"], ["peopleTab", "People"], ["settings", "Settings"]];
+const TABS = [["home", "Home"], ["myjar", "My jar"], ["peopleTab", "People"], ["pebble", "Pebble"], ["settings", "Settings"]];
+// Pebble gets a tab only while it's turned on in Settings.
+const shownTabs = () => TABS.filter(([id]) => id !== "pebble" || pebbleOn());
 const APP_SCREENS = new Set([
   ...SETUP, ...TABS.map((t) => t[0]),
   "task", "handoff", "newTask", "newStone", "person", "kit", "stones", "stoneDetail",
@@ -180,13 +182,14 @@ const ICONS = {
   settings: `<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>`,
   bell: `<path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 2h-15z"/><path d="M10 20.5a2.2 2.2 0 0 0 4 0"/>`,
   kit: `<rect x="3" y="17.5" width="18" height="3.5" rx="1.75"/><path d="M5.5 17.5V10a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v7.5M12.5 17.5V10a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v7.5M7 5.5h3M14 5.5h3"/>`,
+  pebble: `<path d="M12 5.5c5 0 8.5 3 8.5 7S17 19 12 19s-8.5-2.5-8.5-6.5S7 5.5 12 5.5z"/><path d="M9.5 11.5v.6M14.5 11.5v.6M10 14.6c1.2.8 2.8.8 4 0"/>`,
   glow: `<path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.7.6 1.1 1.4 1.1 2.2h5c0-.8.4-1.6 1.1-2.2A6 6 0 0 0 12 3z"/>`,
 };
 const icon = (k) => `<svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${ICONS[k]}</svg>`;
 
 function tabbar() {
   const tab = S.screen === "person" || S.screen === "stones" ? "" : S.screen;
-  return `<nav class="tabbar">${TABS.map(([id, l]) => `<button class="${tab === id ? "on" : ""}" ${tab === id ? 'aria-current="page"' : ""} data-act="tab" data-to="${id}">${icon(id)}<span>${l}</span></button>`).join("")}</nav>`;
+  return `<nav class="tabbar">${shownTabs().map(([id, l]) => `<button class="${tab === id ? "on" : ""}" ${tab === id ? 'aria-current="page"' : ""} data-act="tab" data-to="${id}">${icon(id)}<span>${l}</span></button>`).join("")}</nav>`;
 }
 function navtop(label, right = "") {
   return `<div class="navtop"><button class="navback" data-act="back" aria-label="Back"><img src="${A("back.svg")}" alt="">${esc(label)}</button>${right}</div>`;
@@ -1176,13 +1179,14 @@ Object.assign(NOTES, {
   resources: ["Help and resources", ["People to call first, then support (grief, money), each with a few gentle lines and links to trusted outside sources: 988, CaringInfo, Medicare, the FTC, USA.gov.", "End-of-life topics (what to do when someone dies, funeral planning) stay folded behind a gentle note until someone chooses to open them, with an offer to talk it through with the social worker instead.", "\"Call hospice first, not 911\" is explained in terms of the loved one's wishes, not as a rule."]],
 });
 
-const APP_NAV = ["ready", "home", "myjar", "task", "newTask", "peopleTab", "person", "settings", "resources", "kit", "stones", "done", "clear", "recap", "notifications"];
+const APP_NAV = ["ready", "home", "myjar", "task", "newTask", "peopleTab", "person", "pebble", "settings", "resources", "kit", "stones", "done", "clear", "recap", "notifications"];
 
 function renderAppNotes() {
   const [title, bullets] = NOTES[S.screen] || ["", []];
   document.getElementById("notes").innerHTML = `
     <p class="eyebrow">Shoal · main app${S.app?.demo ? " · demo family" : ""}</p>
     <h2>${title}</h2>
+    <button class="os-open" data-act="osOpen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="2.5" width="12" height="19" rx="3"/><path d="M10.5 18.5h3"/></svg><span><b>Outside the app</b><small>Lock screen, notifications, home screen</small></span></button>
     <ol>${APP_NAV.map((s) => `<li><button data-act="appJump" data-to="${s}" aria-current="${s === S.screen}">${NOTES[s][0]}</button></li>`).join("")}</ol>
     <div class="why"><strong>About this screen</strong><ul>${bullets.map((b) => `<li>${b}</li>`).join("")}</ul></div>
     <button class="reset" data-act="restart">Restart prototype</button>`;
@@ -1434,6 +1438,7 @@ Object.assign(ACTIONS, {
     if (S.pebbleOff) { if (S.path === "pebble") S.path = "manual"; S.tasks.forEach((t) => { t.pebble = false; }); }
     render(); if (document.getElementById("sheet").classList.contains("open")) ACTIONS.pebbleSees();
     toast(S.pebbleOff ? "Pebble is off. Your tasks stay as they are." : "Pebble is back on");
+    if (S.pebbleOff && S.screen === "pebble") { closeSheet(); tabTo("settings"); }
   },
   checkin: (d) => { S.app.checkin = d.id || null; render(); },
   checkinHand: () => {

@@ -1444,24 +1444,35 @@ button, input, textarea { touch-action: manipulation; -webkit-tap-highlight-colo
 
 /* Stone colors: presets, named swatches, look-alike warning */
 .cp-label { margin: 18px 0 8px; }
-/* Live preview: one jar in the family's colors, with what each color means. */
-.cp-preview { position: sticky; top: 0; z-index: 3; background: #fff; -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: 0 6px 18px rgba(19, 49, 93, 0.08); display: flex; align-items: center; gap: 18px; padding: 12px 18px 10px; margin-top: 18px; }
-.cp-jar { flex: none; zoom: 0.9; }
-.cp-jar .gem, .pre-jar .gem { animation: none; }
-.cp-legend { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; flex: 1; }
-.cp-legend li { display: flex; align-items: center; gap: 10px; font-size: 13.5px; color: var(--muted); }
-.cp-legend li .gem { flex: none; }
-.cp-legend b { color: var(--ink); font-weight: 600; margin-right: 6px; }
-/* Presets: a 2x2 grid of cards, each with a jar in its own colors. */
+/* The family's jar stays pinned at the top while the options scroll under it. */
+.cp-top { flex: none; padding: 8px 24px 0; }
+.cp-top .title { margin-bottom: 0; }
+.cp-preview { display: flex; flex-direction: column; align-items: center; padding: 8px 0 10px; border-bottom: 1px solid var(--line); }
+.content.cp-scroll { padding-top: 0; }
+.cp-later { margin: 16px 0 4px; }
+.sheet:has(.cp-scroll) { display: flex; flex-direction: column; overflow: hidden; }
+.sheet .cp-scroll { flex: 1; min-height: 0; overflow-y: auto; margin: 0 -24px; padding: 0 24px; scrollbar-width: none; }
+.sheet .cp-preview { margin: 0 -24px; }
+.cp-jar { zoom: 1.1; }
+.cp-jar .gem { animation: none; }
+.cp-now { font-size: 13px; font-weight: 600; color: var(--muted); margin-top: 2px; }
+/* Presets: a 2x2 grid, one stone of each kind per card, then "Make your own". */
 .presets { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.preset { position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 12px; text-align: left; width: 100%; border: 1.5px solid transparent; }
+.preset { position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 14px 12px 12px; text-align: left; width: 100%; border: 1.5px solid transparent; }
 .preset.on { border-color: var(--blue); background: rgba(255, 255, 255, 0.95); }
-.pre-jar { align-self: center; zoom: 0.8; margin: 16px 0 4px; }
+.pre-stones { display: flex; align-items: center; gap: 8px; margin: 2px 0 12px; }
+.pre-stones .gem { position: relative; }
 .preset .t { font-weight: 600; font-size: 14.5px; color: var(--ink); }
 .preset .d { font-size: 12px; color: var(--muted); line-height: 1.35; }
-.preset .d.names { color: var(--ink); opacity: 0.75; margin-top: 2px; }
-.preset .rec { position: absolute; top: 9px; left: 10px; padding: 1px 6px; border-radius: 6px; background: var(--blue-tint); color: var(--blue); font-size: 10.5px; font-weight: 700; }
-.pre-check { position: absolute; top: 8px; right: 8px; }
+.preset .rec { padding: 1px 6px; margin: 1px 0 2px; border-radius: 6px; background: var(--blue-tint); color: var(--blue); font-size: 10.5px; font-weight: 700; }
+.pre-check { position: absolute; top: 10px; right: 10px; }
+.preset.own { grid-column: 1 / -1; flex-direction: row; align-items: center; gap: 12px; border-radius: 20px; border: 1.5px dashed rgba(19, 49, 93, 0.22); background: rgba(19, 49, 93, 0.04); }
+.preset.own.on { border-style: solid; border-color: var(--blue); background: rgba(255, 255, 255, 0.95); }
+.preset.own .pre-stones { margin: 0; }
+.preset.own .txt { display: flex; flex-direction: column; gap: 2px; }
+.pre-plus { width: 34px; height: 34px; flex: none; border-radius: 50%; display: grid; place-items: center; background: rgba(19, 49, 93, 0.08); color: var(--muted); font-size: 22px; line-height: 1; }
+.cp-custom-head { display: flex; align-items: center; gap: 12px; margin: 14px 0 10px; }
+.cp-custom-head b { font-size: 15px; }
 .swatches.named { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px 4px; padding-left: 0; }
 .sw-cell { display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 2px 0; }
 .sw-cell .sw-name { font-size: 12px; color: var(--muted); white-space: nowrap; }

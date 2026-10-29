@@ -71,22 +71,30 @@ function sampleJar(c) {
   return `<div class="rjar"><div class="glassbox"><img class="glass" src="${A("jar.png")}" alt="">
     ${SAMPLE_JAR.map(([s, w], i) => !pos[i] ? "" : gem(s, { size: "s", cls: `w${w} still ${s === "open" ? "nobody" : ""}`, style: `left:${pos[i].x}px;top:${pos[i].y}px${vars(s)}` })).join("")}</div></div>`;
 }
-// What the family's jar looks like right now. Changes as soon as a color does.
-function colorPreview() {
-  const c = stoneColors();
-  return `<div class="card r20 cp-preview" aria-label="Preview of a jar in your colors">
-    <div class="cp-jar">${sampleJar()}</div>
-    <ul class="cp-legend">${[...COLOR_STATES, "done"].map((s) => `<li>${gem(s, { size: "xs", cls: s === "open" ? "nobody" : "" })}<span><b>${STATE[s][0]}</b>${s === "done" ? "Off" : cap(PALETTE[c[s]].name)}</span></li>`).join("")}</ul>
+// The family's jar, pinned at the top of the picker. It changes as soon as a color does.
+const colorPreview = () => `<div class="cp-preview" aria-label="Preview of a jar in your colors">
+    <div class="cp-jar">${sampleJar()}</div><span class="cp-now">${presetOn() ? `${presetOn().t} colors` : "Your own colors"}</span>
   </div>`;
-}
+// One stone per state, so each card shows what urgent, in progress and unassigned look like.
+const threeStones = (c) => `<span class="pre-stones">${COLOR_STATES.map((s) => {
+  const p = c && PALETTE[c[s]];
+  return gem(s, { cls: s === "open" ? "nobody" : "", style: p ? `--hi:${p.hi};--mid:${p.mid};--lo:${p.lo};--glow:${p.glow}` : "" });
+}).join("")}</span>`;
 function presetRows() {
-  const on = presetOn();
-  return `<p class="label cp-label">Start from a preset</p>
+  const on = presetOn(), custom = !on;
+  return `<p class="label cp-label">Presets</p>
     <div class="presets" role="radiogroup" aria-label="Color presets">${PRESETS.map((p) => `<button class="card preset ${on === p ? "on" : ""}" role="radio" aria-checked="${on === p}" data-act="pickPreset" data-id="${p.id}">
-      ${p.rec ? `<span class="rec">Recommended</span>` : ""}${on === p ? `<span class="pre-check">${check(true)}</span>` : ""}
-      <span class="pre-jar">${sampleJar(p.c)}</span>
-      <span class="t">${p.t}</span><span class="d">${p.d}</span><span class="d names">${COLOR_STATES.map((s) => cap(PALETTE[p.c[s]].name)).join(" · ")}</span></button>`).join("")}</div>`;
+      ${on === p ? `<span class="pre-check">${check(true)}</span>` : ""}${threeStones(p.c)}
+      <span class="t">${p.t}</span>${p.rec ? `<span class="rec">Recommended</span>` : ""}<span class="d">${p.d}</span></button>`).join("")}
+      <button class="preset own ${custom ? "on" : ""}" role="radio" aria-checked="${custom}" data-act="customColors">
+        ${custom ? `<span class="pre-check">${check(true)}</span>${threeStones()}` : `<span class="pre-plus" aria-hidden="true">+</span>`}
+        <span class="txt"><span class="t">${custom ? "Your own colors" : "Make your own"}</span><span class="d">${custom ? "Tap to change them" : "Pick a color for each stone"}</span></span></button>
+    </div>`;
 }
+// Make your own: one row per stone. Replaces the presets until you go back.
+const customView = () => `<div class="cp-custom-head"><button class="linkish" data-act="presetView">‹ Presets</button><b>Make your own</b></div>
+  <div class="card r20 cp-card">${colorRows()}</div>`;
+const pickerBody = () => (S.colorCustom ? customView() : presetRows());
 function colorRows() {
   const c = stoneColors(), warn = lookAlike();
   return `${COLOR_STATES.map((s) => `<div class="cp-row">
@@ -99,33 +107,32 @@ function colorRows() {
 }
 const colorsChanged = () => COLOR_STATES.some((s) => stoneColors()[s] !== DEFAULT_COLORS[s]);
 
+// The jar stays put at the top; only the options under it scroll.
 function colorSheet() {
-  const changed = colorsChanged();
-  openSheet(`<h3>Stone colors</h3><p class="small">Pick colors that make sense to you and are easy to tell apart. Every stone and jar in the family switches together.</p>
+  openSheet(`<h3>Stone colors</h3>
     ${colorPreview()}
-    ${presetRows()}
-    <div class="cp-sheet">${colorRows()}</div>
-    <div class="actions">${changed ? `<button class="btn-soft" data-act="resetColors">Reset colors</button>` : ""}<button class="btn-soft" data-act="closeSheet">Done</button></div>`);
+    <div class="cp-scroll">${pickerBody()}
+      <div class="actions">${colorsChanged() ? `<button class="btn-soft" data-act="resetColors">Reset colors</button>` : ""}<button class="btn-soft" data-act="closeSheet">Done</button></div>
+    </div>`);
 }
 
 // Last onboarding step: the glow is explained once, in the family's own colors.
 SCREENS.colors = () => `${topbar()}
-  <div class="content">
+  <div class="cp-top">
     ${eyebrow("Stones")}
     <h1 class="title">Pick your stone colors</h1>
-    <p class="sub">Each stone glows to show where a task stands. Choose colors that mean something to your family.</p>
     ${colorPreview()}
-    ${presetRows()}
-    <p class="label cp-label">Or pick each one</p>
-    <div class="card r20 cp-card">${colorRows()}</div>
-    <p class="small" style="margin-top:12px">${colorsChanged() ? `<button class="linkish" data-act="resetColors">Reset colors</button> · ` : ""}You can change these anytime in Settings.</p>
+  </div>
+  <div class="content cp-scroll">
+    ${pickerBody()}
+    <p class="small cp-later">Each stone glows to show where a task stands. You can change these anytime in Settings.</p>
   </div>
   ${footer("Go to Home")}`;
 
 const sheetOpen = () => document.getElementById("sheet").classList.contains("open");
 
 Object.assign(ACTIONS, {
-  colorSheet,
+  colorSheet: () => { S.colorCustom = false; colorSheet(); },
   pickColor: (d) => {
     const c = stoneColors();
     // Two states can't share a color, so the one already using it takes the old color instead.
@@ -134,6 +141,8 @@ Object.assign(ACTIONS, {
     c[d.id] = d.color;
     render(); if (sheetOpen()) colorSheet();
   },
-  pickPreset: (d) => { S.colors = { ...PRESETS.find((p) => p.id === d.id).c }; render(); if (sheetOpen()) colorSheet(); },
-  resetColors: () => { S.colors = { ...DEFAULT_COLORS }; render(); if (sheetOpen()) colorSheet(); },
+  pickPreset: (d) => { S.colors = { ...PRESETS.find((p) => p.id === d.id).c }; S.colorCustom = false; render(); if (sheetOpen()) colorSheet(); },
+  customColors: () => { S.colorCustom = true; render(); if (sheetOpen()) colorSheet(); },
+  presetView: () => { S.colorCustom = false; render(); if (sheetOpen()) colorSheet(); },
+  resetColors: () => { S.colors = { ...DEFAULT_COLORS }; S.colorCustom = false; render(); if (sheetOpen()) colorSheet(); },
 });

@@ -6,7 +6,7 @@ const TABS = [["home", "Home"], ["myjar", "My jar"], ["peopleTab", "People"], ["
 const APP_SCREENS = new Set([
   ...SETUP, ...TABS.map((t) => t[0]),
   "task", "handoff", "newTask", "newStone", "person", "kit", "stones", "stoneDetail",
-  "done", "thanks", "clear", "recap", "notifications", "recapSettings",
+  "done", "thanks", "clear", "recap", "notifications", "recapSettings", "resources",
 ]);
 const KIT = 36;
 const BATTERY = [82, 64, 91, 18, 77, 55, 100, 12, 69, 88, 73, 95, 60, 47, 84, 70, 93, 66, 79, 90, 58, 86, 75, 97, 81, 68, 92, 74, 87, 63, 99, 71, 85, 78, 94, 67];
@@ -51,7 +51,12 @@ function demoTasks() {
     mk("Call about the hospital bill", "you", 2, "phone", -4, { done: true }),
     mk("Return the walker", "you", 1, "drive", -5, { done: true }),
     mk("Cook dinners", "mom", 2, "cook", ["Mon", "Wed", "Fri"]),
-    mk("Morning meds", "mom", 1, "meds", [...DAYS]),
+    mk("Morning meds", "mom", 1, "meds", [...DAYS], { medIds: ["metoprolol"] }),
+    // Med tasks point at meds on the care page, where anyone who gives a dose logs it.
+    mk("Comfort meds", "mom", 1, "meds", [...DAYS], {
+      notes: "From the hospice comfort kit in the fridge. Call hospice before giving more than the plan says.",
+      medIds: ["morphine", "lorazepam"],
+    }),
     mk(`Keep ${l} company`, "mom", 2, "there", [...DAYS]),
     mk("Laundry and sheets", "mom", 2, "there", -1, { done: true }),
     mk(`Drive ${l} to Thursday's visit`, "bill", 2, "drive", 2, { why: "10 minutes away" }),
@@ -570,16 +575,24 @@ SCREENS.myjar = () => {
 /* ---------- Task detail ---------- */
 
 const curTask = () => S.tasks.find((t) => t.id === S.app.task);
+// "Bill", "Bill and Sam", "Bill, Sam and Nora"
+const namesList = (ids) => { const n = ids.map(nameOf); return n.length < 2 ? n.join("") : `${n.slice(0, -1).join(", ")} and ${n[n.length - 1]}`; };
+// Who a hand-off went to (one person or several), and who said yes.
+const handTargets = (h) => [].concat(h.to);
+const handWho = (h) => h.taker || handTargets(h)[0];
+
 function handoffCard(t) {
   const h = t.handoff;
   if (!h) return "";
-  const to = person(h.to) || { name: "Someone" };
+  const ids = handTargets(h), many = ids.length > 1;
+  const to = person(handWho(h)) || { name: "Someone" };
   const body = {
-    pending: [`Waiting on ${to.name}`, "Everyone can see it's being handed off.", `<button class="linkish" data-act="cancelHandoff">Cancel</button>`],
-    accepted: [`${to.name} said yes`, `${h.when} · it's in ${possessive(to)} jar now`, ""],
+    pending: [many ? (h.all ? "Asked everyone who can" : `Asked ${namesList(ids)}`) : `Waiting on ${to.name}`, many ? "The first to say yes takes it. Everyone can see it's being handed off." : "Everyone can see it's being handed off.", `<button class="linkish" data-act="cancelHandoff">Cancel</button>`],
+    accepted: [`${to.name} said yes`, `${h.when} · it's in ${possessive(to)} jar now${many ? ". The others were told it's covered." : ""}`, ""],
     declined: [`${to.name} can't take it`, `“${h.why}”`, `<button class="pill-btn" data-act="handoff">Ask someone else</button>`],
   }[h.status];
-  return `<div class="card hand-card ${h.status}">${avatar(to, "s36")}<span class="tl-txt"><span class="n">${esc(body[0])}</span><span class="m">${esc(body[1])}</span></span>${body[2]}</div>`;
+  const pic = h.status === "pending" && many ? `<span class="stack hand-stack">${ids.slice(0, 3).map((id) => avatar(person(id) || { name: "?" }, "s24")).join("")}</span>` : avatar(to, "s36");
+  return `<div class="card hand-card ${h.status}">${pic}<span class="tl-txt"><span class="n">${esc(body[0])}</span><span class="m">${esc(body[1])}</span></span>${body[2]}</div>`;
 }
 
 SCREENS.task = () => {
@@ -600,6 +613,7 @@ SCREENS.task = () => {
       ${gemOf(t, { size: "s" })}
       ${hasKit() && s && !t.done ? `<button class="pill-btn" data-act="findStone" data-id="${t.id}">Find</button>` : ""}
     </div>
+    ${medCard(t)}
     ${handoffCard(t)}
     ${t.steps.length ? `<div class="card stepsc">
       <div class="meter-top"><b>Steps</b><span class="small">${stepsDone} of ${t.steps.length}</span></div>
@@ -618,28 +632,39 @@ SCREENS.task = () => {
 SCREENS.handoff = () => {
   const t = curTask();
   const options = S.people.filter((p) => p.id !== t.who);
-  const to = S.app.handTo;
-  const target = to ? person(to) : null;
+  const able = options.filter((p) => canTake(p, t));
+  const to = S.app.handTo; // undefined = nothing picked, null = unassigned, else a list of ids
+  const picked = Array.isArray(to) ? to : [];
+  const all = able.length > 1 && able.every((p) => picked.includes(p.id));
+  const target = picked.length === 1 ? person(picked[0]) : null;
+  const texts = picked.filter((id) => person(id)?.tier !== "main" || person(id)?.via === "text").length;
+  const label = to === undefined || (Array.isArray(to) && !picked.length) ? "Pick someone"
+    : to === null ? "Leave it unassigned"
+    : target ? `Send request to ${esc(target.name)}`
+    : all ? "Ask everyone" : `Ask ${picked.length} people`;
   return `${navtop("Back")}
   <div class="content">
     <h1 class="title">Hand it off</h1>
-    <p class="sub">Whoever you pick gets a request, and the task moves to their jar.</p>
+    <p class="sub">Ask one person, a few, or everyone. The first to say yes takes it, and the task moves to their jar.</p>
     <div class="card pair-to">${taskLine(t, { act: "noop" })}</div>
     <div class="card tlist pick-list">
+      ${able.length > 1 ? `<button class="radio-row" data-act="handTo" data-id="all"><span class="stack hand-stack">${able.slice(0, 3).map((p) => avatar(p, "s24")).join("")}</span>
+        <span class="tl-txt"><span class="n">Everyone who can</span><span class="m">${able.length} people · first yes takes it</span></span>${check(all, true)}</button>` : ""}
       ${options.map((p) => {
         const ok = canTake(p, t);
         const n = mine(p.id).filter((x) => !x.done).length;
         return `<button class="radio-row" data-act="handTo" data-id="${p.id}" ${ok ? "" : "disabled"}>${avatar(p, "s36")}
           <span class="tl-txt"><span class="n">${esc(p.name)}</span><span class="m">${ok ? `${n} task${n === 1 ? "" : "s"}${p.remote ? " · remote" : ""}${p.tier === "trusted" ? " · gets a text" : ""}` : p.tier === "kid" ? "Kid tasks only" : "Light tasks only"}</span></span>
-          ${check(to === p.id)}</button>`;
+          ${check(picked.includes(p.id), true)}</button>`;
       }).join("")}
       ${t.who ? `<button class="radio-row" data-act="handTo" data-id="">${gem("open", { size: "s" })}<span class="tl-txt"><span class="n">Unassigned</span><span class="m">Glows white for whoever is free</span></span>${check(to === null)}</button>` : ""}
     </div>
     <p class="label">Note <span class="small">optional</span></p>
     <textarea class="note-input" data-input="handoffNote" placeholder="Anything they should know?">${esc(S.app.note)}</textarea>
-    ${target ? `<p class="small" style="text-align:center">We'll ${target.tier === "main" ? "send it to the app" : "text"} ${esc(target.name)}.</p>` : ""}
+    ${target ? `<p class="small" style="text-align:center">We'll ${target.tier === "main" && target.via !== "text" ? "send it to the app" : "text"} ${esc(target.name)}.</p>`
+      : picked.length > 1 ? `<p class="small" style="text-align:center">${esc(namesList(picked))} each get the request${texts ? ` (${texts === 1 ? "one gets a text" : `${texts} get a text`})` : ""}. Once someone says yes, the rest are told it's covered.</p>` : ""}
   </div>
-  ${solo(to === undefined ? "Pick someone" : target ? `Send request to ${esc(target.name)}` : "Leave it unassigned", "sendHandoff", null, to === undefined ? "disabled" : "")}`;
+  ${solo(label, "sendHandoff", null, label === "Pick someone" ? "disabled" : "")}`;
 };
 
 /* ---------- Add a task ---------- */
@@ -716,6 +741,8 @@ SCREENS.peopleTab = () => {
         <span class="tl-txt"><span class="n">Trusted circle</span><span class="m"><span class="stack">${circle.slice(0, 4).map((p) => avatar(p, "s20")).join("")}</span>${circle.length ? `${esc(circle[0].name)}${circle.length > 1 ? ` + ${circle.length - 1} other${circle.length > 2 ? "s" : ""}` : ""} · ` : "No one yet · "}${((n) => `${n} task${n === 1 ? "" : "s"}`)(circle.reduce((n, p) => n + mine(p.id).length, 0))}</span></span>
         <span class="badge">On</span>${chev}</button>
       ${stageOf() === "final" || S.app.demo ? `<button class="prow" data-act="roleGo" data-to="asNurse"><span class="avatar s36">A</span><span class="tl-txt"><span class="n">Hospice nurse</span><span class="m">Ana · see what she sees</span></span>${chev}</button>` : ""}
+      <button class="prow" data-act="go" data-to="care"><span class="circle-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${RES_ICON.heart}</svg></span><span class="tl-txt"><span class="n">${esc(possessive({ name: L() }))} care</span><span class="m">Meds, allergies, needs and preferences</span></span>${chev}</button>
+      <button class="prow" data-act="go" data-to="resources"><span class="circle-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${RES_ICON.phone}</svg></span><span class="tl-txt"><span class="n">Help and resources</span><span class="m">Hospice line, social worker, grief support</span></span>${chev}</button>
       <button class="prow" data-act="go" data-to="volunteerCode"><span class="circle-ico"><img src="${A("lock.svg")}" alt=""></span><span class="tl-txt"><span class="n">Volunteer code</span><span class="m">${S.app.prefs.publicCode ? `On · code ${PUBLIC_CODE}` : "Let neighbors and friends help from anywhere"}</span></span><span class="badge ${S.app.prefs.publicCode ? "" : "plain"}">${S.app.prefs.publicCode ? "On" : "Off"}</span>${chev}</button>
     </div>
   </div>
@@ -747,7 +774,7 @@ SCREENS.settings = () => {
     <div class="apphead"><h1 class="title">Settings</h1></div>
     <div class="card account">${avatar(person("you"), "s36")}<span class="tl-txt"><span class="n">${esc(person("you").name)}</span><span class="m">${signedInAs()}</span></span></div>
     <p class="section-h">Family</p>
-    <div class="card tlist">${row("Family setup", "Redo with Pebble or by hand", "redoSetup")}</div>
+    <div class="card tlist">${row("Help and resources", "Hospice line, grief support, what to do after a death", "go", "", 'data-to="resources"')}${row("Care page lock", "PIN or Face ID · primary caregivers only", "careLockSheet")}${row("Family setup", "Redo with Pebble or by hand", "redoSetup")}</div>
     <p class="section-h">Together</p>
     <div class="card tlist">${row("Thank-yous &amp; recaps", "Weekly recap on Sundays", "go", "", 'data-to="recapSettings"')}${row("Notifications", "Urgent, requests, and thank-yous", "go", "", 'data-to="notifications"')}</div>
     <p class="section-h">My jar</p>
@@ -764,6 +791,89 @@ SCREENS.settings = () => {
     <button class="btn-text center" data-act="restart">Restart prototype</button>
   </div>
   ${tabbar()}`;
+};
+
+/* ---------- Help and resources ---------- */
+
+const RES_ICON = {
+  phone: `<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/>`,
+  heart: `<path d="M12 19s-7-4.3-7-9.2A3.8 3.8 0 0 1 12 7.5a3.8 3.8 0 0 1 7 2.3C19 14.7 12 19 12 19z"/>`,
+  person: `<circle cx="12" cy="8" r="3.5"/><path d="M5 20a7 7 0 0 1 14 0"/>`,
+  home: `<path d="M4 11 12 4l8 7"/><path d="M6 10v10h12V10"/>`,
+  coin: `<circle cx="12" cy="12" r="8"/><path d="M14.5 9.5c-.5-.9-1.5-1.3-2.5-1.3-1.4 0-2.5.8-2.5 1.9 0 2.6 5 1.4 5 4 0 1.1-1.1 1.9-2.5 1.9-1 0-2-.4-2.5-1.3M12 6.5v1.7M12 15.8v1.7"/>`,
+};
+const resIcon = (k) => `<span class="res-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${RES_ICON[k]}</svg></span>`;
+const HOSPICE = { name: "Valley Hospice", line: "(408) 555-0142" };
+
+// Each topic opens a short sheet: a few gentle lines in Shoal's words, then trusted outside sources
+// for the full detail. The end-of-life topics stay folded behind a note until someone chooses to open them.
+const RESOURCES = {
+  grief: { title: "Grief support", sub: "Before and after, for everyone", icon: "heart",
+    intro: "Grief often starts long before a death. Support is there for the whole family, now and later.",
+    items: [
+      `${HOSPICE.name} offers grief counselling to the family for about a year after a death, at no cost.`,
+      "Rosa can point you to support groups nearby or online, and to counsellors who work with kids.",
+      "If you or someone in the family is struggling to cope, you can call or text 988 any time.",
+    ],
+    links: [["988 Suicide & Crisis Lifeline", "Call or text 988, any time", "https://988lifeline.org"], ["CaringInfo", "Grief and caregiving guides from the national hospice association", "https://www.caringinfo.org"], ["The Dougy Center", "Support for children and teens who are grieving", "https://www.dougy.org"]] },
+  money: { title: "Help paying for things", sub: "Benefits and local help", icon: "coin",
+    intro: "Money worries are common and hard to bring up. Rosa can help you sort out what you might qualify for.",
+    items: [
+      "Medicare's hospice benefit usually covers the nurse, equipment, and comfort medicines.",
+      "Veterans may be able to get help with burial costs.",
+      "Some hospices and local charities have small funds for groceries, bills or travel.",
+    ],
+    links: [["Medicare: hospice care", "What the hospice benefit covers", "https://www.medicare.gov/coverage/hospice-care"], ["BenefitsCheckUp", "Find benefits you may qualify for, from the National Council on Aging", "https://www.benefitscheckup.org"], ["VA burial benefits", "For veterans and their families", "https://www.va.gov/burials-memorials/"]] },
+  after: { title: "The days after", sub: "There's no rush. Nothing has to happen right away.", icon: "heart", gentle: true,
+    intro: "When the time comes, the hospice nurse will be with you and will help with the first steps. You won't have to figure it out alone.",
+    items: [
+      "The nurse helps with the next steps and can call the funeral home you chose.",
+      "The funeral home can help with the death certificate and with telling Social Security.",
+      "When you're ready, one person can let everyone else know. Shoal can share it with the family.",
+    ],
+    links: [["USA.gov: when a loved one dies", "Plain-language checklist from the U.S. government", "https://www.usa.gov/death-loved-one"], ["Government death benefits", "Social Security and other benefits for survivors", "https://www.usa.gov/government-death-benefits"]] },
+  funeral: { title: "Funeral home or cremation", sub: "Some families plan ahead. It's okay if you're not ready.", icon: "home", gentle: true,
+    intro: "Thinking about this ahead of time can make things calmer later. Some families do it together, some ask one person to look into it.",
+    items: [
+      "You can call a few places and ask for their price list. You only pay for what you choose.",
+      "There are many ways to say goodbye, simple or traditional. A memorial can be held any time.",
+      `Once you choose a place, let ${HOSPICE.name} know.`,
+    ],
+    links: [["FTC: shopping for funeral services", "Your rights, and the questions to ask", "https://consumer.ftc.gov/articles/shopping-funeral-services"], ["Funeral Consumers Alliance", "A nonprofit guide to choices and costs", "https://funerals.org"]] },
+};
+
+SCREENS.resources = () => {
+  const call = (n, m, icon, msg) => `<div class="srow">${resIcon(icon)}<span class="tl-txt"><span class="n">${n}</span><span class="m">${m}</span></span><button class="pill-btn" data-act="toast" data-msg="${msg}">Call</button></div>`;
+  const row = (k) => `<button class="srow" data-act="resSheet" data-id="${k}">${resIcon(RESOURCES[k].icon)}<span class="tl-txt"><span class="n">${RESOURCES[k].title}</span><span class="m">${RESOURCES[k].sub}</span></span>${chev}</button>`;
+  const open = S.app.resOpen;
+  return `${navtop("Back")}
+  <div class="content res-page">
+    <h1 class="title">Help and resources</h1>
+    <p class="sub">People to call, and trusted places to learn more. Everyone in the family sees this page.</p>
+    <p class="section-h">Call any time</p>
+    <div class="card tlist">
+      ${call(HOSPICE.name, `${HOSPICE.line} · day or night`, "phone", `Calling ${HOSPICE.name} at ${HOSPICE.line}`)}
+      ${call("Rosa, social worker", "Weekdays · money and paperwork", "person", "Calling Rosa at (408) 555-0167")}
+      ${call("Ana, hospice nurse", "Visits Tuesday and Friday", "heart", "Calling Ana at (408) 555-0139")}
+    </div>
+    <p class="section-h">Support</p>
+    <div class="card tlist">${row("grief")}${row("money")}</div>
+    <p class="section-h">Planning ahead</p>
+    ${open ? `<div class="card res-911">
+        <h2>If ${esc(L())} dies at home, call hospice first, not 911.</h2>
+        <p>Take the time you need. When you're ready, call ${HOSPICE.name} at <b>${HOSPICE.line}</b>. A nurse will come and help with what comes next.</p>
+        <p class="res-why">Calling 911 can mean paramedics try to revive ${esc(L())}, which may go against ${esc(possessive({ name: L() }))} wishes.</p>
+        <div class="res-actions"><button class="btn-soft" data-act="toast" data-msg="Calling ${HOSPICE.name} at ${HOSPICE.line}">Call hospice</button></div>
+      </div>
+      <div class="card tlist res-more">${row("after")}${row("funeral")}</div>
+      <button class="btn-text center res-hide" data-act="resToggle">Fold this section away</button>`
+    : `<div class="card res-gate">
+        <p class="res-gate-k">A gentle note</p>
+        <p>This part is about the end of life: what to do when ${esc(L())} dies, and planning a funeral. Open it when you feel ready. You can fold it away again any time.</p>
+        <p class="small">Rosa can also walk the family through it, in person or on the phone.</p>
+        <div class="res-actions"><button class="btn-soft" data-act="resToggle">Open this section</button><button class="btn-soft" data-act="toast" data-msg="Calling Rosa at (408) 555-0167">Talk to Rosa</button></div>
+      </div>`}
+  </div>`;
 };
 
 function signedInAs() {
@@ -949,6 +1059,7 @@ const NOTIF = {
   request: ["Handoff request", `<path d="M4 9h13l-3.5-3.5M20 15H7l3.5 3.5"/>`],
   done: ["Finished", `<path d="m6 12.5 4 4 8-9"/>`],
   plan: ["Plan", `<path d="M20 4 3 11l7 2.5L12.5 21z"/><path d="m10 13.5 4-4"/>`],
+  meds: ["Dose given", `<rect x="4" y="9" width="16" height="7" rx="3.5" transform="rotate(-35 12 12.5)"/><path d="m9.5 9 4.6 6.6"/>`],
   thanks: ["Thank-you", `<path d="M12 19s-7-4.3-7-9.2A3.8 3.8 0 0 1 12 7.5a3.8 3.8 0 0 1 7 2.3C19 14.7 12 19 12 19z"/>`],
 };
 const nfBadge = (k) => `<span class="nf-badge nb-${k}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">${NOTIF[k][1]}</svg></span>`;
@@ -960,9 +1071,15 @@ function notifications() {
   S.app.requests.forEach((r) => list.push({ kind: "request", needs: true, cta: "Review", when: "Today", who: person(r.from), n: `${nameOf(r.from)} asked you to take “${r.n}”`, m: r.note, act: "review", id: r.id }));
   active().filter(isUrgent).slice(0, 2).forEach((t) => list.push({ kind: "urgent", needs: t.who === "you" || !t.who, cta: "Open", when: "Now", gem: gemOf(t, { size: "s" }), n: `${t.n} is ${dueLabel(t)}`, m: t.who ? `${t.who === "you" ? "You have" : `${nameOf(t.who)} has`} it` : "No one has it yet", act: "openTask", id: t.id }));
   S.tasks.filter((t) => t.done && t.doneAt && t.who !== "you").forEach((t) => list.push({ kind: "done", when: t.doneAt.split(",")[0], who: person(t.who), n: `${nameOf(t.who)} finished “${t.n}”`, m: S.app.thanked[t.id] ? "You said thanks" : "Tap to say thanks", act: S.app.thanked[t.id] ? "openTask" : "sayThanks", id: t.id }));
+  [...care().doses].sort((a, b) => b.at - a.at).filter((x) => medOf(x.med)?.prn).slice(0, 2).forEach((x) => {
+    const m = medOf(x.med);
+    const open = careUnlocked(); // locked, it says a dose was logged, not what or how much
+    list.push({ kind: "meds", when: cap(ago(x.at)), who: person(x.who), n: open ? `${x.who === "you" ? "You" : nameOf(x.who)} gave ${m.amt} of ${m.name.toLowerCase()} at ${clock(x.at)}` : `${x.who === "you" ? "You" : nameOf(x.who)} logged a dose at ${clock(x.at)}`, m: open ? `Next dose okay after ${clock(x.at + m.every * 36e5)}` : "Unlock the care page to see it", act: "go", to: "care" });
+  });
   S.tasks.filter((t) => t.handoff && t.handoff.status !== "pending").forEach((t) => {
     const h = t.handoff, ok = h.status === "accepted";
-    list.push({ kind: ok ? "done" : "request", needs: !ok, cta: "Open", when: "Today", who: person(h.to), n: ok ? `${nameOf(h.to)} said yes to “${t.n}”` : `${nameOf(h.to)} can't take “${t.n}”`, m: ok ? "Everyone can see it's with them now" : h.why, act: "openTask", id: t.id });
+    const w = handWho(h);
+    list.push({ kind: ok ? "done" : "request", needs: !ok, cta: "Open", when: "Today", who: person(w), n: ok ? `${nameOf(w)} said yes to “${t.n}”` : `${nameOf(w)} can't take “${t.n}”`, m: ok ? "Everyone can see it's with them now" : h.why, act: "openTask", id: t.id });
   });
   if (S.planSentAt) {
     const who = others.filter((p) => S.lastSent?.includes(p.id)).map((p) => { const n = mine(p.id).length; return `${p.name}, ${n} task${n === 1 ? "" : "s"}`; });
@@ -975,7 +1092,7 @@ function notifications() {
 
 SCREENS.notifications = () => {
   const list = notifications();
-  const row = (x) => `<button class="notif ${x.kind} ${x.needs ? "needs" : ""}" ${x.act ? `data-act="${x.act}" data-id="${x.id || ""}"` : "disabled"}>
+  const row = (x) => `<button class="notif ${x.kind} ${x.needs ? "needs" : ""}" ${x.act ? `data-act="${x.act}" data-id="${x.id || ""}"${x.to ? ` data-to="${x.to}"` : ""}` : "disabled"}>
       <span class="nf-icon">${x.who ? avatar(x.who, "s36") : `<span class="nf-tile">${x.gem}</span>`}${nfBadge(x.kind)}</span>
       <span class="tl-txt"><span class="nf-kind">${NOTIF[x.kind][0]} · ${x.when}</span><span class="n">${esc(x.n)}</span><span class="m">${esc(x.m)}</span></span>
       ${x.needs && x.cta ? `<span class="pill-btn">${x.cta}</span>` : ""}</button>`;
@@ -1034,8 +1151,8 @@ Object.assign(NOTES, {
   pairRest: ["Pair the rest", ["Optional. Anyone can pair their own stones later."]],
   home: ["Home", ["Urgent first, then the family jars and this week. No section labels, so it reads at a glance.", "The week is a bar chart of how much the family has each day. Tap a bar to see that day's tasks.", "Top right: the jar icon opens the home kit (only if the family has one), the bell opens notifications.", "Only urgent stones carry a mark: a ! in the urgent color, so it never looks like a notification on anything else. Done stones go grey. Each jar says how many are left."]],
   myjar: ["My jar", ["Your jar on the left, and a weekly check-in on the right: how's your load feeling? \"I need a break\" lets you hand tasks off right there.", "The old progress ring is optional now, under Settings › My jar.", "One list with All, One-time and Ongoing tabs. Urgent tasks sit on top. Tick to mark done."]],
-  task: ["A task", ["Shows who has it, its size, steps, and notes. Hand off or mark done from here.", "Hand-offs are asks, not orders: the other person says yes or no, and everyone sees the answer.", "Every task has a stone. Linking a real stone at home is optional."]],
-  handoff: ["Hand off", ["Sends a request. Trusted circle and kids are limited to the tasks they can take."]],
+  task: ["A task", ["Med tasks show their meds from the care page: the dose big and bold, who gave the last one, and when the next is okay.", "Shows who has it, its size, steps, and notes. Hand off or mark done from here.", "Hand-offs are asks, not orders: the other person says yes or no, and everyone sees the answer.", "Every task has a stone. Linking a real stone at home is optional."]],
+  handoff: ["Hand off", ["Ask one person, a few, or everyone at once. The first to say yes takes it, and the rest are told it's covered.", "Families asked for this: \"anyone free Thursday?\" shouldn't mean asking one by one.", "Trusted circle and kids are limited to the tasks they can take."]],
   newTask: ["Add a task", ["Name, one-time or ongoing, due date, who, remote OK, notes. Saving adds its stone to that person's jar."]],
   newStone: ["Link a real stone", ["Every task already has a stone in the app jar. Linking a real one is optional, from the task's ••• menu."]],
   peopleTab: ["People", ["Everyone's jars and progress, plus the extended circle."]],
@@ -1050,9 +1167,10 @@ Object.assign(NOTES, {
   recap: ["Weekly recap", ["Sunday recap. No streaks or rankings, only what went well."]],
   notifications: ["Notifications", ["Needs you: handoff requests and your urgent tasks. Each has a button. Stone alerts live in the home kit.", "Updates: things others finished and thank-yous. A badge on each picture shows the kind."]],
   recapSettings: ["Thank-yous and recaps", ["Turn each one off, or go quiet for a while."]],
+  resources: ["Help and resources", ["People to call first, then support (grief, money), each with a few gentle lines and links to trusted outside sources: 988, CaringInfo, Medicare, the FTC, USA.gov.", "End-of-life topics (what to do when someone dies, funeral planning) stay folded behind a gentle note until someone chooses to open them, with an offer to talk it through with the social worker instead.", "\"Call hospice first, not 911\" is explained in terms of the loved one's wishes, not as a rule."]],
 });
 
-const APP_NAV = ["ready", "home", "myjar", "task", "newTask", "peopleTab", "person", "settings", "kit", "stones", "done", "clear", "recap", "notifications"];
+const APP_NAV = ["ready", "home", "myjar", "task", "newTask", "peopleTab", "person", "settings", "resources", "kit", "stones", "done", "clear", "recap", "notifications"];
 
 function renderAppNotes() {
   const [title, bullets] = NOTES[S.screen] || ["", []];
@@ -1204,29 +1322,54 @@ Object.assign(ACTIONS, {
   takeStep: (d) => { curTask().steps[+d.id].who = "you"; render(); toast("That step is yours"); },
   giveStone: (d) => { closeSheet(); S.app.stoneFor = d.id; go("newStone"); },
   handoff: () => { closeSheet(); go("handoff"); },
-  handTo: (d) => { S.app.handTo = d.id || null; render(); },
+  // Pick several people, everyone who can take it, or no one (unassigned).
+  handTo: (d) => {
+    const t = curTask();
+    const able = S.people.filter((p) => p.id !== t.who && canTake(p, t)).map((p) => p.id);
+    const cur = Array.isArray(S.app.handTo) ? S.app.handTo : [];
+    if (!d.id) S.app.handTo = null;
+    else if (d.id === "all") S.app.handTo = able.every((id) => cur.includes(id)) ? undefined : able;
+    else { const next = cur.includes(d.id) ? cur.filter((x) => x !== d.id) : [...cur, d.id]; S.app.handTo = next.length ? next : undefined; }
+    render();
+  },
   // A hand-off is a request. The task stays put until they say yes, and everyone sees how it went.
   sendHandoff: () => {
     const t = curTask(), to = S.app.handTo;
     if (S.app.note) t.notes = S.app.note;
     back();
     if (!to) { t.who = null; t.handoff = null; render(); toast("It glows white for whoever is free"); return; }
-    t.handoff = { to, from: t.who, status: "pending" };
+    const able = S.people.filter((p) => p.id !== t.who && canTake(p, t));
+    const many = to.length > 1;
+    t.handoff = { to, from: t.who, status: "pending", all: many && able.every((p) => to.includes(p.id)) };
     render();
-    toast(`Asked ${nameOf(to)}. It stays ${t.who === "you" ? "with you" : `with ${nameOf(t.who)}`} until they say yes.`);
-    // The prototype answers for them: yes first, then no, so both paths can be shown.
-    const yes = (S.app.handReplies = (S.app.handReplies || 0) + 1) % 2 === 1;
+    const stay = t.who === "you" ? "with you" : `with ${nameOf(t.who)}`;
+    toast(many ? `Asked ${t.handoff.all ? "everyone" : namesList(to)}. It stays ${stay} until someone says yes.` : `Asked ${nameOf(to[0])}. It stays ${stay} until they say yes.`);
+    // The prototype answers for them. One person: yes first, then no, so both paths can be shown.
+    // Several people: someone always says yes, and the rest are told it's covered.
+    const yes = many || (S.app.handReplies = (S.app.handReplies || 0) + 1) % 2 === 1;
+    const taker = many ? (to.find((id) => person(id)?.tier === "main") || to[0]) : to[0];
     setTimeout(() => {
       if (t.handoff?.status !== "pending") return;
       t.handoff.status = yes ? "accepted" : "declined";
       t.handoff.when = "Just now";
-      if (yes) t.who = to;
+      t.handoff.taker = taker;
+      if (yes) t.who = taker;
       else t.handoff.why = "Can't this week. I'm traveling until Sunday.";
       S.app.seenNotes = false;
       render();
-      toast(yes ? `${nameOf(to)} said yes to “${t.n}”` : `${nameOf(to)} can't take “${t.n}”`);
+      toast(yes ? `${nameOf(taker)} said yes to “${t.n}”${many ? ". The others were told." : ""}` : `${nameOf(taker)} can't take “${t.n}”`);
     }, 4000);
   },
+  resSheet: (d) => {
+    const r = RESOURCES[d.id];
+    openSheet(`<h3>${r.title}</h3><p class="res-intro">${esc(r.intro)}</p>
+      <ul class="res-points">${r.items.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>
+      <p class="res-src">Learn more from trusted sources</p>
+      <div class="res-links">${r.links.map(([n, m, url]) => `<a class="res-link" href="${url}" target="_blank" rel="noopener"><span class="tl-txt"><span class="n">${esc(n)}</span><span class="m">${esc(m)}</span></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 5h5v5M19 5l-8 8M17 14v4a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1h4"/></svg></a>`).join("")}</div>
+      <p class="small res-foot">Opens in your browser. Shoal isn't connected to these sites.</p>
+      <div class="actions">${r.gentle ? `<button class="btn-soft" data-act="toast" data-msg="Calling Rosa at (408) 555-0167">Talk to Rosa</button>` : ""}<button class="btn-soft" data-act="closeSheet">Done</button></div>`);
+  },
+  resToggle: () => { S.app.resOpen = !S.app.resOpen; render(); },
   cancelHandoff: () => { curTask().handoff = null; render(); toast("Request canceled"); },
   newTask: () => {
     ensureAppData();

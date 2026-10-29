@@ -1939,31 +1939,6 @@ button, input, textarea { touch-action: manipulation; -webkit-tap-highlight-colo
 .jar-check .jc-opts .chip { flex: 1 1 auto; justify-content: center; }
 .card.jar-hero { justify-content: center; margin: 0 0 12px; }
 
-/* ---------- Stones lit from inside (stones.js) ----------
-   A white shell, and the stone's colour as light inside it. --lit is that light, taken from the
-   palette so custom stone colours still work. Done stones have the light off. */
-#phone[data-stone] .gem:not(.none) { --lit: color-mix(in srgb, var(--lo) 72%, var(--mid)); --shell: #e3e8ef; }
-#phone[data-stone] .gem.open { --lit: #ffffff; }
-#phone[data-stone] .gem.dark { --shell: #cfd7e2; --lit: color-mix(in srgb, var(--mid) 82%, var(--lo)); }
-#phone[data-stone] .gem.dark.open { --lit: #ffffff; }
-#phone[data-stone] .gem.done { --shell: #c3c6cb; }
-#phone[data-stone="core"] .gem:not(.none) {
-  background: radial-gradient(ellipse 110% 100% at 52% 70%, color-mix(in srgb, var(--lit) 78%, transparent) 0, color-mix(in srgb, var(--lit) 50%, transparent) 40%, color-mix(in srgb, var(--lit) 14%, transparent) 75%, transparent 100%),
-    radial-gradient(ellipse at 38% 26%, #fff 0, #fbfcfd 30%, var(--shell) 100%);
-}
-#phone[data-stone="dawn"] .gem:not(.none) {
-  background: radial-gradient(ellipse 95% 85% at 50% 100%, var(--lit) 0, color-mix(in srgb, var(--lit) 55%, transparent) 45%, transparent 100%),
-    radial-gradient(ellipse at 38% 22%, #fff 0, #fbfcfd 34%, var(--shell) 100%);
-}
-#phone[data-stone="core"] .gem.done, #phone[data-stone="dawn"] .gem.done { background: radial-gradient(ellipse at 38% 26%, #f6f7f8 0, #e2e4e7 45%, var(--shell) 100%); }
-/* A thin rim keeps the white shell visible on the light backgrounds. */
-#phone[data-stone="core"] .gem:not(.none, .done)::before, #phone[data-stone="dawn"] .gem:not(.none, .done)::before {
-  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
-  box-shadow: inset 0 0 0 0.5px rgba(19, 49, 93, 0.12), inset 0 1px 1px rgba(255, 255, 255, 0.9);
-}
-.stone-look { margin-top: 18px; }
-.stone-look strong { display: block; margin-bottom: 6px; font-size: 13px; }
-
 /* ---------- Demo frame: the page never scrolls ----------
    The stage is the window's height. The notes panel scrolls on its own, and scrolling that reaches
    the end of a list stays put instead of carrying the page along. "Hide panel" leaves just the phone. */
@@ -1977,3 +1952,114 @@ button, input, textarea { touch-action: manipulation; -webkit-tap-highlight-colo
   background: rgba(255, 255, 255, 0.7); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.9), 0 2px 8px rgba(19, 49, 93, 0.08); }
 body.present .notes { display: none; }
 @media (max-width: 860px) { .panel-toggle { display: none; } }
+
+/* Hand off to several people */
+.avatar.s24 { width: 24px; height: 24px; border-width: 1.5px; font-size: 10px; }
+.hand-stack { flex: none; width: 36px; justify-content: flex-start; margin-right: 0; }
+.hand-stack .avatar + .avatar { margin-left: -12px; }
+
+/* Shared medication log */
+.med-card { padding: 14px 16px; margin-top: 10px; }
+.med-card .meter-top { margin-bottom: 4px; }
+.med { padding: 12px 0; }
+.med + .med { border-top: 1px solid var(--line); }
+.med-dose { margin: 0; font-size: 30px; line-height: 34px; font-weight: 800; color: var(--navy); letter-spacing: -0.5px; font-variant-numeric: tabular-nums; }
+.med-dose span { font-size: 19px; font-weight: 700; letter-spacing: 0; }
+.med-how { margin: 4px 0 8px; font-size: 14px; line-height: 19px; color: var(--muted); }
+.med-last { margin: 0 0 10px; padding: 8px 10px; border-radius: 10px; background: rgba(15, 76, 147, 0.05); font-size: 14px; line-height: 20px; color: var(--ink, #22262e); }
+.med-last.wait { background: var(--amber-tint); color: #6e4705; }
+.med-btn { width: 100%; justify-content: center; height: 44px; }
+.med-card > .small { margin: 4px 0 0; }
+.nf-badge.nb-meds { background: #3f9b8c; }
+.dose-log { margin: 12px 0 4px; max-height: 46vh; overflow-y: auto; }
+.dl-row { display: flex; align-items: center; gap: 12px; padding: 9px 0; }
+.dl-row + .dl-row { border-top: 1px solid var(--line); }
+.dl-row .tl-txt { flex: 1; min-width: 0; }
+
+/* Resources */
+.res-ico { flex: none; width: 36px; height: 36px; border-radius: 18px; display: grid; place-items: center; background: var(--blue-tint); color: var(--blue); }
+.res-ico svg { width: 18px; height: 18px; }
+.res-page .section-h:first-of-type { margin-top: 8px; }
+.res-911 { padding: 18px 18px 16px; background: rgba(246, 226, 186, 0.55); border-color: rgba(255, 255, 255, 0.8); }
+.res-911 h2 { margin: 0; font-family: "Fraunces", serif; font-variation-settings: "SOFT" 0, "WONK" 1; font-weight: 400; font-size: 24px; line-height: 28px; color: #5c3b04; }
+.res-actions { display: flex; gap: 10px; margin-top: 18px; }
+.res-actions .btn-soft { flex: 1; justify-content: center; height: 44px; padding: 0 10px; background: #fff; color: #6e4705; }
+.circle-ico svg { width: 16px; height: 16px; }
+.res-page { padding-bottom: 40px; }
+
+/* Care page */
+.care-page { padding-bottom: 40px; }
+.care-page .section-h:first-of-type { margin-top: 8px; }
+.care-row { align-items: flex-start; padding: 13px 0; }
+.care-row .chev { margin-top: 4px; }
+.care-k { display: flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; color: var(--muted); }
+.care-v { margin-top: 3px; font-size: 15px; line-height: 21px; color: var(--ink, #22262e); text-wrap: pretty; }
+.care-row .m { margin-top: 5px; }
+.care-row.alert .care-k { color: #a2391f; }
+.care-row.alert .care-v { font-weight: 600; }
+.care-flag { flex: none; width: 16px; height: 16px; border-radius: 8px; display: inline-grid; place-items: center; background: #d4553a; color: #fff; font-size: 11px; font-weight: 800; font-style: normal; line-height: 1; }
+.care-add { min-height: 52px; color: var(--blue); }
+.care-add .n { color: var(--blue); font-weight: 600; font-size: 14.5px; }
+.care-plus { flex: none; width: 24px; height: 24px; border-radius: 12px; display: grid; place-items: center; background: var(--blue-tint); color: var(--blue); font-size: 17px; font-weight: 600; line-height: 1; }
+.med-card .care-add { border-top: 1px solid var(--line); }
+.med-card .care-link { border-top: 1px solid var(--line); min-height: 56px; }
+.med-card .care-link::before { display: none; }
+.med-last.given { background: rgba(63, 155, 140, 0.12); color: #24665b; }
+.care-form { display: flex; flex-direction: column; gap: 12px; margin-top: 14px; }
+.care-form label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600; color: var(--muted); }
+.care-form input, .care-form textarea { font: inherit; font-size: 16px; font-weight: 400; color: var(--ink, #22262e); padding: 11px 12px; border-radius: 12px; border: 1px solid var(--line); background: #fff; resize: none; }
+.care-kind { display: flex; gap: 8px; }
+.h-care { margin-bottom: 12px; gap: 0; }
+.hc-med { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; padding: 7px 0; font-size: 14px; }
+.hc-med + .hc-med { border-top: 1px solid var(--line); }
+.hc-med b { font-weight: 700; color: var(--navy); }
+.hc-med span { color: var(--muted); font-size: 13px; }
+.hc-med span.wait { color: #8a5a07; font-weight: 600; }
+.hc-alert { display: flex; align-items: center; gap: 6px; margin: 8px 0 0; font-size: 13px; font-weight: 600; color: #a2391f; }
+.res-911 h2 { font-size: 21px; line-height: 26px; }
+.res-911 p { margin: 10px 0 0; font-size: 15px; line-height: 21px; color: #4a3a1c; }
+.res-911 .res-why { font-size: 13.5px; line-height: 19px; color: #7a6338; }
+.res-911 .res-actions .btn-soft { flex: none; padding: 0 20px; }
+.res-more { margin-top: 12px; }
+.res-hide { display: block; margin: 4px auto 0; }
+.res-gate { padding: 18px; }
+.res-gate-k { margin: 0; font-size: 12.5px; font-weight: 700; color: var(--blue-label, #4a6fa5); }
+.res-gate p:not(.res-gate-k):not(.small) { margin: 8px 0 0; font-size: 15px; line-height: 22px; }
+.res-gate .small { margin: 8px 0 0; }
+.res-gate .res-actions .btn-soft { background: var(--blue-tint); color: var(--blue); }
+.res-intro { margin: 6px 0 0; font-size: 15px; line-height: 22px; color: var(--ink, #22262e); }
+.res-points { margin: 12px 0 0; padding-left: 18px; font-size: 14.5px; line-height: 21px; color: #3b414b; }
+.res-points li + li { margin-top: 6px; }
+.res-src { margin: 18px 0 6px; font-size: 12.5px; font-weight: 700; color: var(--muted); }
+.res-links { border-radius: 16px; background: rgba(15, 76, 147, 0.04); padding: 0 14px; }
+.res-link { display: flex; align-items: center; gap: 12px; padding: 11px 0; color: inherit; text-decoration: none; }
+.res-link + .res-link { border-top: 1px solid var(--line); }
+.res-link .n { color: var(--blue); }
+.res-link svg { flex: none; width: 16px; height: 16px; color: var(--blue); }
+.res-foot { margin: 8px 0 0; }
+
+/* Care lock */
+.care-lock { display: flex; flex-direction: column; align-items: center; text-align: center; padding-top: 24px; }
+.care-lock .sub { max-width: 300px; }
+.lock-big { width: 56px; height: 56px; border-radius: 28px; display: grid; place-items: center; background: var(--blue-tint); color: var(--blue); margin-bottom: 14px; }
+.lock-big svg { width: 26px; height: 26px; }
+.lock-ico { flex: none; width: 36px; height: 36px; border-radius: 18px; display: grid; place-items: center; background: var(--blue-tint); color: var(--blue); }
+.lock-ico svg { width: 17px; height: 17px; }
+.pin { display: flex; flex-direction: column; align-items: center; width: 100%; margin-top: 6px; }
+.pin-msg { margin: 0 0 14px; font-size: 14px; font-weight: 600; color: var(--navy); }
+.pin-dots { display: flex; gap: 16px; margin-bottom: 22px; }
+.pin-dots i { width: 13px; height: 13px; border-radius: 7px; border: 1.5px solid var(--navy); transition: background-color 0.12s; }
+.pin-dots i.on { background: var(--navy); }
+.pin-keys { display: grid; grid-template-columns: repeat(3, 72px); gap: 14px 24px; justify-content: center; }
+.pin-keys button { width: 72px; height: 72px; border-radius: 36px; background: rgba(255, 255, 255, 0.7); border: 1px solid #fff; box-shadow: var(--card-shadow); font-size: 28px; font-weight: 400; color: var(--navy); }
+.pin-keys button:active { transform: scale(0.94); background: rgba(15, 76, 147, 0.08); }
+.pin-keys .pin-del, .pin-keys .pin-face { background: transparent; border: 0; box-shadow: none; font-size: 22px; display: grid; place-items: center; }
+.pin-face svg { width: 30px; height: 30px; color: var(--blue); }
+.pin.shake { animation: pin-shake 0.35s; }
+@keyframes pin-shake { 20%, 60% { transform: translateX(-8px); } 40%, 80% { transform: translateX(8px); } }
+@media (prefers-reduced-motion: reduce) { .pin.shake { animation: none; } }
+.sheet .pin { margin: 14px 0 8px; }
+.med-locked { display: flex; align-items: center; gap: 12px; }
+.hc-locked { display: flex; align-items: center; gap: 10px; margin: 4px 0 0; font-size: 13.5px; line-height: 19px; color: var(--muted); }
+.lock-btn { display: inline-flex; align-items: center; gap: 5px; }
+.lock-btn svg { width: 13px; height: 13px; }

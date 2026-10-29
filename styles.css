@@ -112,10 +112,14 @@ input { font: inherit; color: inherit; }
 .statusbar img { position: absolute; left: 310px; top: 20px; width: 66px; height: 12.6px; }
 
 .screen { position: absolute; inset: 0; display: flex; flex-direction: column; }
-.screen.enter-fwd { animation: inR 0.32s cubic-bezier(.2, .8, .2, 1); }
-.screen.enter-back { animation: inL 0.32s cubic-bezier(.2, .8, .2, 1); }
-@keyframes inR { from { opacity: 0; transform: translateX(28px); } }
-@keyframes inL { from { opacity: 0; transform: translateX(-28px); } }
+.screen.enter-fwd { animation: inR 0.42s cubic-bezier(.22, 1, .36, 1); }
+.screen.enter-back { animation: inL 0.42s cubic-bezier(.22, 1, .36, 1); }
+@keyframes inR { from { opacity: 0; transform: translateX(36px) scale(0.985); } }
+@keyframes inL { from { opacity: 0; transform: translateX(-36px) scale(0.985); } }
+/* Tabs: a shorter slide toward the tab you tapped. The tab bar itself stays put. */
+.screen.enter-tabR > :not(.tabbar, .home2), .screen.enter-tabR > .home2 > :not(.tabbar) { animation: tabIn 0.4s cubic-bezier(.22, 1, .36, 1); --sx: 22px; }
+.screen.enter-tabL > :not(.tabbar, .home2), .screen.enter-tabL > .home2 > :not(.tabbar) { animation: tabIn 0.4s cubic-bezier(.22, 1, .36, 1); --sx: -22px; }
+@keyframes tabIn { from { opacity: 0; transform: translateX(var(--sx)); } }
 
 .topbar { position: relative; height: 96px; flex: none; }
 .topbar .back { position: absolute; left: 10px; top: 50px; width: 44px; height: 44px; }
@@ -688,7 +692,7 @@ input { font: inherit; color: inherit; }
 .finished .fin-txt { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--muted); }
 .finished .fin-txt b { color: var(--ink, #21262e); font-weight: 600; }
 .x-btn { flex: none; width: 28px; height: 28px; border-radius: 14px; font-size: 18px; line-height: 1; color: var(--muted); }
-.card.shelf { position: relative; margin-top: 12px; }
+.shelf { position: relative; margin-top: 12px; }
 .shelf-jars.glow-dim .gem:not(.done) { box-shadow: 0 0 4px 0 var(--glow), inset 0 -3px 5px rgba(19, 49, 93, 0.07); filter: saturate(0.8) brightness(0.96); }
 .shelf-jars.glow-off .gem:not(.done) { box-shadow: inset 0 -3px 5px rgba(19, 49, 93, 0.07); }
 .glassbox .gem.still { animation: none; }
@@ -1045,8 +1049,9 @@ input { font: inherit; color: inherit; }
 .nf-kind { letter-spacing: 0.6px; }
 
 /* Everything tappable eases and presses like a physical button */
-.card, .srow, .notif, .tl-main, .pill-btn, .chip, .btn-ghost, .btn-soft, .btn-social, .bell, .x-btn, .round-btn, .radio-row, .tabbar button, .day-strip button, .seg button, .linkish, .stone-card {
-  transition: transform 0.18s cubic-bezier(.2, .8, .2, 1), background-color 0.18s, box-shadow 0.18s, border-color 0.18s, color 0.18s;
+.card, .srow, .notif, .tl-main, .pill-btn, .chip, .btn-ghost, .btn-soft, .btn-social, .bell, .x-btn, .round-btn, .radio-row, .tabbar button, .day-strip button, .seg button, .linkish, .stone-card,
+.h-w, .h-note, .k-tile, .k-set, .k-alert, .k-pill, .k-look, .rjar, .lc-day, .btn-primary {
+  transition: transform 0.34s cubic-bezier(.34, 1.56, .64, 1), background-color 0.18s, box-shadow 0.18s, border-color 0.18s, color 0.18s;
 }
 button.card:not(:disabled):active, .notif.needs:not(:disabled):active, .kit-alert:active, .stone-card:active { transform: scale(0.985); }
 .pill-btn:active, .chip:active, .btn-ghost:active, .btn-soft:active, .round-btn:active, .bell:active, .x-btn:active, .seg button:active, .day-strip button:active { transform: scale(0.95); }
@@ -1374,21 +1379,17 @@ button, input, textarea { touch-action: manipulation; -webkit-tap-highlight-colo
 .jh-check .linkish { font-size: 13px; }
 
 /* ---------- Marks: meaning never rides on color alone ---------- */
-/* ! urgent · dashed ring = no one has it · check = done. Tiny stones (xs) skip the badge. */
-.gem.open, .gem.nobody { outline: 1.5px dashed rgba(19, 49, 93, 0.42); outline-offset: 2px; }
-.gem.xs.open, .gem.xs.nobody { outline-width: 1px; outline-offset: 1px; }
+/* Only urgent stones carry a mark: a ! in a deeper shade of the urgent color. Tiny stones (xs) skip it. */
 .gem.urgent:not(.xs)::after {
   position: absolute; top: -3px; right: -4px; display: flex; align-items: center; justify-content: center;
   width: 11px; height: 11px; border-radius: 50%; font: 800 8px/1 "Figtree", sans-serif; color: #fff;
 }
-.gem.urgent:not(.xs)::after { content: "!"; background: #b5761a; box-shadow: 0 0 0 1.5px #fff; }
+.gem.urgent:not(.xs)::after { content: "!"; background: color-mix(in srgb, var(--lo) 74%, #000); box-shadow: 0 0 0 1.5px #fff; }
 .gem.m::after { width: 18px; height: 18px; font-size: 12px; top: -4px; right: -4px; }
 .gem.l::after, .gem.xl::after { width: 26px; height: 26px; font-size: 16px; top: 2px; right: 0; }
 .glassbox .gem::after { width: 9px; height: 9px; font-size: 7px; top: -2px; right: -3px; }
-.glassbox .gem.open, .glassbox .gem.nobody { outline-offset: 1px; }
 .weight .gem { outline: none; }
 .weight .gem::after { display: none; }
-.size-opt .gem, .kit-sizes .gem, .kind-stone .gem, .wt-stone .gem { outline-color: rgba(19, 49, 93, 0.25); }
 .jar-n { display: block; font-size: 11.5px; font-weight: 500; color: var(--muted); margin-top: 1px; text-align: center; }
 .kinds.marks { grid-template-columns: 1fr; margin-top: 12px; }
 .mini-jar .jar-n { display: none; }
@@ -1417,3 +1418,548 @@ button, input, textarea { touch-action: manipulation; -webkit-tap-highlight-colo
 .inv-task.is-no .n { text-decoration: line-through; }
 .seg.yn { flex: none; }
 .seg.yn button { min-height: 32px; }
+
+/* Pick-many lists get a square checkbox; pick-one keeps the round one. */
+.check.box { border-radius: 6px; }
+.check.box.off { background: rgba(255, 255, 255, 0.6); box-shadow: inset 0 0 0 1.5px #c5c9cf; }
+
+/* Invite sheet and pending invites */
+.inv-form { display: flex; flex-direction: column; gap: 10px; margin: 12px 0 16px; }
+.inv-form .field { margin: 0; }
+.inv-form .label { margin: 6px 0 0; display: flex; justify-content: space-between; }
+.seg.wide { display: flex; width: 100%; }
+.seg.wide button { flex: 1; min-height: 36px; font-size: 13px; }
+.inv-role { margin: -2px 2px 0; }
+.inv-code { display: flex; align-items: center; gap: 12px; padding: 12px 16px; }
+.inv-code .tl-txt { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.inv-code .code { font-size: 22px; font-weight: 700; letter-spacing: 3px; color: var(--navy); font-variant-numeric: tabular-nums; }
+.inv-code .m { font-size: 12.5px; color: var(--muted); }
+.avatar.pending { opacity: 0.6; outline: 1.5px dashed var(--dash); outline-offset: 2px; }
+.person.pend { width: 100%; text-align: left; }
+.pend-head { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+.pend-head .tl-txt { display: flex; flex-direction: column; gap: 2px; }
+.pend-head .n { font-family: "Fraunces", serif; font-size: 21px; color: var(--navy); }
+.pend-head .m { font-size: 13px; color: var(--muted); }
+.sheet .btn-text.danger { color: var(--alert); }
+.sheet .actions.col .btn-soft { flex: none; height: 44px; justify-content: center; }
+
+/* Stone colors: presets, named swatches, look-alike warning */
+.cp-label { margin: 18px 0 8px; }
+/* The family's jar stays pinned at the top while the options scroll under it. */
+.cp-top { flex: none; padding: 8px 24px 0; }
+.cp-top .title { margin-bottom: 0; }
+.cp-preview { display: flex; flex-direction: column; align-items: center; padding: 8px 0 10px; border-bottom: 1px solid var(--line); }
+.content.cp-scroll { padding-top: 0; }
+.cp-later { margin: 16px 0 4px; }
+.sheet:has(.cp-scroll) { display: flex; flex-direction: column; overflow: hidden; }
+.sheet .cp-scroll { flex: 1; min-height: 0; overflow-y: auto; margin: 0 -24px; padding: 0 24px; scrollbar-width: none; }
+.sheet .cp-preview { margin: 0 -24px; }
+.cp-jar { zoom: 1.1; }
+.cp-jar .gem { animation: none; }
+.cp-now { font-size: 13px; font-weight: 600; color: var(--muted); margin-top: 2px; }
+/* Presets: a 2x2 grid, one stone of each kind per card, then "Make your own". */
+.presets { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.preset { position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 14px 12px 12px; text-align: left; width: 100%; border: 1.5px solid transparent; }
+.preset.on { border-color: var(--blue); background: rgba(255, 255, 255, 0.95); }
+.pre-stones { display: flex; align-items: center; gap: 8px; margin: 2px 0 12px; }
+.pre-stones .gem { position: relative; }
+.preset .t { font-weight: 600; font-size: 14.5px; color: var(--ink); }
+.preset .d { font-size: 12px; color: var(--muted); line-height: 1.35; }
+.preset .rec { padding: 1px 6px; margin: 1px 0 2px; border-radius: 6px; background: var(--blue-tint); color: var(--blue); font-size: 10.5px; font-weight: 700; }
+.pre-check { position: absolute; top: 10px; right: 10px; }
+.preset.own { grid-column: 1 / -1; flex-direction: row; align-items: center; gap: 12px; border-radius: 20px; border: 1.5px dashed rgba(19, 49, 93, 0.22); background: rgba(19, 49, 93, 0.04); }
+.preset.own.on { border-style: solid; border-color: var(--blue); background: rgba(255, 255, 255, 0.95); }
+.preset.own .pre-stones { margin: 0; }
+.preset.own .txt { display: flex; flex-direction: column; gap: 2px; }
+.pre-plus { width: 34px; height: 34px; flex: none; border-radius: 50%; display: grid; place-items: center; background: rgba(19, 49, 93, 0.08); color: var(--muted); font-size: 22px; line-height: 1; }
+.cp-custom-head { display: flex; align-items: center; gap: 12px; margin: 14px 0 10px; }
+.cp-custom-head b { font-size: 15px; }
+.swatches.named { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px 4px; padding-left: 0; }
+.sw-cell { display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 2px 0; }
+.sw-cell .sw-name { font-size: 12px; color: var(--muted); white-space: nowrap; }
+.sw-cell.on .sw-name { color: var(--ink); font-weight: 600; }
+.sw-cell .swatch::after { display: none; }
+.cp-warn { margin: 6px 0 10px; padding: 10px 12px; border-radius: 12px; background: var(--amber-tint); color: #6e4a0b; font-size: 13px; line-height: 1.45; }
+.cp-warn .linkish { font-size: inherit; }
+.cp-marks { margin: 4px 0 12px; color: var(--muted); }
+.cp-sheet { margin-top: 8px; }
+
+/* ---------- Home kit, cleaner look (test). Scoped to .kit2 so the rest of the app is unchanged. ---------- */
+/* Soft Shoal blue and butter cream. Never reaches white, so white rows read as solid. */
+.kit2 { position: absolute; inset: 0; display: flex; flex-direction: column;
+  background:
+    radial-gradient(120% 70% at 0% 0%, #dde8f6 0%, rgba(221, 232, 246, 0) 70%),
+    radial-gradient(110% 75% at 100% 100%, #f8edd6 0%, rgba(248, 237, 214, 0) 70%),
+    #f2f1ee; }
+.kit2 .navtop { flex: none; }
+.kit2 .content { padding-bottom: 40px; }
+.k-look { margin-left: auto; height: 30px; padding: 0 12px; border-radius: 15px; background: #fff; font-size: 12.5px; font-weight: 600; color: var(--muted); }
+.kit2 .title { margin-bottom: 4px; }
+.k-status { display: flex; align-items: center; gap: 7px; margin: 0 0 16px; font-size: 13.5px; color: var(--muted); }
+.k-status > i { width: 7px; height: 7px; border-radius: 50%; background: #3fae6a; flex: none; }
+
+/* Alert: a notification. Tinted, with an icon and one action, unlike anything else on the screen. */
+.k-alert { display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px 12px 12px 14px; margin-bottom: 14px; text-align: left; border-radius: 18px; background: #fff4e0; border: 1px solid #f1d39b; color: var(--ink); }
+.k-alert-ic { position: relative; width: 34px; height: 34px; flex: none; display: grid; place-items: center; }
+.k-alert-ic .k-ring { position: absolute; inset: 0; }
+.k-alert-ic .trk { stroke: rgba(224, 138, 30, 0.22); }
+.k-alert-ic .val { stroke: #e08a1e; }
+.k-alert-ic i { font-style: normal; font-weight: 800; font-size: 14px; color: #c06f0c; }
+.k-alert .tl-txt { flex: 1; }
+.k-alert .n { font-weight: 600; font-size: 14.5px; }
+.k-alert .m { font-size: 12.5px; color: #8a5a14; }
+.k-pill { flex: none; height: 34px; padding: 0 16px; border-radius: 17px; display: inline-flex; align-items: center; justify-content: center; background: #ecebe7; color: var(--ink); font-size: 13.5px; font-weight: 600; }
+.k-pill.dark { background: #1d2025; color: #fff; }
+
+/* Readings: rings flat on the background. No card, nothing to tap. */
+.k-read { display: grid; grid-template-columns: repeat(3, 1fr); margin: 6px 0 18px; }
+.k-r { position: relative; display: grid; justify-items: center; }
+.k-r b { position: absolute; top: 0; height: 72px; display: grid; place-items: center; font-family: Figtree, sans-serif; font-size: 19px; font-weight: 600; color: var(--ink); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.k-r em { font-style: normal; margin-top: 6px; font-size: 12.5px; color: var(--muted); }
+.k-ring { display: block; }
+.k-ring .trk { fill: none; stroke: rgba(19, 49, 93, 0.1); }
+.k-ring .val { fill: none; stroke: var(--blue); stroke-linecap: round; animation: ring-in 1s cubic-bezier(.3, .7, .2, 1) backwards; }
+.k-r.low .val { stroke: #e08a1e; }
+@keyframes ring-in { from { stroke-dashoffset: var(--c); } }
+.k-read small, .k-big small { font-size: 0.5em; font-weight: 500; color: var(--muted); margin-left: 2px; }
+
+/* Tiles: things you change. The control always sits in the top right. */
+.k-tile { display: flex; flex-direction: column; align-items: stretch; text-align: left; width: 100%; padding: 16px; border-radius: 24px; background: #fff; color: var(--ink); box-shadow: 0 1px 2px rgba(20, 22, 26, 0.04), 0 8px 24px -12px rgba(40, 60, 90, 0.12); }
+.k-tile-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 34px; }
+.k-lab { font-size: 14px; font-weight: 600; }
+/* The jar tile is a dark room, so the glow shows. A soft light pools under the jars and fades with Glow. */
+.k-hero { position: relative; overflow: hidden; isolation: isolate; margin-bottom: 12px; color: #fff;
+  background: linear-gradient(180deg, #1a2a44 0%, #101b2f 100%); box-shadow: 0 1px 2px rgba(16, 27, 47, 0.2), 0 14px 30px -14px rgba(16, 27, 47, 0.45); }
+.k-hero::before { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; transition: opacity 0.7s ease;
+  background: radial-gradient(80% 50% at 50% 78%, rgba(120, 170, 255, 0.28), rgba(120, 170, 255, 0) 70%); }
+.k-hero[data-glow="dim"]::before { opacity: 0.4; }
+.k-hero[data-glow="off"]::before { opacity: 0; }
+.k-hero .k-lab { color: #fff; }
+.k-hero .k-seg { background: rgba(255, 255, 255, 0.1); }
+.k-hero .k-seg button { color: rgba(255, 255, 255, 0.7); transition: background 0.25s, color 0.25s; }
+.k-hero .k-seg button.on { background: #fff; color: #101b2f; }
+.k-hero .rjar .who { color: #fff; }
+.k-hero .jar-n { color: rgba(255, 255, 255, 0.6); }
+.k-hero .rjar .glassbox > img.glass { opacity: 0.1; }
+.kit2 .k-hero .rjar .glassbox::before { border-color: rgba(255, 255, 255, 0.2); border-top-color: rgba(255, 255, 255, 0.34);
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.02) 35%, rgba(255, 255, 255, 0.02) 70%, rgba(255, 255, 255, 0.08));
+  box-shadow: inset 0 -5px 0 rgba(255, 255, 255, 0.07), inset 2px 0 0 rgba(255, 255, 255, 0.12); }
+.kit2 .k-hero .gem { transition: box-shadow 0.7s ease, filter 0.7s ease; }
+.kit2 .k-hero .shelf-jars .gem:not(.done) { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7), 0 0 12px 2px var(--glow); filter: none; }
+.kit2 .k-hero .shelf-jars.glow-dim .gem:not(.done) { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 0 5px 0 var(--glow); filter: brightness(0.78) saturate(0.85); }
+.kit2 .k-hero .shelf-jars.glow-off .gem:not(.done) { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 0 0 0 transparent; filter: brightness(0.55) saturate(0.45); }
+.kit2 .k-hero .gem.done { filter: brightness(0.62); box-shadow: none; }
+.kit2 .k-hero .shelf-jars { width: 100%; flex-wrap: nowrap; justify-content: space-between; gap: 6px; margin-top: 14px; }
+.k-seg { display: flex; padding: 3px; border-radius: 20px; background: #f1f0ec; }
+.k-seg button { width: 58px; height: 30px; border-radius: 15px; font-size: 13px; font-weight: 600; color: var(--muted); }
+.k-seg button.on { background: #1d2025; color: #fff; }
+.k-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 22px; }
+.k-grid .k-tile { min-height: 168px; }
+.k-big { margin: 16px 0 0; font-family: Figtree, sans-serif; font-size: 30px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.1; }
+.k-note { margin: 4px 0 0; font-size: 12.5px; color: var(--muted); }
+.k-link { margin-top: auto; align-self: flex-start; display: inline-flex; align-items: center; gap: 2px; padding-top: 10px; font-size: 13.5px; font-weight: 600; color: var(--blue); }
+.k-go { width: 30px; height: 30px; border-radius: 50%; background: #f1f0ec; display: grid; place-items: center; }
+.k-tile .k-stones { display: flex; align-items: flex-end; gap: 8px; margin: auto 0 0; padding-top: 16px; }
+.k-tile .k-stones .gem { zoom: 1.5; }
+
+/* Settings: white grouped rows, each with a switch or an arrow. */
+.k-group { background: #fff; border-radius: 20px; padding: 0 16px; margin-bottom: 12px; box-shadow: 0 1px 2px rgba(20, 22, 26, 0.04); }
+.k-set { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 56px; padding: 10px 0; text-align: left; color: var(--ink); }
+.k-set + .k-set { border-top: 1px solid #efeeea; }
+.k-set .tl-txt { flex: 1; }
+.k-set .n { font-size: 15px; font-weight: 500; }
+.k-set .m { font-size: 12.5px; color: var(--muted); }
+.kit2 .btn-text.center { margin-top: 6px; }
+
+/* Dark kit. A device screen, so it gets a night-blue ombre; overview and detail screens keep their own
+   backgrounds. Tiles turn into lifted glass panels, readings stay flat, and sheets above stay light. */
+.kit2 { --ink: #f1f5fb; --muted: rgba(214, 226, 243, 0.64); --navy: #f6f8fc; color: var(--ink);
+  background:
+    radial-gradient(120% 55% at 0% 0%, #2b5288 0%, rgba(43, 82, 136, 0) 65%),
+    radial-gradient(110% 55% at 100% 100%, #1d3d70 0%, rgba(29, 61, 112, 0) 70%),
+    linear-gradient(180deg, #142a4c 0%, #0b1730 100%); }
+.phone:has(.screen > .kit2) .statusbar { filter: invert(1); }
+.kit2 .navback img, .kit2 .chev { filter: brightness(0) invert(1); opacity: 0.7; }
+.kit2 .k-look { background: rgba(255, 255, 255, 0.1); color: var(--ink); }
+.kit2 .k-ring .trk { stroke: rgba(255, 255, 255, 0.12); }
+.kit2 .k-ring .val { stroke: #7fb1ff; }
+.kit2 .k-r.low .val { stroke: #f0a64a; }
+.kit2 .k-alert { background: rgba(240, 160, 60, 0.14); border-color: rgba(240, 170, 80, 0.38); }
+.kit2 .k-alert .m { color: #f5c47e; }
+.kit2 .k-alert-ic .trk { stroke: rgba(240, 170, 80, 0.25); }
+.kit2 .k-alert-ic .val { stroke: #f0a64a; }
+.kit2 .k-alert-ic i { color: #f5b45c; }
+.kit2 .k-pill.dark { background: #fff; color: #0f1c33; }
+.kit2 .k-tile:not(.k-hero), .kit2 .k-group { background: rgba(255, 255, 255, 0.075); border: 1px solid rgba(255, 255, 255, 0.09);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06); -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px); }
+/* The jars sit straight on the dark screen, no panel. The light pool spreads past them and fades with Glow. */
+.kit2 .k-hero { background: none; border: 0; box-shadow: none; padding: 4px 0 0; margin: 6px 0 22px; overflow: visible; }
+.kit2 .k-hero::before { inset: -40px -24px -24px; background: radial-gradient(60% 45% at 50% 72%, rgba(120, 170, 255, 0.26), rgba(120, 170, 255, 0) 72%); }
+.kit2 .k-set + .k-set { border-top-color: rgba(255, 255, 255, 0.08); }
+.kit2 .k-go { background: rgba(255, 255, 255, 0.1); }
+.kit2 .k-link { color: #8ab8ff; }
+.kit2 .switch:not(.on) { background: rgba(255, 255, 255, 0.18); }
+
+/* Flat stones: solid color with one soft top light and a small contact shadow. No airbrushed halo. */
+.kit2 .gem, .home2 .gem { background: linear-gradient(180deg, color-mix(in srgb, var(--hi) 55%, var(--mid)) 0%, var(--mid) 45%, color-mix(in srgb, var(--mid) 70%, var(--lo)) 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7), inset 0 -1.5px 0 rgba(19, 49, 93, 0.08), 0 1px 1.5px rgba(19, 49, 93, 0.18); }
+.kit2 .gem.done, .home2 .gem.done { background: linear-gradient(180deg, #e3e4e6, #c9cbcf); }
+.kit2 .shelf-jars.glow-dim .gem:not(.done) { filter: saturate(0.7) brightness(0.97); }
+.kit2 .shelf-jars.glow-off .gem:not(.done) { filter: saturate(0.25); }
+.kit2 .rjar .glassbox::before { background: linear-gradient(90deg, rgba(20, 22, 26, 0.03), rgba(20, 22, 26, 0.01) 40%, rgba(20, 22, 26, 0.04)); border-color: rgba(20, 22, 26, 0.12); box-shadow: inset 0 -4px 0 rgba(20, 22, 26, 0.05); }
+
+/* ---------- Home, overview look (test). A bright brand ombre with widgets in a few sizes. ---------- */
+.home2 { position: absolute; inset: 0; display: flex; flex-direction: column;
+  background:
+    radial-gradient(110% 60% at 0% 0%, #cfe2fb 0%, rgba(207, 226, 251, 0) 68%),
+    radial-gradient(90% 55% at 100% 62%, #fde9bd 0%, rgba(253, 233, 189, 0) 70%),
+    radial-gradient(80% 45% at 0% 100%, #d9e8fb 0%, rgba(217, 232, 251, 0) 70%),
+    #f8f6f1; }
+.home2 .title { margin-bottom: 14px; }
+.home2 .k-look { margin-left: 0; margin-right: 4px; align-self: center; background: rgba(255, 255, 255, 0.75); }
+.avatar.s28 { width: 28px; height: 28px; }
+
+/* Notes: banners, tinted by what they are. Urgent follows the urgent stone color. */
+.h-note { display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px 12px 12px 14px; margin-bottom: 10px; text-align: left; border-radius: 18px; color: var(--ink);
+  background: color-mix(in srgb, var(--u, #f2b84b) 16%, #fff); border: 1px solid color-mix(in srgb, var(--u, #f2b84b) 45%, #fff); }
+.h-note .tl-txt { flex: 1; min-width: 0; }
+.h-note .n { font-weight: 600; font-size: 14.5px; }
+.h-note .m { font-size: 12.5px; color: color-mix(in srgb, var(--u, #f2b84b) 50%, #3a3020); }
+.h-note.done { background: rgba(255, 255, 255, 0.7); border-color: rgba(255, 255, 255, 0.9); }
+.h-note.done .n { font-weight: 500; font-size: 14px; }
+.h-note .k-pill:not(.dark) { background: #fff; box-shadow: 0 0 0 1px rgba(19, 49, 93, 0.1); }
+
+/* The jars sit straight on the ombre, like the kit. */
+.h-jars { margin: 22px 0 30px; padding: 0 2px; }
+.h-jars .shelf-jars { width: 100%; flex-wrap: nowrap; justify-content: space-between; gap: 6px; }
+
+/* Widgets: frosted white, because the ombre behind gives the blur something to show. */
+.h-w { display: flex; flex-direction: column; align-items: stretch; text-align: left; width: 100%; padding: 16px; border-radius: 26px; color: var(--ink);
+  background: rgba(255, 255, 255, 0.72); border: 1px solid rgba(255, 255, 255, 0.9); -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px);
+  box-shadow: 0 1px 2px rgba(19, 49, 93, 0.04), 0 10px 26px -14px rgba(19, 49, 93, 0.18); }
+.home2 .k-grid { margin-bottom: 12px; }
+.home2 .k-grid .h-w { min-height: 150px; }
+.h-num { position: relative; display: flex; align-items: center; gap: 10px; margin-top: auto; padding-top: 14px; }
+.h-num b { font-family: Figtree, sans-serif; font-size: 34px; font-weight: 600; letter-spacing: -0.02em; line-height: 1; font-variant-numeric: tabular-nums; }
+.h-num small { font-size: 0.5em; font-weight: 500; color: var(--muted); margin-left: 2px; }
+.h-avs { display: flex; margin-top: auto; padding-top: 14px; }
+.h-avs .avatar { margin-right: -8px; box-shadow: 0 0 0 2px #fff; }
+.h-w.wide .load-chart { margin-top: 6px; }
+.h-w.wide .tlist { margin-top: 6px; }
+
+/* The kit widget is a small piece of the kit screen: same night blue, so you know where it goes. */
+.h-kit { --ink: #f1f5fb; --muted: rgba(214, 226, 243, 0.66); color: var(--ink); border-color: rgba(255, 255, 255, 0.08);
+  background: radial-gradient(120% 80% at 0% 0%, #2b5288 0%, rgba(43, 82, 136, 0) 70%), linear-gradient(180deg, #142a4c, #0b1730); }
+.h-kit .k-go { background: rgba(255, 255, 255, 0.12); }
+.h-kit .chev { filter: brightness(0) invert(1); opacity: 0.7; }
+.h-kit .k-ring .trk { stroke: rgba(255, 255, 255, 0.14); }
+.h-kit .k-ring .val { stroke: #7fb1ff; }
+.h-warn { color: #f5c47e; font-weight: 600; }
+
+/* ---------- Micro-interactions (motion.js) ---------- */
+.btn-primary:not(:disabled):active, .k-pill:active, .k-look:active { transform: scale(0.95); }
+.h-w:active, .k-tile:is(button):active, .h-note:is(button):active, .k-alert:active { transform: scale(0.97); }
+.k-set:active, .rjar:is(button):active { transform: scale(0.985); }
+.lc-day:active { transform: scale(0.9); }
+
+/* Tab bar: one blob that stretches toward the new tab, overshoots a touch, and settles like liquid. */
+.tab-blob { position: absolute; z-index: 0; top: 6px; bottom: 6px; left: 6px; width: calc((100% - 12px) / 4); border-radius: 24px; background: var(--blue-tint);
+  transform: translateX(calc(var(--to) * 100%)); pointer-events: none; }
+.tab-blob.move { animation: blob 0.72s cubic-bezier(.45, 0, .2, 1); }
+@keyframes blob {
+  0% { transform: translateX(calc(var(--from) * 100%)) scale(1, 1); border-radius: 24px; }
+  20% { transform: translateX(calc((var(--from) + (var(--to) - var(--from)) * 0.12) * 100%)) scale(1.12, 0.96); }
+  48% { transform: translateX(calc((var(--from) + (var(--to) - var(--from)) * 0.6) * 100%)) scale(1.34, 0.88); border-radius: 28px 20px 20px 28px; }
+  74% { transform: translateX(calc((var(--from) + (var(--to) - var(--from)) * 1.02) * 100%)) scale(0.96, 1.04); }
+  88% { transform: translateX(calc(var(--to) * 100%)) scale(1.02, 0.99); }
+  100% { transform: translateX(calc(var(--to) * 100%)) scale(1, 1); border-radius: 24px; }
+}
+.tabbar button { position: relative; z-index: 1; }
+.tabbar:has(.tab-blob) button.on { background: transparent; }
+.tabbar.moved button.on svg { animation: tabPop 0.5s cubic-bezier(.34, 1.56, .64, 1) 0.12s backwards; }
+@keyframes tabPop { 0% { transform: scale(0.7) translateY(3px); } 60% { transform: scale(1.12); } }
+
+/* Switches: the knob stretches while pressed and springs across. */
+.switch i { transition: transform 0.4s cubic-bezier(.34, 1.56, .64, 1), width 0.2s ease, left 0.2s ease; }
+.switch:active i { width: 30px; }
+.switch.on:active i { left: -3px; }
+.switch.flip-on i { animation: knobOn 0.45s cubic-bezier(.34, 1.56, .64, 1); }
+.switch.flip-off i { animation: knobOff 0.45s cubic-bezier(.34, 1.56, .64, 1); }
+.switch.flip-on { animation: trackOn 0.3s ease; }
+@keyframes knobOn { from { transform: translateX(0); } }
+@keyframes knobOff { from { transform: translateX(20px); } }
+@keyframes trackOn { from { background: rgba(110, 115, 124, 0.25); } }
+
+/* Glow: a thumb that slides under the choice instead of jumping. */
+.k-seg { position: relative; }
+.k-seg .seg-thumb { position: absolute; top: 3px; left: 3px; width: 58px; height: 30px; border-radius: 15px; background: #1d2025;
+  transform: translateX(calc(var(--i) * 58px)); transition: transform 0.45s cubic-bezier(.34, 1.4, .64, 1); }
+.k-hero .k-seg .seg-thumb { background: #fff; }
+.k-seg button { position: relative; z-index: 1; }
+.k-seg button.on, .k-hero .k-seg button.on { background: transparent; }
+
+/* Swipe to finish: the row slides off a blue "Done" that fills in as you pull. */
+.tline { touch-action: pan-y; }
+.tline.swiping { z-index: 1; background: #fff; border-radius: 14px; user-select: none; box-shadow: 0 6px 18px -8px rgba(19, 49, 93, 0.3); }
+.tline.swiping::before { display: none; }
+.swipe-under { position: absolute; left: 0; right: 0; z-index: 0; border-radius: 14px; display: flex; align-items: center; padding-left: 16px; overflow: hidden;
+  color: #fff; font-weight: 600; font-size: 14px; background: color-mix(in srgb, var(--blue) calc(35% + var(--p, 0) * 65%), #dfe9f7); transition: background 0.15s; }
+.swipe-under span { display: inline-flex; align-items: center; gap: 6px; opacity: calc(0.4 + var(--p, 0) * 0.6); transform: scale(calc(0.85 + var(--p, 0) * 0.15)); transition: transform 0.25s cubic-bezier(.34, 1.56, .64, 1); }
+.swipe-under.armed span { transform: scale(1.08); }
+.swipe-under.go { background: var(--blue); }
+.tline.just-done .gem { animation: donePop 0.55s cubic-bezier(.34, 1.56, .64, 1); }
+.tline.just-done { animation: doneRow 0.6s ease; }
+@keyframes donePop { 0% { transform: scale(1.5); filter: brightness(1.3); } 100% { transform: scale(1); } }
+@keyframes doneRow { from { background: color-mix(in srgb, var(--blue) 12%, transparent); } }
+
+/* Celebrations: sending thanks softens the screen, a glow rises, then it opens into what they did. */
+.cheer { position: absolute; inset: 0; z-index: 25; display: grid; place-items: center; overflow: hidden;
+  background: rgba(248, 246, 241, 0.35); backdrop-filter: blur(14px) saturate(1.1); -webkit-backdrop-filter: blur(14px) saturate(1.1);
+  animation: cheerIn 0.35s ease both; }
+.cheer.leaving { animation: cheerOut 0.26s ease both; }
+@keyframes cheerIn { from { background: rgba(248, 246, 241, 0); backdrop-filter: blur(0); } }
+@keyframes cheerOut { to { opacity: 0; } }
+.cheer-glow { position: absolute; inset: 0; pointer-events: none; }
+.cheer-glow i { position: absolute; left: 50%; bottom: -160px; width: 420px; height: 320px; border-radius: 50%; filter: blur(46px); transform: translateX(-50%) scale(0.4); opacity: 0;
+  transition: transform 1s cubic-bezier(.2, .8, .2, 1), bottom 0.9s cubic-bezier(.2, .8, .2, 1), opacity 0.6s ease; }
+.cheer-glow i:nth-child(1) { background: #6ea2ee; }
+.cheer-glow i:nth-child(2) { background: #f3c56a; width: 300px; margin-left: 70px; }
+.cheer-glow i:nth-child(3) { background: #b9d3fb; width: 260px; margin-left: -90px; }
+.cheer.sending .cheer-glow i { opacity: 0.75; transform: translateX(-50%) scale(1); animation: glowBreathe 1.2s ease-in-out infinite alternate; }
+.cheer.sending .cheer-glow i:nth-child(2) { animation-delay: -0.4s; }
+.cheer.sending .cheer-glow i:nth-child(3) { animation-delay: -0.8s; }
+@keyframes glowBreathe { to { transform: translateX(-50%) scale(1.15, 1.25); } }
+.cheer.sent .cheer-glow i { bottom: 520px; opacity: 0.42; transform: translateX(-50%) scale(1.5); }
+.cheer.sent .cheer-glow i:nth-child(2) { bottom: 470px; transition-delay: 0.06s; }
+.cheer.sent .cheer-glow i:nth-child(3) { bottom: 500px; transition-delay: 0.1s; }
+
+.cheer-send { position: absolute; left: 0; right: 0; bottom: 150px; display: flex; flex-direction: column; align-items: center; gap: 12px;
+  color: var(--navy); font-weight: 600; font-size: 15px; transition: opacity 0.25s, transform 0.35s ease; }
+.cheer-send p { margin: 0; }
+.cheer-ring { position: relative; display: grid; place-items: center; }
+.cheer-ring::after { content: ""; position: absolute; inset: -7px; border-radius: 50%; border: 2px solid rgba(32, 112, 217, 0.18); border-top-color: var(--blue); animation: spin 0.9s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.cheer.sent .cheer-send { opacity: 0; transform: translateY(-40px) scale(0.9); pointer-events: none; }
+
+.cheer-body { position: relative; width: 330px; display: flex; flex-direction: column; align-items: center; text-align: center; padding: 26px 22px 22px;
+  background: rgba(255, 255, 255, 0.82); border: 1px solid rgba(255, 255, 255, 0.9); border-radius: 30px; box-shadow: 0 30px 60px -20px rgba(19, 49, 93, 0.35);
+  opacity: 0; transform: translateY(60px) scale(0.86); pointer-events: none; }
+.cheer.sent .cheer-body { opacity: 1; transform: none; pointer-events: auto; transition: transform 0.6s cubic-bezier(.34, 1.4, .64, 1), opacity 0.3s ease; }
+.cheer-body .eyebrow { margin: 6px 0 2px; }
+.cheer-h { font-family: "Fraunces", serif; font-variation-settings: "SOFT" 0, "WONK" 1; font-weight: 400; font-size: 25px; line-height: 30px; color: var(--navy); margin: 0 0 12px; text-wrap: balance; }
+.cheer-list { list-style: none; margin: 0 0 6px; padding: 0; width: 100%; display: grid; gap: 6px; }
+.cheer-list li { display: flex; align-items: center; gap: 10px; text-align: left; font-size: 14.5px; padding: 9px 12px; border-radius: 14px; background: rgba(32, 112, 217, 0.06); }
+.cheer.sent .cheer-list li { animation: rowIn 0.45s cubic-bezier(.34, 1.4, .64, 1) var(--d) backwards; }
+@keyframes rowIn { from { opacity: 0; transform: translateY(10px); } }
+.cheer-body .small { margin: 4px 0 0; }
+.cheer-body .btn-primary { margin-top: 18px; width: 100%; }
+
+.cheer-badge { position: relative; width: 132px; height: 132px; display: grid; place-items: center; }
+.laurel { position: absolute; inset: 0; fill: #e0b04c; }
+.laurel ellipse { transform-box: fill-box; transform-origin: center; }
+.cheer.sent .laurel ellipse { animation: leafIn 0.4s cubic-bezier(.34, 1.56, .64, 1) calc(0.25s + var(--d)) backwards; }
+@keyframes leafIn { from { opacity: 0; scale: 0.2; } }
+.cheer-core .avatar.lg { width: 70px; height: 70px; font-size: 24px; border-width: 3px; box-shadow: 0 8px 20px -6px rgba(19, 49, 93, 0.35); }
+.cheer-count { position: absolute; bottom: 4px; left: 50%; translate: -50% 0; min-width: 34px; height: 30px; padding: 0 9px; border-radius: 15px; background: var(--blue); color: #fff;
+  font-size: 16px; font-weight: 700; display: grid; place-items: center; font-variant-numeric: tabular-nums; box-shadow: var(--check-shadow); }
+.cheer.sent .cheer-count { animation: pop 0.5s cubic-bezier(.34, 1.56, .64, 1) 0.35s backwards; }
+@keyframes pop { from { scale: 0; } }
+.spark { position: absolute; fill: #f0b84a; }
+.spark.s1 { width: 26px; top: 0; right: 4px; }
+.spark.s2 { width: 16px; top: 30px; left: -6px; fill: #6ea2ee; }
+.spark.s3 { width: 12px; bottom: 26px; right: -4px; }
+.cheer.sent .spark, .cheer-mine .spark { animation: sparkIn 0.7s cubic-bezier(.34, 1.56, .64, 1) backwards, twinkle 2.4s ease-in-out 1s infinite; }
+.cheer.sent .spark.s1 { animation-delay: 0.4s, 1.1s; }
+.cheer.sent .spark.s2 { animation-delay: 0.5s, 1.6s; }
+.cheer.sent .spark.s3 { animation-delay: 0.6s, 2s; }
+@keyframes sparkIn { from { opacity: 0; transform: scale(0) rotate(-90deg); } }
+@keyframes twinkle { 50% { transform: scale(0.75) rotate(20deg); opacity: 0.7; } }
+
+/* Your own task done: a warm bloom behind the stone, and your count for the week. */
+.cheer-done { position: relative; isolation: isolate; }
+.cheer-bloom { position: absolute; z-index: -1; top: -40px; left: 50%; width: 360px; height: 300px; translate: -50% 0; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(closest-side, rgba(243, 197, 106, 0.42), rgba(110, 162, 238, 0.18) 60%, transparent); animation: bloom 1.1s cubic-bezier(.2, .8, .2, 1) both; }
+@keyframes bloom { from { opacity: 0; scale: 0.3; } }
+.cheer-mine { position: relative; display: flex; align-items: center; justify-content: center; gap: 12px; margin: 0 auto 14px; padding: 10px 18px 10px 12px; width: max-content;
+  border-radius: 22px; background: rgba(255, 255, 255, 0.8); box-shadow: var(--card-shadow); font-size: 13.5px; line-height: 17px; color: var(--muted); text-align: left;
+  animation: rowIn 0.5s cubic-bezier(.34, 1.4, .64, 1) 0.3s backwards; }
+.cheer-mine .cheer-count { position: static; translate: none; height: 38px; min-width: 38px; border-radius: 19px; font-size: 19px; animation: pop 0.5s cubic-bezier(.34, 1.56, .64, 1) 0.45s backwards; }
+.cheer-mine .spark.s1 { top: -8px; right: -6px; width: 18px; animation-delay: 0.6s, 1.4s; }
+.cheer-mine .spark.s2 { top: -4px; left: 2px; width: 11px; animation-delay: 0.7s, 1.9s; }
+
+/* Done: the stone's last color fades off it, then the check pops in. */
+.hero-gem.dimming .was { position: absolute; left: 60px; top: 50px; z-index: 1; animation: wasFade 1s ease-in-out 0.35s both; }
+@keyframes wasFade { 0% { opacity: 1; filter: brightness(1.12); } 30% { opacity: 1; filter: brightness(1.2); } 100% { opacity: 0; filter: brightness(0.9); } }
+.hero-gem.dimming .okdot { z-index: 2; animation: pop 0.5s cubic-bezier(.34, 1.56, .64, 1) 1.2s backwards; }
+
+/* Pairing heard: rings ripple off the stone, the glow flares into its color, the pill pops. */
+.heard-ring { position: absolute; width: 96px; height: 96px; margin: -48px 0 0 -48px; border-radius: 50%; border: 2px solid var(--blue); pointer-events: none; opacity: 0;
+  animation: heardRing 1.1s cubic-bezier(.2, .7, .3, 1) var(--d) both; }
+@keyframes heardRing { 0% { opacity: 0.7; transform: scale(0.6); } 100% { opacity: 0; transform: scale(2.6); } }
+.stage-card.just-heard .gem { position: relative; z-index: 1; animation: heardFlare 0.9s cubic-bezier(.34, 1.4, .64, 1); }
+@keyframes heardFlare { 0% { filter: brightness(1.7) saturate(0); transform: scale(1.12); } 45% { filter: brightness(1.25) saturate(0.7); } 100% { filter: none; transform: none; } }
+.stage-card.just-heard .status-pill, .stage-card.just-heard .n { animation: pop 0.45s cubic-bezier(.34, 1.56, .64, 1) 0.2s backwards; }
+
+/* Your jar is clear: one slow glow over the whole jar, then it rests. */
+.clear-jar .glassbox { animation: jarGlow 1.8s ease-in-out 0.5s both; }
+@keyframes jarGlow { 0%, 100% { filter: none; } 45% { filter: drop-shadow(0 0 14px rgba(243, 197, 106, 0.85)) drop-shadow(0 0 30px rgba(110, 162, 238, 0.45)) brightness(1.08); } }
+.clear-jar .glassbox .gem { animation: none; }
+
+/* Thank-you card: a theme on top, your own note written on the paper below. */
+.thanks2 .title { margin-bottom: 4px; }
+.ty-card { margin: 18px 0 6px; border-radius: 22px; overflow: hidden; background: #fff; box-shadow: 0 18px 40px -18px rgba(19, 49, 93, 0.35), 0 1px 2px rgba(33, 38, 46, 0.06); transform: rotate(-1.2deg); }
+.ty-art { position: relative; height: 130px; }
+.ty-art svg { display: block; width: 100%; height: 100%; }
+.ty-art.in { position: absolute; inset: 0 0 auto; z-index: 1; animation: artIn 0.42s ease both; }
+.ty-card { position: relative; }
+@keyframes artIn { from { opacity: 0; transform: scale(1.06); } }
+.ty-card:has(.ty-art.in) { animation: cardNudge 0.42s cubic-bezier(.34, 1.56, .64, 1); }
+@keyframes cardNudge { 40% { transform: rotate(0.6deg) scale(1.015); } }
+.ty-paper { display: flex; flex-direction: column; gap: 4px; padding: 14px 18px 16px;
+  background: repeating-linear-gradient(180deg, transparent 0 25px, rgba(32, 112, 217, 0.07) 25px 26px); background-position: 0 32px; }
+.ty-to, .ty-from { font-family: "Fraunces", serif; font-variation-settings: "SOFT" 100, "WONK" 1; color: var(--navy); }
+.ty-to { font-size: 20px; }
+.ty-from { align-self: flex-end; font-size: 16px; font-style: italic; }
+.ty-note { border: 0; outline: 0; resize: none; background: transparent; font: inherit; font-size: 16px; line-height: 26px; color: var(--ink); padding: 0; min-height: 78px; }
+.ty-note::placeholder { color: #9aa3ad; }
+.ty-note:focus, .ty-note:focus-visible { outline: 0; box-shadow: none; }
+.ty-card:focus-within { box-shadow: 0 18px 40px -18px rgba(19, 49, 93, 0.35), 0 0 0 3px rgba(32, 112, 217, 0.28); }
+.ty-themes { display: flex; gap: 10px; margin-bottom: 18px; }
+.ty-themes button { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.ty-sw { width: 100%; aspect-ratio: 1; border-radius: 16px; overflow: hidden; outline: 2px solid transparent; outline-offset: 2px; transition: outline-color 0.2s, transform 0.3s cubic-bezier(.34, 1.56, .64, 1); }
+.ty-sw svg { display: block; width: 100%; height: 100%; }
+.ty-themes button.on .ty-sw { outline-color: var(--blue); transform: scale(1.06); }
+.ty-themes button:active .ty-sw { transform: scale(0.94); }
+.ty-themes em { font-style: normal; font-size: 12px; font-weight: 600; color: var(--muted); }
+.ty-themes button.on em { color: var(--blue-label); }
+.ty-how { margin: -4px 0 0; }
+
+/* iOS Messages, for anything that leaves Shoal by text. System font, iOS sheet motion. */
+.imsg { position: absolute; inset: 0; z-index: 26; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif; background: rgba(0, 0, 0, 0); transition: background 0.38s; }
+.imsg.open { background: rgba(0, 0, 0, 0.28); }
+.im-sheet { position: absolute; left: 0; right: 0; bottom: 0; top: 54px; border-radius: 12px 12px 0 0; background: #fff; display: flex; flex-direction: column; overflow: hidden;
+  transform: translateY(100%); transition: transform 0.38s cubic-bezier(.32, .72, 0, 1); }
+.imsg.open .im-sheet { transform: none; }
+.im-grab { width: 36px; height: 5px; border-radius: 3px; background: #d1d1d6; margin: 6px auto 0; }
+.im-top { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 10px 16px; font-size: 17px; color: #000; }
+.im-cancel { color: #007aff; font-size: 17px; justify-self: start; }
+.im-to { display: flex; align-items: center; gap: 6px; padding: 9px 16px; border-bottom: 0.5px solid #c6c6c8; color: #8e8e93; font-size: 16px; }
+.im-chip { color: #007aff; }
+.im-thread { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; padding: 12px 14px; }
+.im-meta { margin: 0 0 auto; text-align: center; font-size: 11px; color: #8e8e93; }
+.im-meta.right { margin: 2px 2px 0; text-align: right; }
+.im-out { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; opacity: 0; transform: translateY(70px) scale(0.92); transform-origin: bottom right; }
+.imsg.sent .im-out { opacity: 1; transform: none; transition: transform 0.45s cubic-bezier(.32, .72, 0, 1), opacity 0.2s; }
+.im-deliv { opacity: 0; }
+.imsg.sent .im-deliv { opacity: 1; transition: opacity 0.2s 0.6s; }
+.im-link { width: 236px; border-radius: 18px; overflow: hidden; background: #e9e9eb; display: flex; flex-direction: column; }
+.im-art { display: block; height: 110px; }
+.im-art svg { display: block; width: 100%; height: 100%; }
+.im-cap { display: flex; flex-direction: column; padding: 8px 12px 9px; font-size: 13px; color: #000; }
+.im-cap b { font-weight: 600; }
+.im-cap small { color: #8e8e93; font-size: 12px; }
+.im-bub { margin: 0; max-width: 250px; padding: 8px 12px; border-radius: 18px; background: #007aff; color: #fff; font-size: 16px; line-height: 21px; }
+.im-bar { display: flex; align-items: flex-end; gap: 8px; padding: 8px 10px 34px; }
+.im-plus { flex: none; width: 34px; height: 34px; border-radius: 50%; background: #e9e9eb; color: #8e8e93; display: grid; place-items: center; font-size: 22px; }
+.im-field { flex: 1; display: flex; flex-direction: column; gap: 6px; padding: 6px 6px 7px; border: 1px solid #c6c6c8; border-radius: 18px; transition: opacity 0.2s; }
+.im-link.sm { width: 150px; border-radius: 13px; }
+.im-link.sm .im-art { height: 62px; }
+.im-link.sm .im-cap { padding: 5px 8px 6px; font-size: 11px; }
+.im-link.sm .im-cap small { font-size: 10px; }
+.im-text { padding: 0 6px; font-size: 16px; line-height: 21px; color: #000; }
+.im-ph { color: #c7c7cc; }
+.imsg.sent .im-field { opacity: 0; }
+.im-send { flex: none; width: 30px; height: 30px; margin-bottom: 4px; border-radius: 50%; background: #007aff; display: grid; place-items: center; }
+.im-send:active { transform: scale(0.9); }
+.imsg.sent .im-send { background: #c7c7cc; }
+
+/* Home notifications: iOS banners at the top. Glass, app icon, swipe left or × to clear, and two or more stack. */
+.h-stack { position: relative; display: grid; gap: 8px; margin: 0 0 18px; }
+.h-stack.stacked { margin-bottom: calc(18px + (var(--n) - 1) * 9px); }
+.h-ios { position: relative; z-index: 2; border-radius: 22px; background: rgba(255, 255, 255, 0.42);
+  -webkit-backdrop-filter: blur(20px) saturate(1.6); backdrop-filter: blur(20px) saturate(1.6);
+  box-shadow: inset 0 0 18px rgba(255, 255, 255, 0.2), 0 12px 30px -24px rgba(19, 49, 93, 0.4);
+  transition: transform 0.45s cubic-bezier(.32, .72, 0, 1), opacity 0.3s ease; }
+.h-ios.urgent { background: color-mix(in srgb, var(--u) 14%, rgba(255, 255, 255, 0.46)); }
+.h-ios::before { background: linear-gradient(160deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.3) 35%, rgba(255, 255, 255, 0.08) 60%, rgba(255, 255, 255, 0.55)); }
+.h-ios.dragging { transition: none; }
+.h-ios.gone { transform: translateX(-110%) !important; opacity: 0; }
+.h-ios-main { display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 10px 10px 10px; text-align: left; border-radius: inherit; }
+.h-ios-thumb { flex: none; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; background: rgba(255, 255, 255, 0.55); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.8); }
+.h-ios.urgent .h-ios-thumb { background: color-mix(in srgb, var(--u) 16%, rgba(255, 255, 255, 0.6)); }
+.h-ios-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.h-ios .n { font-size: 14.5px; font-weight: 600; line-height: 19px; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.h-ios .m { font-size: 12.5px; line-height: 16px; color: rgba(34, 38, 46, 0.6); }
+.h-ios.urgent .m { color: color-mix(in srgb, var(--u) 70%, #3a2a00); }
+.h-ios-cta { flex: none; padding: 6px 12px; border-radius: 14px; font-size: 12.5px; font-weight: 600; color: var(--navy); background: rgba(255, 255, 255, 0.7); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.9); }
+.h-ios-x { position: absolute; z-index: 3; top: -7px; left: -7px; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font-size: 15px; line-height: 1; color: #5b6170;
+  background: rgba(255, 255, 255, 0.9); box-shadow: 0 2px 8px rgba(19, 49, 93, 0.18); opacity: 0; transform: scale(0.6); transition: opacity 0.2s, transform 0.25s cubic-bezier(.34, 1.56, .64, 1); }
+.h-ios:hover .h-ios-x, .h-ios:focus-within .h-ios-x { opacity: 1; transform: none; }
+.h-stack.stacked .h-ios:not(:first-of-type) { position: absolute; left: 0; right: 0; top: 0; bottom: 0; z-index: 1; transform: translateY(calc(var(--i) * 9px)) scale(calc(1 - var(--i) * 0.05)); }
+.h-stack.stacked .h-ios:not(:first-of-type) > * { opacity: 0; }
+.h-stack-hit { position: absolute; z-index: 4; inset: 0 0 calc((var(--n) - 1) * -9px); border-radius: 22px; }
+.h-stack.open .h-ios { animation: fan 0.5s cubic-bezier(.32, .72, 0, 1) calc(var(--i) * 50ms) backwards; }
+@keyframes fan { from { transform: translateY(calc(var(--i) * -64px)) scale(calc(1 - var(--i) * 0.05)); opacity: 0.4; } }
+.h-stack.fresh .h-ios { animation: dropIn 0.7s cubic-bezier(.34, 1.3, .64, 1) calc(0.25s + var(--i) * 90ms) backwards; }
+@keyframes dropIn { from { transform: translateY(-110px) scale(0.92); opacity: 0; } }
+.h-stack-less { justify-self: end; padding: 5px 12px; border-radius: 14px; font-size: 12.5px; font-weight: 600; color: var(--navy); background: rgba(255, 255, 255, 0.6); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); }
+
+/* Tab bar: thin, sheer glass. Barely any fill, a frost behind, and a hairline rim that catches light at
+   the top left and fades round the sides, with a faint prism edge. No raised shadow, no puffy shine. */
+.tabbar { background: rgba(255, 255, 255, 0.16); border: 0;
+  -webkit-backdrop-filter: blur(14px) saturate(1.6) brightness(1.03); backdrop-filter: blur(14px) saturate(1.6) brightness(1.03);
+  box-shadow: inset 0 0 18px rgba(255, 255, 255, 0.14), 0 10px 30px -22px rgba(19, 49, 93, 0.35); }
+.tabbar::before, .tabbar::after, .tab-blob::before, .h-ios::before { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; padding: 1px;
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); mask-composite: exclude; }
+.tabbar::before { background: linear-gradient(160deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.35) 30%, rgba(255, 255, 255, 0.08) 55%, rgba(255, 255, 255, 0.5) 100%); }
+.tabbar::after { inset: 1px; background: linear-gradient(90deg, rgba(255, 170, 210, 0.35), rgba(255, 230, 160, 0.25) 30%, rgba(150, 210, 255, 0.35) 65%, rgba(190, 160, 255, 0.3)); opacity: 0.6; }
+.tab-blob { background: rgba(255, 255, 255, 0.22); box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.18); }
+.tab-blob::before { background: linear-gradient(160deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.2) 45%, rgba(255, 255, 255, 0.6)); }
+.tabbar button.on { color: var(--navy); }
+.tabbar button.on svg { color: var(--blue); }
+.tabbar button:active svg { transform: scale(0.86); transition: transform 0.15s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .tab-blob.move, .tabbar.moved button.on svg, .switch i, .switch.flip-on i, .switch.flip-off i, .tline.just-done, .tline.just-done .gem { animation: none; transition: none; }
+  .screen[class*="enter-"], .screen[class*="enter-"] * { animation-duration: 0.01s !important; }
+}
+
+/* Jars sit on the background everywhere, as the focal point. Cards below are the things you do. */
+.shelf, .stage-card, .kit-pitch, .kit-hero { background: none; box-shadow: none; border: 0; }
+.shelf { padding: 18px 0 8px; margin: 14px 0 22px; }
+.shelf-top { padding: 0 2px 10px; }
+.stage-card { padding: 30px 0 22px; }
+.jar-free { display: flex; justify-content: center; margin: 26px 0 22px; }
+.jar-free .shelf-jars { zoom: 1.45; }
+.jar-free .who { display: none; }
+.jh-stats { margin: 0 0 22px; }
+.jar-check { padding: 16px 18px 18px; margin: 0 0 12px; }
+.jar-check .jh-check { padding: 0; }
+.jar-check .jc-opts { flex-direction: row; flex-wrap: wrap; }
+.jar-check .jc-opts .chip { flex: 1 1 auto; justify-content: center; }
+.card.jar-hero { justify-content: center; margin: 0 0 12px; }
+
+/* ---------- Stones lit from inside (stones.js) ----------
+   A white shell, and the stone's colour as light inside it. --lit is that light, taken from the
+   palette so custom stone colours still work. Done stones have the light off. */
+#phone[data-stone] .gem:not(.none) { --lit: color-mix(in srgb, var(--lo) 72%, var(--mid)); --shell: #e3e8ef; }
+#phone[data-stone] .gem.open { --lit: #ffffff; }
+#phone[data-stone] .gem.dark { --shell: #cfd7e2; --lit: color-mix(in srgb, var(--mid) 82%, var(--lo)); }
+#phone[data-stone] .gem.dark.open { --lit: #ffffff; }
+#phone[data-stone] .gem.done { --shell: #c3c6cb; }
+#phone[data-stone="core"] .gem:not(.none) {
+  background: radial-gradient(ellipse 110% 100% at 52% 70%, color-mix(in srgb, var(--lit) 78%, transparent) 0, color-mix(in srgb, var(--lit) 50%, transparent) 40%, color-mix(in srgb, var(--lit) 14%, transparent) 75%, transparent 100%),
+    radial-gradient(ellipse at 38% 26%, #fff 0, #fbfcfd 30%, var(--shell) 100%);
+}
+#phone[data-stone="dawn"] .gem:not(.none) {
+  background: radial-gradient(ellipse 95% 85% at 50% 100%, var(--lit) 0, color-mix(in srgb, var(--lit) 55%, transparent) 45%, transparent 100%),
+    radial-gradient(ellipse at 38% 22%, #fff 0, #fbfcfd 34%, var(--shell) 100%);
+}
+#phone[data-stone="core"] .gem.done, #phone[data-stone="dawn"] .gem.done { background: radial-gradient(ellipse at 38% 26%, #f6f7f8 0, #e2e4e7 45%, var(--shell) 100%); }
+/* A thin rim keeps the white shell visible on the light backgrounds. */
+#phone[data-stone="core"] .gem:not(.none, .done)::before, #phone[data-stone="dawn"] .gem:not(.none, .done)::before {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  box-shadow: inset 0 0 0 0.5px rgba(19, 49, 93, 0.12), inset 0 1px 1px rgba(255, 255, 255, 0.9);
+}
+.stone-look { margin-top: 18px; }
+.stone-look strong { display: block; margin-bottom: 6px; font-size: 13px; }

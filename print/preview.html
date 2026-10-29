@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Shoal kit preview</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #f4f3ef; font: 14px system-ui, sans-serif; color: #13315d; }
+  #pick { position: fixed; top: 12px; left: 12px; display: flex; flex-wrap: wrap; gap: 6px; }
+  #pick button { border: 0; border-radius: 16px; padding: 7px 12px; background: #fff; color: inherit; cursor: pointer; }
+  #pick button.on { background: #13315d; color: #fff; }
+</style>
+</head>
+<body>
+<div id="pick"></div>
+<script type="importmap">{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js", "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/" } }</script>
+<script type="module">
+import * as THREE from "three";
+import { STLLoader } from "three/addons/loaders/STLLoader.js";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+
+const FILES = ["preview-assembled", "base-1", "base-2", "base-3-charging-pad", "stones-plate-1", "stones-plate-2", "stones-plate-3", "stone-small-top", "stone-small-bottom", "stone-medium-top", "stone-medium-bottom", "stone-large-top", "stone-large-bottom"];
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(devicePixelRatio);
+renderer.setSize(innerWidth, innerHeight);
+document.body.appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xf4f3ef);
+const camera = new THREE.PerspectiveCamera(35, innerWidth / innerHeight, 1, 5000);
+camera.up.set(0, 0, 1);
+const controls = new OrbitControls(camera, renderer.domElement);
+scene.add(new THREE.HemisphereLight(0xffffff, 0xb8c2d0, 2.2));
+const sun = new THREE.DirectionalLight(0xffffff, 1.6);
+sun.position.set(-200, -300, 400);
+scene.add(sun);
+let mesh;
+
+async function show(name) {
+  const geo = await new STLLoader().loadAsync(`stl/${name}.stl`);
+  geo.computeBoundingBox();
+  const box = geo.boundingBox, c = box.getCenter(new THREE.Vector3()), size = box.getSize(new THREE.Vector3()).length();
+  if (mesh) scene.remove(mesh);
+  mesh = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color: 0xdfe6ef, roughness: 0.55 }));
+  scene.add(mesh);
+  controls.target.copy(c);
+  camera.position.set(c.x + size * 0.55, c.y - size * 1.2, c.z + size * 0.6);
+  controls.update();
+  document.querySelectorAll("#pick button").forEach((b) => b.classList.toggle("on", b.dataset.f === name));
+}
+
+const pick = document.getElementById("pick");
+FILES.forEach((f) => {
+  const b = Object.assign(document.createElement("button"), { textContent: f });
+  b.dataset.f = f;
+  b.onclick = () => show(f);
+  pick.appendChild(b);
+});
+addEventListener("resize", () => { camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); });
+renderer.setAnimationLoop(() => renderer.render(scene, camera));
+show(new URLSearchParams(location.search).get("f") || FILES[0]);
+</script>
+</body>
+</html>

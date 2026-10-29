@@ -5,20 +5,20 @@ const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&
 
 /* ---------- Content ---------- */
 
+// What they're living with. Hospice isn't here: it's a stage of care, not an illness, so it's asked as a stage below.
 const CONDITIONS = [
-  { id: "hospice", t: "Hospice or end of life", d: "Comfort care at home" },
   { id: "dementia", t: "Dementia or memory loss", d: "Alzheimer's, confusion, wandering" },
-  { id: "cancer", t: "Cancer treatment", d: "Chemo, radiation, recovery" },
-  { id: "aging", t: "Getting older", d: "Needs more help day to day" },
-  { id: "other", t: "Something else", d: "Surgery recovery, stroke, other" },
+  { id: "cancer", t: "Cancer", d: "Chemo, radiation, recovery" },
+  { id: "aging", t: "Getting older and frail", d: "Needs more help day to day" },
+  { id: "other", t: "Something else", d: "Heart or lung illness, stroke, surgery recovery" },
 ];
 
 // Where things are right now. Each stage has a starter set, picked with hospice nurses and doulas,
 // so first-timers see the tasks people usually miss. It's a fixed list, not Pebble, so it works with Pebble off.
 const STAGES = [
-  { id: "start", t: "Just starting", d: "A new diagnosis, or help is new" },
-  { id: "daily", t: "Day to day", d: "Ongoing care, settling into a routine" },
-  { id: "final", t: "Final months", d: "Hospice or comfort care" },
+  { id: "start", t: "Just starting", d: "A new diagnosis, or help is new", s: "families just starting out" },
+  { id: "daily", t: "Day to day", d: "Ongoing care, settling into a routine", s: "day-to-day care" },
+  { id: "final", t: "In hospice or final months", d: "Comfort care, at home or in a facility", s: "hospice and the final months" },
 ];
 const STARTER = {
   start: ["Doctor appointments", "Keep a list of meds and doses", "Keep the care binder up to date", "Insurance calls", "Set up a meal train", "Keep family updated", "Safety check: rails, rugs, lights"],
@@ -27,7 +27,9 @@ const STARTER = {
 };
 // Pebble is optional. Off, everything still works by hand: the starter set, sizes and dates stay, the guesses don't.
 const pebbleOn = () => !S.pebbleOff;
-const stageOf = () => S.stage || (S.conditions.includes("hospice") ? "final" : "daily");
+const stageOf = () => S.stage || "daily";
+// "hospice" tasks follow the stage; the rest follow the conditions picked.
+const hasCond = (c) => (c === "hospice" ? stageOf() === "final" : S.conditions.includes(c));
 
 // w = weight (1 light, 2 medium, 3 heavy). k = skill tag. r = repeats by default ("Needed" = only as it comes up).
 // c = only suggested for these conditions (none = everyone). p = Pebble pre-picks it.
@@ -165,15 +167,33 @@ const SIZE_WORDS = [
   [2, /appointment|doctor|ride|drive|cook|meal|clean|bath|shop|grocer|walk|outing|yard|therapy|visit|repair|errand/i],
 ];
 const guessSize = (n) => (SIZE_WORDS.find(([, re]) => re.test(n)) || [1])[0];
-// Stacks stones bottom-up in a jar, as many per row as fit, odd rows nudged so they nest.
+// Drops stones into a jar one at a time, like real ones: each falls to the lowest spot it can reach,
+// resting on the curved tops of the stones below (stones are treated as ellipses), and rolls until it
+// touches a neighbor or the glass. Ties lean to the middle, with a small fixed wobble so piles don't look ruled.
 // sizes: [[w, h], ...] in px. Returns the top-left of each stone, or null once the jar is full to the top.
-function packStones(sizes, { left = 6, right = 80, base = 104, nest = 0.72, top = 18 } = {}) {
-  let row = 0, x = left, rowH = 0;
-  return sizes.map(([w, h]) => {
-    if (rowH && x + w > right) { base -= rowH * nest; row++; x = left + (row % 2 ? 4 : 0); rowH = 0; }
-    const pos = { x, y: base - h };
-    x += w - 1; rowH = Math.max(rowH, h);
-    return pos.y < top ? null : pos;
+function packStones(sizes, { left = 6, right = 80, base = 104, top = 18 } = {}) {
+  const placed = [], mid = (left + right) / 2;
+  const arc = (dx, a) => Math.sqrt(Math.max(0, 1 - (dx / a) ** 2));
+  return sizes.map(([w, h], i) => {
+    const a = w / 2, b = h / 2;
+    let best = null;
+    for (let x = left; x <= right - w; x++) {
+      const cx = x + a;
+      let cy = base - b;
+      for (const p of placed) {
+        if (Math.abs(p.cx - cx) >= p.a + a) continue;
+        // Where the two outlines would touch, sampled across their overlap.
+        const lo = Math.max(p.cx - p.a, cx - a), hi = Math.min(p.cx + p.a, cx + a);
+        for (let c = lo; c <= hi; c += 1) cy = Math.min(cy, p.cy - p.b * arc(c - p.cx, p.a) - b * arc(c - cx, a) + 1.5);
+      }
+      // A stone rolls until it touches a neighbor or the glass, so open gaps cost a little.
+      const gap = Math.min(x - left, right - w - x, ...placed.map((p) => Math.abs(p.cx - cx) - p.a - a).filter((g) => g >= -1));
+      const score = cy - Math.max(0, gap) * 0.25 - Math.abs(cx - mid) * 0.03 + Math.sin(i * 2.4 + x * 0.9) * 0.5;
+      if (!best || score > best.score) best = { x, cx, cy, score };
+    }
+    if (!best || best.cy - b < top) return null;
+    placed.push({ cx: best.cx, cy: best.cy, a, b });
+    return { x: best.x, y: best.cy - b };
   });
 }
 // A full jar shows what fits, plus a count of the rest.
@@ -337,7 +357,7 @@ function seedTasks() {
   S.splitTouched = false;
   Object.entries(TASK_LIBRARY).forEach(([cat, items]) => {
     items.forEach((t) => {
-      if (t.c && !t.c.some((c) => S.conditions.includes(c))) return;
+      if (t.c && !t.c.some(hasCond)) return;
       const kids = S.people.some((p) => p.tier === "kid");
       const starter = STARTER[stageOf()].includes(t.n);
       const pebble = !starter && S.path === "pebble" && pebbleOn()
@@ -406,9 +426,12 @@ function suggestSplit() {
 
 /* ---------- Shared pieces ---------- */
 
-const check = (on) => on
-  ? `<span class="check on"><img src="${A("check.svg")}" alt=""></span>`
-  : `<span class="check off"><img src="${A("radio-empty.svg")}" alt=""></span>`;
+// Round for pick-one, square for pick-many (box = true), so the shape says how many you can choose.
+const check = (on, box = false) => box
+  ? `<span class="check box ${on ? "on" : "off"}">${on ? `<img src="${A("check.svg")}" alt="">` : ""}</span>`
+  : on
+    ? `<span class="check on"><img src="${A("check.svg")}" alt=""></span>`
+    : `<span class="check off"><img src="${A("radio-empty.svg")}" alt=""></span>`;
 const weightPill = (w) => `<span class="weight" title="${WEIGHT_LABEL[w]} task"><span class="wt-stone">${gem("open", { size: "xs", cls: `w${w}` })}</span>${WEIGHT_LABEL[w]}</span>`;
 const hasKit = () => S.kit === "yes";
 // How big is this task? Pebble's pick is tagged so people can see what it guessed.
@@ -545,19 +568,19 @@ SCREENS.about = () => `${topbar({ skip: false })}
     <h1 class="title">Who are you caring for?</h1>
     <p class="sub">This picks the starter tasks. You can change any of them.</p>
     <label class="card cond-name"><span>Name</span><input data-input="lovedOne" value="${esc(S.lovedOne)}" maxlength="20" aria-label="Their name"></label>
-    <p class="label">What are they facing? <span class="small">Pick all that apply</span></p>
+    <p class="label">Where are things right now?</p>
+    ${STAGES.map((g) => `<button class="option ${S.stage === g.id ? "on" : ""}" data-act="stage" data-id="${g.id}">
+      <span class="txt"><span class="t">${g.t}</span><span class="d">${g.d}</span></span>${check(S.stage === g.id)}</button>`).join("")}
+    <p class="label">What are they living with? <span class="small">Optional · pick any</span></p>
     ${CONDITIONS.map((c) => {
       const on = S.conditions.includes(c.id);
       return `<button class="option ${on ? "on" : ""}" data-act="condition" data-id="${c.id}">
-      <span class="txt"><span class="t">${c.t}</span></span>${check(on)}
+      <span class="txt"><span class="t">${c.t}</span></span>${check(on, true)}
     </button>`;
     }).join("")}
     ${writeIns("cond", "Write your own")}
-    <p class="label">Where are things right now?</p>
-    ${STAGES.map((g) => `<button class="option ${stageOf() === g.id ? "on" : ""}" data-act="stage" data-id="${g.id}">
-      <span class="txt"><span class="t">${g.t}</span><span class="d">${g.d}</span></span>${check(stageOf() === g.id)}</button>`).join("")}
   </div>
-  ${footer("Next", { disabled: !S.lovedOne.trim() || !(S.conditions.length || S.own.cond.length) })}`;
+  ${footer("Next", { disabled: !S.lovedOne.trim() || !S.stage })}`;
 
 SCREENS.them = () => `${topbar()}
   <div class="content">
@@ -565,7 +588,7 @@ SCREENS.them = () => `${topbar()}
     <h1 class="title">What matters most to ${esc(S.lovedOne)} right now?</h1>
     <p class="sub">Pick any, or write your own.</p>
     ${MATTERS_THEM.map((m) => `<button class="option ${S.them.includes(m.id) ? "on" : ""}" data-act="toggleThem" data-id="${m.id}">
-      <span class="txt"><span class="t">${m.t}</span></span>${check(S.them.includes(m.id))}
+      <span class="txt"><span class="t">${m.t}</span></span>${check(S.them.includes(m.id), true)}
     </button>`).join("")}
     ${writeIns("them", "Write your own")}
   </div>
@@ -575,7 +598,7 @@ SCREENS.them = () => `${topbar()}
 function writeIns(key, placeholder) {
   const list = S.own[key];
   return `${list.map((v, i) => `<button class="option on own" data-act="dropOwn" data-key="${key}" data-i="${i}" aria-label="Remove ${esc(v)}">
-      <span class="txt"><span class="t">${esc(v)}</span></span>${check(true)}</button>`).join("")}
+      <span class="txt"><span class="t">${esc(v)}</span></span>${check(true, true)}</button>`).join("")}
     <form class="write-own" data-form="own" data-key="${key}"><img src="${A("plus.svg")}" alt=""><input name="v" placeholder="${placeholder}" aria-label="${placeholder}"><button class="go">Add</button></form>`;
 }
 
@@ -585,7 +608,7 @@ SCREENS.you = () => `${topbar()}
     <h1 class="title">What matters most to you?</h1>
     <p class="sub lock"><img src="${A("lock.svg")}" width="14" height="14" alt="">Only you see this answer.</p>
     ${MATTERS_YOU.map((m) => `<button class="option ${S.you.includes(m.id) ? "on" : ""}" data-act="toggleYou" data-id="${m.id}">
-      <span class="txt"><span class="t">${m.t}</span></span>${check(S.you.includes(m.id))}
+      <span class="txt"><span class="t">${m.t}</span></span>${check(S.you.includes(m.id), true)}
     </button>`).join("")}
     ${writeIns("you", "Write your own")}
   </div>
@@ -603,7 +626,7 @@ SCREENS.tasks = () => {
   const rest = items.filter((t) => !top.includes(t)), restOn = rest.filter((t) => t.on).length;
   const open = !top.length || S.moreOpen?.[tab];
   const taskRow = (t) => `<div class="row ${t.on ? "on" : ""}">
-        <button data-act="toggleTask" data-id="${t.id}" style="display:flex;align-items:center;gap:12px;flex:1;text-align:left">${check(t.on)}<span class="name">${esc(t.n)}${t.pebble ? `<span class="tag">Pebble</span>` : ""}</span></button>
+        <button data-act="toggleTask" data-id="${t.id}" style="display:flex;align-items:center;gap:12px;flex:1;text-align:left">${check(t.on, true)}<span class="name">${esc(t.n)}${t.pebble ? `<span class="tag">Pebble</span>` : ""}</span></button>
         ${t.y ? "" : `<button data-act="sizeSheet" data-id="${t.id}" aria-label="Size: ${WEIGHT_LABEL[t.w]}. Change size">${weightPill(t.w)}</button>`}
       </div>`;
   return `${topbar({ skip: false })}
@@ -611,7 +634,7 @@ SCREENS.tasks = () => {
     ${eyebrow("Tasks")}
     <h1 class="title">What needs doing?</h1>
     <p class="sub">Check the picks in each tab. Open More suggestions if something's missing. Tap a size to change it.</p>
-    <div class="card r20 starter-note"><span class="sn-ic">${icon("myjar")}</span><span class="small" style="color:var(--ink)"><b>${starterCount} starter tasks</b> for ${esc(stage.t.toLowerCase())}, put together with hospice nurses and doulas.${pebbleCount ? ` Pebble added <b>${pebbleCount}</b> from your answers.` : ""} Uncheck anything that doesn't fit.</span></div>
+    <div class="card r20 starter-note"><span class="sn-ic">${icon("myjar")}</span><span class="small" style="color:var(--ink)"><b>${starterCount} starter tasks</b> for ${stage.s}, put together with hospice nurses and doulas.${pebbleCount ? ` Pebble added <b>${pebbleCount}</b> from your answers.` : ""} Uncheck anything that doesn't fit.</span></div>
     <div class="tabs" role="tablist">${cats.map((c) => {
       const n = S.tasks.filter((t) => t.cat === c && t.on).length;
       return `<button role="tab" class="${c === tab ? "on" : ""}" aria-selected="${c === tab}" data-act="taskTab" data-id="${esc(c)}">${esc(c)}${n ? `<b>${n}</b>` : ""}</button>`;
@@ -777,10 +800,10 @@ SCREENS.strengths = () => {
     <p class="sub">Pick any. Pebble leans toward giving you these.</p>
     ${STRENGTHS.map((s) => {
       const on = S.strengths.includes(s.id);
-      return `<button class="option ${on ? "on" : ""}" data-act="strength" data-id="${s.id}"><span class="txt"><span class="t">${s.t}</span></span>${check(on)}</button>`;
+      return `<button class="option ${on ? "on" : ""}" data-act="strength" data-id="${s.id}"><span class="txt"><span class="t">${s.t}</span></span>${check(on, true)}</button>`;
     }).join("")}
     ${writeIns("strengths", "Something else you'd like to do")}
-    <button class="option opt-none ${any ? "on" : ""}" data-act="strength" data-id="any"><span class="txt"><span class="t">No preference, split it evenly</span></span>${check(any)}</button>
+    <button class="option opt-none ${any ? "on" : ""}" data-act="strength" data-id="any"><span class="txt"><span class="t">No preference, split it evenly</span></span>${check(any, true)}</button>
     <div class="pref-avoid">
       <p class="label">Anything you'd rather avoid? <span class="small">Optional</span></p>
       <div class="chips">${STRENGTHS.map((s) => chip(s.t, S.avoid.includes(s.id), "avoid", s.id)).join("")}${S.own.avoid.map((v, i) => `<button class="chip on" data-act="dropOwn" data-key="avoid" data-i="${i}" aria-label="Remove ${esc(v)}"><img src="${A("chip-check.svg")}" alt="">${esc(v)}</button>`).join("")}</div>
@@ -849,7 +872,7 @@ SCREENS.review = () => {
     <p class="eyebrow">Last look</p>
     <h1 class="title">${esc(S.lovedOne)}'s plan is ready</h1>
     <p class="sub">${hasKit() ? "Tap any stone to hear it, or to make the real one glow so you can find it." : "Tap any stone to hear it. Bigger stones are bigger tasks."}</p>
-    <div class="card shelf">
+    <div class="shelf">
       <div class="shelf-jars">${main.map((p) => {
         const mine = picked().filter((t) => t.who === p.id).sort((a, b) => b.w - a.w);
         const pos = slots(mine);
@@ -982,7 +1005,7 @@ const NOTES = {
   welcome: ["Welcome", ["Onboarding is now three steps, about 2 minutes: who you're caring for, who's helping, and stone colors.", "Testers felt the old 11-step setup was too much while grieving. Tasks, calendar, the split, and the stones moved to a checklist on Home."]],
   taskStart: ["Start your list", ["First stop of “Add what needs doing” on the Home checklist.", "No “Recommended” badge and no AI up front: “Start from suggestions” is described as faster. “Who suggests the tasks?” explains Pebble for anyone who wants to know."]],
   colors: ["Stone colors", ["Last onboarding step. Families pick colors that mean something to them, so the glow is explained once, with their own colors.", "Changeable anytime in Settings or the Home kit."]],
-  about: ["Care situation", ["Starts blank: no name or condition filled in.", "Pick more than one condition; general tasks are always suggested, plus ones for each condition."]],
+  about: ["Care situation", ["Starts blank: no name, stage or condition filled in.", "Stage comes first: just starting, day to day, or in hospice. Hospice is a stage of care, not an illness, so it isn't in the condition list.", "Conditions are optional and you can pick more than one; general tasks are always suggested, plus ones for each condition."]],
   them: ["What matters to them", ["Pebble path only. Starts blank. Answers pre-pick tasks (e.g. “Their wishes in order” adds the advance-directive task)."]],
   you: ["What matters to you", ["Pebble path only. “Helping from far away” leans Pebble toward phone and paperwork tasks."]],
   tasks: ["Tasks before people", ["Six category tabs: Medical, Care & visits, Home & meals, Rides & errands, Money & paperwork, and Kids & teens.", "A starter set for the stage you're in (just starting, day to day, final months), put together with hospice nurses and doulas, sits on top with Pebble's picks; the rest fold under More suggestions. Kid tasks are their own tab and never urgent.", "Each task has a size (small, medium, large). Pebble picks one, even for write-ins; tap it to change. The size sets the stone: bigger tasks get bigger stones in the jar and in the real kit, and it feeds the fair split."]],
@@ -1009,12 +1032,39 @@ function renderNotes() {
     <button class="reset" data-act="skipToApp">Skip to the main app →</button>`;
 }
 
+// Matches nodes by tag (and data-id / data-key when they have one) and updates them in place.
+const nodeKey = (n) => n.nodeType === 1 ? `${n.nodeName}#${n.getAttribute("data-key") ?? n.getAttribute("data-id") ?? ""}` : `#${n.nodeType}`;
+function patchNode(a, b) {
+  if (a.nodeType !== 1) { if (a.nodeValue !== b.nodeValue) a.nodeValue = b.nodeValue; return; }
+  for (const { name } of [...a.attributes]) if (!b.hasAttribute(name)) a.removeAttribute(name);
+  for (const { name, value } of b.attributes) if (a.getAttribute(name) !== value) a.setAttribute(name, value);
+  if (a.nodeName === "TEXTAREA" || a.nodeName === "INPUT") {
+    if (a !== document.activeElement) a.value = a.nodeName === "TEXTAREA" ? b.textContent : b.getAttribute("value") ?? "";
+    if (a.type === "checkbox" || a.type === "radio") a.checked = b.hasAttribute("checked");
+    if (a.nodeName === "TEXTAREA") return;
+  }
+  patchChildren(a, b);
+}
+function patchChildren(a, b) {
+  const old = [...a.childNodes], used = new Set();
+  [...b.childNodes].forEach((n, i) => {
+    const k = nodeKey(n);
+    let m = old[i] && !used.has(old[i]) && nodeKey(old[i]) === k ? old[i] : old.find((o) => !used.has(o) && nodeKey(o) === k);
+    if (m) { used.add(m); patchNode(m, n); } else m = n;
+    if (a.childNodes[i] !== m) a.insertBefore(m, a.childNodes[i] || null);
+  });
+  old.forEach((o) => { if (!used.has(o)) o.remove(); });
+}
+
 function render() {
   const el = document.getElementById("screen");
   const prevScreen = el.dataset.s;
   const keepScroll = prevScreen === S.screen ? el.querySelector(".content")?.scrollTop : 0;
   if (S.app) S.tasks.forEach(normTask);
-  el.innerHTML = SCREENS[S.screen]();
+  // A new screen is drawn fresh so it can animate in. The same screen is patched in place,
+  // so a tab or toggle only moves what changed instead of replaying the whole page.
+  if (prevScreen === S.screen) patchChildren(el, Object.assign(document.createElement("template"), { innerHTML: SCREENS[S.screen]() }).content);
+  else el.innerHTML = SCREENS[S.screen]();
   el.dataset.s = S.screen;
   if (prevScreen !== S.screen) {
     el.classList.remove("enter-fwd", "enter-back", "enter-fade");

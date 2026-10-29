@@ -1480,63 +1480,50 @@ button, input, textarea { touch-action: manipulation; -webkit-tap-highlight-colo
 .cp-sheet { margin-top: 8px; }
 
 /* ---------- Home kit, cleaner look (test). Scoped to .kit2 so the rest of the app is unchanged. ---------- */
-/* Two soft washes of Shoal's blue and sand, greyed down. Never reaches white, so white tiles read as solid. */
+/* Soft Shoal blue and butter cream. Never reaches white, so white rows read as solid. */
 .kit2 { position: absolute; inset: 0; display: flex; flex-direction: column;
   background:
-    radial-gradient(120% 70% at 0% 0%, #d9e3ee 0%, rgba(217, 227, 238, 0) 70%),
-    radial-gradient(110% 75% at 100% 100%, #e9dfd2 0%, rgba(233, 223, 210, 0) 70%),
-    #e8e7e4; }
+    radial-gradient(120% 70% at 0% 0%, #dde8f6 0%, rgba(221, 232, 246, 0) 70%),
+    radial-gradient(110% 75% at 100% 100%, #f8edd6 0%, rgba(248, 237, 214, 0) 70%),
+    #f2f1ee; }
 .kit2 .navtop { flex: none; }
 .kit2 .content { padding-bottom: 40px; }
 .k-look { margin-left: auto; height: 30px; padding: 0 12px; border-radius: 15px; background: #fff; font-size: 12.5px; font-weight: 600; color: var(--muted); }
 .kit2 .title { margin-bottom: 4px; }
-.k-status { display: flex; align-items: center; gap: 7px; margin: 0 0 18px; font-size: 13.5px; color: var(--muted); }
-.k-status > i, .k-lab > i { width: 7px; height: 7px; border-radius: 50%; background: #3fae6a; flex: none; }
-.k-status > i.warn, .k-lab > i.warn { background: #e08a1e; }
+.k-status { display: flex; align-items: center; gap: 7px; margin: 0 0 16px; font-size: 13.5px; color: var(--muted); }
+.k-status > i { width: 7px; height: 7px; border-radius: 50%; background: #3fae6a; flex: none; }
 
-.k-tile { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; width: 100%; padding: 16px; text-align: left; background: #fff; border-radius: 26px; box-shadow: 0 1px 2px rgba(20, 22, 26, 0.04); color: var(--ink); }
-button.k-tile:active { transform: scale(0.985); }
-.k-lab { display: flex; align-items: center; gap: 7px; width: 100%; font-size: 13px; font-weight: 500; color: var(--muted); }
-.k-lab .switch { margin-left: auto; transform: scale(0.82); transform-origin: right center; }
-.k-big { font-family: "Figtree", sans-serif; font-weight: 600; font-size: 34px; line-height: 1; letter-spacing: -1px; font-variant-numeric: tabular-nums; }
-.k-big small, .k-stats b small { font-size: 0.5em; font-weight: 500; letter-spacing: 0; margin-left: 1px; color: var(--muted); }
-.k-mid { font-family: "Figtree", sans-serif; font-weight: 600; font-size: 20px; line-height: 1.2; letter-spacing: -0.3px; }
-.k-note { font-size: 12.5px; line-height: 1.35; color: var(--muted); }
-.k-note .bolt { vertical-align: -2px; margin-right: 2px; }
-.k-row { display: flex; align-items: center; gap: 12px; width: 100%; }
-.k-row .k-note { flex: 1; }
-
-.k-hero { padding: 22px 16px 16px; align-items: stretch; margin-bottom: 10px; }
-.k-hero .shelf-jars { width: 100%; flex-wrap: nowrap; justify-content: space-between; }
-.k-stats { display: grid; grid-template-columns: repeat(3, 1fr); margin-top: 14px; padding-top: 14px; border-top: 1px solid #efeeea; }
-.k-stats span { display: flex; flex-direction: column; gap: 2px; padding-left: 12px; }
-.k-stats span + span { border-left: 1px solid #efeeea; }
-.k-stats b { font-weight: 600; font-size: 22px; letter-spacing: -0.5px; font-variant-numeric: tabular-nums; }
-.k-stats small { font-size: 12px; color: var(--muted); }
-
-.k-alert { margin-bottom: 10px; }
+/* Alert: a notification. Tinted, with an icon and one action, unlike anything else on the screen. */
+.k-alert { display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px 12px 12px 14px; margin-bottom: 18px; text-align: left; border-radius: 18px; background: #fff4e0; border: 1px solid #f1d39b; color: var(--ink); }
+.k-alert-ic { width: 26px; height: 26px; flex: none; border-radius: 50%; display: grid; place-items: center; background: #e08a1e; color: #fff; font-weight: 800; font-size: 14px; }
+.k-alert .tl-txt { flex: 1; }
+.k-alert .n { font-weight: 600; font-size: 14.5px; }
+.k-alert .m { font-size: 12.5px; color: #8a5a14; }
 .k-pill { flex: none; height: 34px; padding: 0 16px; border-radius: 17px; display: inline-flex; align-items: center; justify-content: center; background: #ecebe7; color: var(--ink); font-size: 13.5px; font-weight: 600; }
 .k-pill.dark { background: #1d2025; color: #fff; }
-.k-pill.big { height: 50px; border-radius: 25px; font-size: 15px; flex: 1; }
 
-.k-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.k-grid .wide { grid-column: 1 / -1; }
-.k-grid .k-tile { min-height: 132px; }
-.k-glow { min-height: 0 !important; }
-.k-seg { margin-left: auto; display: flex; padding: 3px; border-radius: 18px; background: #f1f0ed; }
-.k-seg button { height: 30px; padding: 0 14px; border-radius: 15px; font-size: 13px; font-weight: 600; color: var(--muted); }
+/* Glow: the one control up top, right above the jars it changes. */
+.k-glow { display: flex; align-items: center; gap: 12px; }
+.k-glow-lab { font-size: 15px; font-weight: 600; }
+.k-seg { margin-left: auto; flex: 1; max-width: 240px; display: flex; padding: 3px; border-radius: 20px; background: #fff; box-shadow: 0 1px 2px rgba(20, 22, 26, 0.05); }
+.k-seg button { flex: 1; height: 34px; border-radius: 17px; font-size: 13.5px; font-weight: 600; color: var(--muted); }
 .k-seg button.on { background: #1d2025; color: #fff; }
-.k-stones { display: flex; gap: 6px; align-items: center; margin-bottom: 2px; }
-.k-grid .k-tile > .k-lab { margin-bottom: auto; }
-.k-note .bolt, .k-chg .bolt { color: #3fae6a; }
 
-.k-head { margin: 22px 4px 10px; font-size: 13px; font-weight: 600; color: var(--muted); }
-.k-list { padding: 4px 16px; gap: 0; }
-.k-li { display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px 0; }
-.k-li + .k-li { border-top: 1px solid #efeeea; }
-.k-li .tl-txt { flex: 1; }
-.k-chg { display: inline-flex; align-items: center; gap: 3px; font-size: 12.5px; font-weight: 600; color: var(--muted); }
-.k-actions { display: flex; gap: 10px; margin: 18px 0 6px; }
+/* Information: flat on the background. No card, no shadow, nothing that looks tappable. */
+.k-info { margin: 18px 0 22px; }
+.k-info .shelf-jars { width: 100%; flex-wrap: nowrap; justify-content: space-between; }
+.k-stats { display: flex; justify-content: center; gap: 18px; margin-top: 14px; font-size: 13px; color: var(--muted); }
+.k-stats b { color: var(--ink); font-weight: 600; margin-right: 4px; font-variant-numeric: tabular-nums; }
+
+/* Settings: white grouped rows, each with a switch or an arrow. */
+.k-group { background: #fff; border-radius: 20px; padding: 0 16px; margin-bottom: 12px; box-shadow: 0 1px 2px rgba(20, 22, 26, 0.04); }
+.k-set { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 56px; padding: 10px 0; text-align: left; color: var(--ink); }
+.k-set + .k-set { border-top: 1px solid #efeeea; }
+.k-set .tl-txt { flex: 1; }
+.k-set .n { font-size: 15px; font-weight: 500; }
+.k-set .m { font-size: 12.5px; color: var(--muted); }
+.k-stones { display: flex; gap: 4px; align-items: center; }
+.kit2 .btn-text.center { margin-top: 6px; }
 
 /* Flat stones: solid color with one soft top light and a small contact shadow. No airbrushed halo. */
 .kit2 .gem { background: linear-gradient(180deg, color-mix(in srgb, var(--hi) 55%, var(--mid)) 0%, var(--mid) 45%, color-mix(in srgb, var(--mid) 70%, var(--lo)) 100%);
@@ -1545,4 +1532,3 @@ button.k-tile:active { transform: scale(0.985); }
 .kit2 .shelf-jars.glow-dim .gem:not(.done) { filter: saturate(0.7) brightness(0.97); }
 .kit2 .shelf-jars.glow-off .gem:not(.done) { filter: saturate(0.25); }
 .kit2 .rjar .glassbox::before { background: linear-gradient(90deg, rgba(20, 22, 26, 0.03), rgba(20, 22, 26, 0.01) 40%, rgba(20, 22, 26, 0.04)); border-color: rgba(20, 22, 26, 0.12); box-shadow: inset 0 -4px 0 rgba(20, 22, 26, 0.05); }
-.k-actions .k-pill:not(.dark) { background: #fff; }

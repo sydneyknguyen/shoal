@@ -1,7 +1,7 @@
 /* Shoal: small celebrations. Sending thanks in Shoal is an event, not a toast: the screen softens,
    a glow rises from the button while it sends, then it blooms into a card of what that person got
    done, with the count ticking up. Finishing your own task gets the same count, for you.
-   Loaded after motion.js; wraps sendThanks and the done screen from main-app.js. */
+   Loaded after motion.js; thanks.js calls celebrateThanks, and this wraps the done screen from main-app.js. */
 
 const sparkle = (cls) => `<svg class="spark ${cls}" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 0c1 7.6 4.4 11 12 12-7.6 1-11 4.4-12 12-1-7.6-4.4-11-12-12C7.6 11 11 7.6 12 0z"/></svg>`;
 
@@ -34,7 +34,7 @@ function countUp(el) {
 
 /* ---------- Thanks sent ---------- */
 
-function thanksCard(f) {
+function thanksCard(f, via) {
   const p = person(f.who), first = p.name.split(" ")[0];
   const did = S.tasks.filter((t) => t.done && t.who === f.who).map((t) => t.n);
   if (!did.includes(f.n)) did.unshift(f.n);
@@ -46,7 +46,7 @@ function thanksCard(f) {
     <h2 class="cheer-h">${esc(first)} did ${n === 1 ? "1 thing" : `${n} things`} this week</h2>
     <ul class="cheer-list">${did.slice(0, 3).map((x, i) => `<li style="--d:${520 + i * 70}ms">${gem("done", { size: "s" })}<span>${esc(x)}</span></li>`).join("")}</ul>
     ${n > 3 ? `<p class="small">and ${n - 3} more</p>` : ""}
-    <p class="small">${esc(possessive(p))} jar glows softly${S.app.shareThanks ? ", and the family sees your thanks" : ""}.</p>
+    <p class="small">${via === "text" ? `${esc(first)} can open your card from the text` : `${esc(possessive(p))} jar glows softly`}${S.app.shareThanks ? ", and the family sees your thanks" : ""}.</p>
     <button class="btn-primary" data-act="cheerClose">Done</button>
   </div>`;
 }
@@ -62,22 +62,20 @@ function showCheer(html) {
   return el;
 }
 
-const sendThanksApp = ACTIONS.sendThanks;
+// Sending holds for a beat so it reads as going somewhere, then it lands. A text has already gone, so it skips the wait.
+function celebrateThanks(f, via = "app") {
+  if (f.task) S.app.thanked[f.task] = true;
+  const el = showCheer(thanksCard(f, via));
+  const quick = matchMedia("(prefers-reduced-motion: reduce)").matches, hold = quick || via !== "app" ? 0 : 1150;
+  setTimeout(() => {
+    back();
+    el.classList.replace("sending", "sent");
+    el.querySelector(".btn-primary").focus({ preventScroll: true });
+    setTimeout(() => el.querySelectorAll(".cheer-count[data-to]").forEach(countUp), quick ? 0 : 380);
+  }, hold);
+}
+
 Object.assign(ACTIONS, {
-  sendThanks: () => {
-    if ((S.app.thankVia || "app") !== "app") return sendThanksApp();
-    const f = S.app.thankFor;
-    if (f.task) S.app.thanked[f.task] = true;
-    const el = showCheer(thanksCard(f));
-    const quick = matchMedia("(prefers-reduced-motion: reduce)").matches;
-    // Sending holds for a beat so it reads as going somewhere, then it lands.
-    setTimeout(() => {
-      back();
-      el.classList.replace("sending", "sent");
-      el.querySelector(".btn-primary").focus({ preventScroll: true });
-      setTimeout(() => el.querySelectorAll(".cheer-count[data-to]").forEach(countUp), quick ? 0 : 380);
-    }, quick ? 0 : 1150);
-  },
   cheerClose: () => {
     const el = document.querySelector(".cheer");
     if (!el) return;
@@ -118,7 +116,3 @@ render = function () {
   wasHeard = listening && S.app.heard; heardOn = listening ? S.screen : null;
   document.querySelectorAll("#screen .cheer-count[data-to]").forEach((el) => setTimeout(() => countUp(el), 450));
 };
-
-NOTES.thanks = ["Say thanks", ["One tap, optional note. Send it in Shoal, by text, or as a reminder to call.",
-  "Sending in Shoal is a small moment: the screen softens and a glow rises while it sends, then it opens into a card of everything they got done this week, with the count ticking up.",
-  "Finishing your own task shows your count too, so you can see how much you've carried."]];

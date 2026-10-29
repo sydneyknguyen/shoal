@@ -1805,6 +1805,74 @@ button, input, textarea { touch-action: manipulation; -webkit-tap-highlight-colo
 @keyframes jarGlow { 0%, 100% { filter: none; } 45% { filter: drop-shadow(0 0 14px rgba(243, 197, 106, 0.85)) drop-shadow(0 0 30px rgba(110, 162, 238, 0.45)) brightness(1.08); } }
 .clear-jar .glassbox .gem { animation: none; }
 
+/* Thank-you card: a theme on top, your own note written on the paper below. */
+.thanks2 .title { margin-bottom: 4px; }
+.ty-card { margin: 18px 0 6px; border-radius: 22px; overflow: hidden; background: #fff; box-shadow: 0 18px 40px -18px rgba(19, 49, 93, 0.35), 0 1px 2px rgba(33, 38, 46, 0.06); transform: rotate(-1.2deg); }
+.ty-art { position: relative; height: 130px; }
+.ty-art svg { display: block; width: 100%; height: 100%; }
+.ty-art.in { position: absolute; inset: 0 0 auto; z-index: 1; animation: artIn 0.42s ease both; }
+.ty-card { position: relative; }
+@keyframes artIn { from { opacity: 0; transform: scale(1.06); } }
+.ty-card:has(.ty-art.in) { animation: cardNudge 0.42s cubic-bezier(.34, 1.56, .64, 1); }
+@keyframes cardNudge { 40% { transform: rotate(0.6deg) scale(1.015); } }
+.ty-paper { display: flex; flex-direction: column; gap: 4px; padding: 14px 18px 16px;
+  background: repeating-linear-gradient(180deg, transparent 0 25px, rgba(32, 112, 217, 0.07) 25px 26px); background-position: 0 32px; }
+.ty-to, .ty-from { font-family: "Fraunces", serif; font-variation-settings: "SOFT" 100, "WONK" 1; color: var(--navy); }
+.ty-to { font-size: 20px; }
+.ty-from { align-self: flex-end; font-size: 16px; font-style: italic; }
+.ty-note { border: 0; outline: 0; resize: none; background: transparent; font: inherit; font-size: 16px; line-height: 26px; color: var(--ink); padding: 0; min-height: 78px; }
+.ty-note::placeholder { color: #9aa3ad; }
+.ty-note:focus, .ty-note:focus-visible { outline: 0; box-shadow: none; }
+.ty-card:focus-within { box-shadow: 0 18px 40px -18px rgba(19, 49, 93, 0.35), 0 0 0 3px rgba(32, 112, 217, 0.28); }
+.ty-themes { display: flex; gap: 10px; margin-bottom: 18px; }
+.ty-themes button { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.ty-sw { width: 100%; aspect-ratio: 1; border-radius: 16px; overflow: hidden; outline: 2px solid transparent; outline-offset: 2px; transition: outline-color 0.2s, transform 0.3s cubic-bezier(.34, 1.56, .64, 1); }
+.ty-sw svg { display: block; width: 100%; height: 100%; }
+.ty-themes button.on .ty-sw { outline-color: var(--blue); transform: scale(1.06); }
+.ty-themes button:active .ty-sw { transform: scale(0.94); }
+.ty-themes em { font-style: normal; font-size: 12px; font-weight: 600; color: var(--muted); }
+.ty-themes button.on em { color: var(--blue-label); }
+.ty-how { margin: -4px 0 0; }
+
+/* iOS Messages, for anything that leaves Shoal by text. System font, iOS sheet motion. */
+.imsg { position: absolute; inset: 0; z-index: 26; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif; background: rgba(0, 0, 0, 0); transition: background 0.38s; }
+.imsg.open { background: rgba(0, 0, 0, 0.28); }
+.im-sheet { position: absolute; left: 0; right: 0; bottom: 0; top: 54px; border-radius: 12px 12px 0 0; background: #fff; display: flex; flex-direction: column; overflow: hidden;
+  transform: translateY(100%); transition: transform 0.38s cubic-bezier(.32, .72, 0, 1); }
+.imsg.open .im-sheet { transform: none; }
+.im-grab { width: 36px; height: 5px; border-radius: 3px; background: #d1d1d6; margin: 6px auto 0; }
+.im-top { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 10px 16px; font-size: 17px; color: #000; }
+.im-cancel { color: #007aff; font-size: 17px; justify-self: start; }
+.im-to { display: flex; align-items: center; gap: 6px; padding: 9px 16px; border-bottom: 0.5px solid #c6c6c8; color: #8e8e93; font-size: 16px; }
+.im-chip { color: #007aff; }
+.im-thread { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; padding: 12px 14px; }
+.im-meta { margin: 0 0 auto; text-align: center; font-size: 11px; color: #8e8e93; }
+.im-meta.right { margin: 2px 2px 0; text-align: right; }
+.im-out { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; opacity: 0; transform: translateY(70px) scale(0.92); transform-origin: bottom right; }
+.imsg.sent .im-out { opacity: 1; transform: none; transition: transform 0.45s cubic-bezier(.32, .72, 0, 1), opacity 0.2s; }
+.im-deliv { opacity: 0; }
+.imsg.sent .im-deliv { opacity: 1; transition: opacity 0.2s 0.6s; }
+.im-link { width: 236px; border-radius: 18px; overflow: hidden; background: #e9e9eb; display: flex; flex-direction: column; }
+.im-art { display: block; height: 110px; }
+.im-art svg { display: block; width: 100%; height: 100%; }
+.im-cap { display: flex; flex-direction: column; padding: 8px 12px 9px; font-size: 13px; color: #000; }
+.im-cap b { font-weight: 600; }
+.im-cap small { color: #8e8e93; font-size: 12px; }
+.im-bub { margin: 0; max-width: 250px; padding: 8px 12px; border-radius: 18px; background: #007aff; color: #fff; font-size: 16px; line-height: 21px; }
+.im-bar { display: flex; align-items: flex-end; gap: 8px; padding: 8px 10px 34px; }
+.im-plus { flex: none; width: 34px; height: 34px; border-radius: 50%; background: #e9e9eb; color: #8e8e93; display: grid; place-items: center; font-size: 22px; }
+.im-field { flex: 1; display: flex; flex-direction: column; gap: 6px; padding: 6px 6px 7px; border: 1px solid #c6c6c8; border-radius: 18px; transition: opacity 0.2s; }
+.im-link.sm { width: 150px; border-radius: 13px; }
+.im-link.sm .im-art { height: 62px; }
+.im-link.sm .im-cap { padding: 5px 8px 6px; font-size: 11px; }
+.im-link.sm .im-cap small { font-size: 10px; }
+.im-text { padding: 0 6px; font-size: 16px; line-height: 21px; color: #000; }
+.im-ph { color: #c7c7cc; }
+.imsg.sent .im-field { opacity: 0; }
+.im-send { flex: none; width: 30px; height: 30px; margin-bottom: 4px; border-radius: 50%; background: #007aff; display: grid; place-items: center; }
+.im-send:active { transform: scale(0.9); }
+.imsg.sent .im-send { background: #c7c7cc; }
+
 @media (prefers-reduced-motion: reduce) {
   .tab-blob.move, .tabbar.moved button.on svg, .switch i, .switch.flip-on i, .switch.flip-off i, .tline.just-done, .tline.just-done .gem { animation: none; transition: none; }
   .screen[class*="enter-"], .screen[class*="enter-"] * { animation-duration: 0.01s !important; }

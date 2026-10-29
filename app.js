@@ -5,12 +5,12 @@ const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&
 
 /* ---------- Content ---------- */
 
+// What they're living with. Hospice isn't here: it's a stage of care, not an illness, so it's asked as a stage below.
 const CONDITIONS = [
-  { id: "hospice", t: "Hospice or end of life", d: "Comfort care at home" },
   { id: "dementia", t: "Dementia or memory loss", d: "Alzheimer's, confusion, wandering" },
-  { id: "cancer", t: "Cancer treatment", d: "Chemo, radiation, recovery" },
-  { id: "aging", t: "Getting older", d: "Needs more help day to day" },
-  { id: "other", t: "Something else", d: "Surgery recovery, stroke, other" },
+  { id: "cancer", t: "Cancer", d: "Chemo, radiation, recovery" },
+  { id: "aging", t: "Getting older and frail", d: "Needs more help day to day" },
+  { id: "other", t: "Something else", d: "Heart or lung illness, stroke, surgery recovery" },
 ];
 
 // Where things are right now. Each stage has a starter set, picked with hospice nurses and doulas,
@@ -18,7 +18,7 @@ const CONDITIONS = [
 const STAGES = [
   { id: "start", t: "Just starting", d: "A new diagnosis, or help is new" },
   { id: "daily", t: "Day to day", d: "Ongoing care, settling into a routine" },
-  { id: "final", t: "Final months", d: "Hospice or comfort care" },
+  { id: "final", t: "In hospice or final months", d: "Comfort care, at home or in a facility" },
 ];
 const STARTER = {
   start: ["Doctor appointments", "Keep a list of meds and doses", "Keep the care binder up to date", "Insurance calls", "Set up a meal train", "Keep family updated", "Safety check: rails, rugs, lights"],
@@ -27,7 +27,9 @@ const STARTER = {
 };
 // Pebble is optional. Off, everything still works by hand: the starter set, sizes and dates stay, the guesses don't.
 const pebbleOn = () => !S.pebbleOff;
-const stageOf = () => S.stage || (S.conditions.includes("hospice") ? "final" : "daily");
+const stageOf = () => S.stage || "daily";
+// "hospice" tasks follow the stage; the rest follow the conditions picked.
+const hasCond = (c) => (c === "hospice" ? stageOf() === "final" : S.conditions.includes(c));
 
 // w = weight (1 light, 2 medium, 3 heavy). k = skill tag. r = repeats by default ("Needed" = only as it comes up).
 // c = only suggested for these conditions (none = everyone). p = Pebble pre-picks it.
@@ -337,7 +339,7 @@ function seedTasks() {
   S.splitTouched = false;
   Object.entries(TASK_LIBRARY).forEach(([cat, items]) => {
     items.forEach((t) => {
-      if (t.c && !t.c.some((c) => S.conditions.includes(c))) return;
+      if (t.c && !t.c.some(hasCond)) return;
       const kids = S.people.some((p) => p.tier === "kid");
       const starter = STARTER[stageOf()].includes(t.n);
       const pebble = !starter && S.path === "pebble" && pebbleOn()
@@ -545,7 +547,10 @@ SCREENS.about = () => `${topbar({ skip: false })}
     <h1 class="title">Who are you caring for?</h1>
     <p class="sub">This picks the starter tasks. You can change any of them.</p>
     <label class="card cond-name"><span>Name</span><input data-input="lovedOne" value="${esc(S.lovedOne)}" maxlength="20" aria-label="Their name"></label>
-    <p class="label">What are they facing? <span class="small">Pick all that apply</span></p>
+    <p class="label">Where are things right now?</p>
+    ${STAGES.map((g) => `<button class="option ${S.stage === g.id ? "on" : ""}" data-act="stage" data-id="${g.id}">
+      <span class="txt"><span class="t">${g.t}</span><span class="d">${g.d}</span></span>${check(S.stage === g.id)}</button>`).join("")}
+    <p class="label">What are they living with? <span class="small">Optional · pick any</span></p>
     ${CONDITIONS.map((c) => {
       const on = S.conditions.includes(c.id);
       return `<button class="option ${on ? "on" : ""}" data-act="condition" data-id="${c.id}">
@@ -553,11 +558,8 @@ SCREENS.about = () => `${topbar({ skip: false })}
     </button>`;
     }).join("")}
     ${writeIns("cond", "Write your own")}
-    <p class="label">Where are things right now?</p>
-    ${STAGES.map((g) => `<button class="option ${stageOf() === g.id ? "on" : ""}" data-act="stage" data-id="${g.id}">
-      <span class="txt"><span class="t">${g.t}</span><span class="d">${g.d}</span></span>${check(stageOf() === g.id)}</button>`).join("")}
   </div>
-  ${footer("Next", { disabled: !S.lovedOne.trim() || !(S.conditions.length || S.own.cond.length) })}`;
+  ${footer("Next", { disabled: !S.lovedOne.trim() || !S.stage })}`;
 
 SCREENS.them = () => `${topbar()}
   <div class="content">
@@ -982,7 +984,7 @@ const NOTES = {
   welcome: ["Welcome", ["Onboarding is now three steps, about 2 minutes: who you're caring for, who's helping, and stone colors.", "Testers felt the old 11-step setup was too much while grieving. Tasks, calendar, the split, and the stones moved to a checklist on Home."]],
   taskStart: ["Start your list", ["First stop of “Add what needs doing” on the Home checklist.", "No “Recommended” badge and no AI up front: “Start from suggestions” is described as faster. “Who suggests the tasks?” explains Pebble for anyone who wants to know."]],
   colors: ["Stone colors", ["Last onboarding step. Families pick colors that mean something to them, so the glow is explained once, with their own colors.", "Changeable anytime in Settings or the Home kit."]],
-  about: ["Care situation", ["Starts blank: no name or condition filled in.", "Pick more than one condition; general tasks are always suggested, plus ones for each condition."]],
+  about: ["Care situation", ["Starts blank: no name, stage or condition filled in.", "Stage comes first: just starting, day to day, or in hospice. Hospice is a stage of care, not an illness, so it isn't in the condition list.", "Conditions are optional and you can pick more than one; general tasks are always suggested, plus ones for each condition."]],
   them: ["What matters to them", ["Pebble path only. Starts blank. Answers pre-pick tasks (e.g. “Their wishes in order” adds the advance-directive task)."]],
   you: ["What matters to you", ["Pebble path only. “Helping from far away” leans Pebble toward phone and paperwork tasks."]],
   tasks: ["Tasks before people", ["Six category tabs: Medical, Care & visits, Home & meals, Rides & errands, Money & paperwork, and Kids & teens.", "A starter set for the stage you're in (just starting, day to day, final months), put together with hospice nurses and doulas, sits on top with Pebble's picks; the rest fold under More suggestions. Kid tasks are their own tab and never urgent.", "Each task has a size (small, medium, large). Pebble picks one, even for write-ins; tap it to change. The size sets the stone: bigger tasks get bigger stones in the jar and in the real kit, and it feeds the fair split."]],

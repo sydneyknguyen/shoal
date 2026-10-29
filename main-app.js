@@ -76,6 +76,7 @@ function ensureAppData() {
   const demo = !S.setup && !S.tasks.some((t) => t.on);
   if (demo) {
     S.kit ??= "yes"; // the sample family shows the physical kit too
+    S.stage ??= "final"; // and is in hospice, which the sample tasks assume
     if (!S.lovedOne) S.lovedOne = "Dad";
     DEMO_PEOPLE.forEach((p) => {
       if (!S.people.some((x) => x.name === p.name)) S.people.push({ ...p, note: "", invited: true, about: p.about === "Lives with " ? `Lives with ${L()}` : p.about });
@@ -713,7 +714,7 @@ SCREENS.peopleTab = () => {
         <span class="circle-ico">${icon("peopleTab")}</span>
         <span class="tl-txt"><span class="n">Trusted circle</span><span class="m"><span class="stack">${circle.slice(0, 4).map((p) => avatar(p, "s20")).join("")}</span>${circle.length ? `${esc(circle[0].name)}${circle.length > 1 ? ` + ${circle.length - 1} other${circle.length > 2 ? "s" : ""}` : ""} · ` : "No one yet · "}${((n) => `${n} task${n === 1 ? "" : "s"}`)(circle.reduce((n, p) => n + mine(p.id).length, 0))}</span></span>
         <span class="badge">On</span>${chev}</button>
-      ${S.conditions.includes("hospice") || S.app.demo ? `<button class="prow" data-act="roleGo" data-to="asNurse"><span class="avatar s36">A</span><span class="tl-txt"><span class="n">Hospice nurse</span><span class="m">Ana · see what she sees</span></span>${chev}</button>` : ""}
+      ${stageOf() === "final" || S.app.demo ? `<button class="prow" data-act="roleGo" data-to="asNurse"><span class="avatar s36">A</span><span class="tl-txt"><span class="n">Hospice nurse</span><span class="m">Ana · see what she sees</span></span>${chev}</button>` : ""}
       <button class="prow" data-act="go" data-to="volunteerCode"><span class="circle-ico"><img src="${A("lock.svg")}" alt=""></span><span class="tl-txt"><span class="n">Volunteer code</span><span class="m">${S.app.prefs.publicCode ? `On · code ${PUBLIC_CODE}` : "Let neighbors and friends help from anywhere"}</span></span><span class="badge ${S.app.prefs.publicCode ? "" : "plain"}">${S.app.prefs.publicCode ? "On" : "Off"}</span>${chev}</button>
     </div>
   </div>

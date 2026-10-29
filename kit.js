@@ -5,13 +5,13 @@
 const kitOld = SCREENS.kit;
 
 // A thin progress ring. It fills in from empty when it first draws.
-function ring(f, size, w, cls = "") {
+function kitRing(f, size, w, cls = "") {
   const r = (size - w) / 2, c = 2 * Math.PI * r, m = size / 2;
   return `<svg class="k-ring ${cls}" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" aria-hidden="true">
     <circle class="trk" cx="${m}" cy="${m}" r="${r}" stroke-width="${w}"/>
     <circle class="val" cx="${m}" cy="${m}" r="${r}" stroke-width="${w}" stroke-dasharray="${c}" stroke-dashoffset="${c * (1 - Math.max(0, Math.min(1, f)))}" style="--c:${c}" transform="rotate(-90 ${m} ${m})"/></svg>`;
 }
-const reading = (f, val, lab, cls = "") => `<span class="k-r ${cls}">${ring(f, 72, 5)}<b><span>${val}</span></b><em>${lab}</em></span>`;
+const reading = (f, val, lab, cls = "") => `<span class="k-r ${cls}">${kitRing(f, 72, 5)}<b><span>${val}</span></b><em>${lab}</em></span>`;
 
 // Three sizes, one rule. Readings sit flat on the background (nothing to tap). Tiles are things you
 // change: the jars sit up top with their Glow control, two tiles are night hours and colors, and
@@ -32,7 +32,7 @@ function kitNew() {
     <p class="k-status"><i></i>Base connected</p>
 
     ${out.map((st) => `<button class="k-alert" data-act="openStone" data-id="${st.id}">
-      <span class="k-alert-ic" aria-hidden="true">${ring(st.battery / 100, 34, 3)}<i>!</i></span>
+      <span class="k-alert-ic" aria-hidden="true">${kitRing(st.battery / 100, 34, 3)}<i>!</i></span>
       ${txt(`Stone ${String(st.id).padStart(2, "0")} is ${outLabel(st)}`, `${st.battery}% · not charging`)}
       <span class="k-pill dark">Find</span></button>`).join("")}
 

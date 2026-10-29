@@ -1596,9 +1596,57 @@ button, input, textarea { touch-action: manipulation; -webkit-tap-highlight-colo
 .kit2 .switch:not(.on) { background: rgba(255, 255, 255, 0.18); }
 
 /* Flat stones: solid color with one soft top light and a small contact shadow. No airbrushed halo. */
-.kit2 .gem { background: linear-gradient(180deg, color-mix(in srgb, var(--hi) 55%, var(--mid)) 0%, var(--mid) 45%, color-mix(in srgb, var(--mid) 70%, var(--lo)) 100%);
+.kit2 .gem, .home2 .gem { background: linear-gradient(180deg, color-mix(in srgb, var(--hi) 55%, var(--mid)) 0%, var(--mid) 45%, color-mix(in srgb, var(--mid) 70%, var(--lo)) 100%);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7), inset 0 -1.5px 0 rgba(19, 49, 93, 0.08), 0 1px 1.5px rgba(19, 49, 93, 0.18); }
-.kit2 .gem.done { background: linear-gradient(180deg, #e3e4e6, #c9cbcf); }
+.kit2 .gem.done, .home2 .gem.done { background: linear-gradient(180deg, #e3e4e6, #c9cbcf); }
 .kit2 .shelf-jars.glow-dim .gem:not(.done) { filter: saturate(0.7) brightness(0.97); }
 .kit2 .shelf-jars.glow-off .gem:not(.done) { filter: saturate(0.25); }
 .kit2 .rjar .glassbox::before { background: linear-gradient(90deg, rgba(20, 22, 26, 0.03), rgba(20, 22, 26, 0.01) 40%, rgba(20, 22, 26, 0.04)); border-color: rgba(20, 22, 26, 0.12); box-shadow: inset 0 -4px 0 rgba(20, 22, 26, 0.05); }
+
+/* ---------- Home, overview look (test). A bright brand ombre with widgets in a few sizes. ---------- */
+.home2 { position: absolute; inset: 0; display: flex; flex-direction: column;
+  background:
+    radial-gradient(110% 60% at 0% 0%, #cfe2fb 0%, rgba(207, 226, 251, 0) 68%),
+    radial-gradient(90% 55% at 100% 62%, #fde9bd 0%, rgba(253, 233, 189, 0) 70%),
+    radial-gradient(80% 45% at 0% 100%, #d9e8fb 0%, rgba(217, 232, 251, 0) 70%),
+    #f8f6f1; }
+.home2 .title { margin-bottom: 14px; }
+.home2 .k-look { margin-left: 0; margin-right: 4px; align-self: center; background: rgba(255, 255, 255, 0.75); }
+.avatar.s28 { width: 28px; height: 28px; }
+
+/* Notes: banners, tinted by what they are. Urgent follows the urgent stone color. */
+.h-note { display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px 12px 12px 14px; margin-bottom: 10px; text-align: left; border-radius: 18px; color: var(--ink);
+  background: color-mix(in srgb, var(--u, #f2b84b) 16%, #fff); border: 1px solid color-mix(in srgb, var(--u, #f2b84b) 45%, #fff); }
+.h-note .tl-txt { flex: 1; min-width: 0; }
+.h-note .n { font-weight: 600; font-size: 14.5px; }
+.h-note .m { font-size: 12.5px; color: color-mix(in srgb, var(--u, #f2b84b) 50%, #3a3020); }
+.h-note.done { background: rgba(255, 255, 255, 0.7); border-color: rgba(255, 255, 255, 0.9); }
+.h-note.done .n { font-weight: 500; font-size: 14px; }
+.h-note .k-pill:not(.dark) { background: #fff; box-shadow: 0 0 0 1px rgba(19, 49, 93, 0.1); }
+
+/* The jars sit straight on the ombre, like the kit. */
+.h-jars { margin: 8px 0 18px; }
+.h-jars .shelf-jars { width: 100%; flex-wrap: nowrap; justify-content: space-between; gap: 6px; }
+
+/* Widgets: frosted white, because the ombre behind gives the blur something to show. */
+.h-w { display: flex; flex-direction: column; align-items: stretch; text-align: left; width: 100%; padding: 16px; border-radius: 26px; color: var(--ink);
+  background: rgba(255, 255, 255, 0.72); border: 1px solid rgba(255, 255, 255, 0.9); -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px);
+  box-shadow: 0 1px 2px rgba(19, 49, 93, 0.04), 0 10px 26px -14px rgba(19, 49, 93, 0.18); }
+.home2 .k-grid { margin-bottom: 12px; }
+.home2 .k-grid .h-w { min-height: 150px; }
+.h-num { position: relative; display: flex; align-items: center; gap: 10px; margin-top: auto; padding-top: 14px; }
+.h-num b { font-family: Figtree, sans-serif; font-size: 34px; font-weight: 600; letter-spacing: -0.02em; line-height: 1; font-variant-numeric: tabular-nums; }
+.h-num small { font-size: 0.5em; font-weight: 500; color: var(--muted); margin-left: 2px; }
+.h-avs { display: flex; margin-top: auto; padding-top: 14px; }
+.h-avs .avatar { margin-right: -8px; box-shadow: 0 0 0 2px #fff; }
+.h-w.wide .load-chart { margin-top: 6px; }
+.h-w.wide .tlist { margin-top: 6px; }
+
+/* The kit widget is a small piece of the kit screen: same night blue, so you know where it goes. */
+.h-kit { --ink: #f1f5fb; --muted: rgba(214, 226, 243, 0.66); color: var(--ink); border-color: rgba(255, 255, 255, 0.08);
+  background: radial-gradient(120% 80% at 0% 0%, #2b5288 0%, rgba(43, 82, 136, 0) 70%), linear-gradient(180deg, #142a4c, #0b1730); }
+.h-kit .k-go { background: rgba(255, 255, 255, 0.12); }
+.h-kit .chev { filter: brightness(0) invert(1); opacity: 0.7; }
+.h-kit .k-ring .trk { stroke: rgba(255, 255, 255, 0.14); }
+.h-kit .k-ring .val { stroke: #7fb1ff; }
+.h-warn { color: #f5c47e; font-weight: 600; }

@@ -127,7 +127,7 @@ SCREENS.colors = () => `${topbar()}
     ${pickerBody()}
     <p class="small cp-later">Each stone glows to show where a task stands. You can change these anytime in Settings.</p>
   </div>
-  ${footer("Go to Home")}`;
+  ${footer("Confirm colors", { act: "confirmColors" })}`;
 
 const sheetOpen = () => document.getElementById("sheet").classList.contains("open");
 
@@ -142,6 +142,8 @@ Object.assign(ACTIONS, {
     render(); if (sheetOpen()) colorSheet();
   },
   pickPreset: (d) => { S.colors = { ...PRESETS.find((p) => p.id === d.id).c }; S.colorCustom = false; render(); if (sheetOpen()) colorSheet(); },
+  // Says out loud that the choice is saved before onboarding moves on to Home.
+  confirmColors: () => { const p = presetOn(); ACTIONS.next(); toast(`Stone colors saved${p ? `: ${p.t}` : ""}`); },
   customColors: () => { S.colorCustom = true; render(); if (sheetOpen()) colorSheet(); },
   presetView: () => { S.colorCustom = false; render(); if (sheetOpen()) colorSheet(); },
   resetColors: () => { S.colors = { ...DEFAULT_COLORS }; S.colorCustom = false; render(); if (sheetOpen()) colorSheet(); },

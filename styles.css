@@ -1441,3 +1441,33 @@ button, input, textarea { touch-action: manipulation; -webkit-tap-highlight-colo
 .pend-head .m { font-size: 13px; color: var(--muted); }
 .sheet .btn-text.danger { color: var(--alert); }
 .sheet .actions.col .btn-soft { flex: none; height: 44px; justify-content: center; }
+
+/* Stone colors: presets, named swatches, look-alike warning */
+.cp-label { margin: 18px 0 8px; }
+/* Live preview: one jar in the family's colors, with what each color means. */
+.cp-preview { position: sticky; top: 0; z-index: 3; background: #fff; -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: 0 6px 18px rgba(19, 49, 93, 0.08); display: flex; align-items: center; gap: 18px; padding: 12px 18px 10px; margin-top: 18px; }
+.cp-jar { flex: none; zoom: 0.9; }
+.cp-jar .gem, .pre-jar .gem { animation: none; }
+.cp-legend { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; flex: 1; }
+.cp-legend li { display: flex; align-items: center; gap: 10px; font-size: 13.5px; color: var(--muted); }
+.cp-legend li .gem { flex: none; }
+.cp-legend b { color: var(--ink); font-weight: 600; margin-right: 6px; }
+/* Presets: a 2x2 grid of cards, each with a jar in its own colors. */
+.presets { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.preset { position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 12px; text-align: left; width: 100%; border: 1.5px solid transparent; }
+.preset.on { border-color: var(--blue); background: rgba(255, 255, 255, 0.95); }
+.pre-jar { align-self: center; zoom: 0.8; margin: 16px 0 4px; }
+.preset .t { font-weight: 600; font-size: 14.5px; color: var(--ink); }
+.preset .d { font-size: 12px; color: var(--muted); line-height: 1.35; }
+.preset .d.names { color: var(--ink); opacity: 0.75; margin-top: 2px; }
+.preset .rec { position: absolute; top: 9px; left: 10px; padding: 1px 6px; border-radius: 6px; background: var(--blue-tint); color: var(--blue); font-size: 10.5px; font-weight: 700; }
+.pre-check { position: absolute; top: 8px; right: 8px; }
+.swatches.named { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px 4px; padding-left: 0; }
+.sw-cell { display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 2px 0; }
+.sw-cell .sw-name { font-size: 12px; color: var(--muted); white-space: nowrap; }
+.sw-cell.on .sw-name { color: var(--ink); font-weight: 600; }
+.sw-cell .swatch::after { display: none; }
+.cp-warn { margin: 6px 0 10px; padding: 10px 12px; border-radius: 12px; background: var(--amber-tint); color: #6e4a0b; font-size: 13px; line-height: 1.45; }
+.cp-warn .linkish { font-size: inherit; }
+.cp-marks { margin: 4px 0 12px; color: var(--muted); }
+.cp-sheet { margin-top: 8px; }

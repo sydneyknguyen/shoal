@@ -39,25 +39,72 @@ function applyColors() {
 }
 const baseRender = render;
 render = function () { applyColors(); baseRender(); };
+// Presets. Distances were checked by simulating each type of color blindness on these exact colors.
+const PRESETS = [
+  { id: "shoal", t: "Shoal", d: "The original colors", c: { urgent: "honey", progress: "ice", open: "white" } },
+  { id: "clear", t: "Easy to tell apart", d: "Works for every kind of color blindness", rec: true, c: { urgent: "honey", progress: "purple", open: "white" } },
+  { id: "rg", t: "Red-green safe", d: "Protanopia and deuteranopia, the most common kinds", c: { urgent: "orange", progress: "purple", open: "white" } },
+  { id: "by", t: "Blue-yellow safe", d: "Tritanopia, which is rare", c: { urgent: "red", progress: "honey", open: "white" } },
+];
+// Pairs that can look alike. "all" means even with typical color vision.
+const LOOK_ALIKE = [
+  ["ice", "white", "all"], ["honey", "orange", "red-green"], ["red", "green", "red-green"],
+  ["orange", "green", "red-green"], ["orange", "pink", "blue-yellow"], ["ice", "green", "blue-yellow"],
+];
+const cap = (n) => n[0].toUpperCase() + n.slice(1);
+const presetOn = () => PRESETS.find((p) => COLOR_STATES.every((s) => p.c[s] === stoneColors()[s]));
+function lookAlike() {
+  const c = COLOR_STATES.map((s) => stoneColors()[s]);
+  return LOOK_ALIKE.filter(([a, b]) => c.includes(a) && c.includes(b));
+}
 const colorSummary = () => COLOR_STATES.map((s) => `${STATE[s][0]} ${PALETTE[stoneColors()[s]].name}`).join(" · ");
 const urgentHex = () => PALETTE[stoneColors().urgent].lo;
 
 /* ---------- Picker ---------- */
 
-function colorRows() {
+// A small jar of stones. With a preset's colors, each stone carries them inline; without, it follows the family's.
+// State and size of each stone, big ones at the bottom.
+const SAMPLE_JAR = [["done", 3], ["done", 2], ["progress", 3], ["urgent", 2], ["open", 2], ["progress", 1], ["open", 1], ["urgent", 1], ["progress", 2]];
+function sampleJar(c) {
+  const pos = jarSlots(SAMPLE_JAR.map(([, w]) => ({ w })));
+  const vars = (s) => { if (!c || s === "done") return ""; const p = PALETTE[c[s]]; return `;--hi:${p.hi};--mid:${p.mid};--lo:${p.lo};--glow:${p.glow}`; };
+  return `<div class="rjar"><div class="glassbox"><img class="glass" src="${A("jar.png")}" alt="">
+    ${SAMPLE_JAR.map(([s, w], i) => !pos[i] ? "" : gem(s, { size: "s", cls: `w${w} still ${s === "open" ? "nobody" : ""}`, style: `left:${pos[i].x}px;top:${pos[i].y}px${vars(s)}` })).join("")}</div></div>`;
+}
+// What the family's jar looks like right now. Changes as soon as a color does.
+function colorPreview() {
   const c = stoneColors();
+  return `<div class="card r20 cp-preview" aria-label="Preview of a jar in your colors">
+    <div class="cp-jar">${sampleJar()}</div>
+    <ul class="cp-legend">${[...COLOR_STATES, "done"].map((s) => `<li>${gem(s, { size: "xs", cls: s === "open" ? "nobody" : "" })}<span><b>${STATE[s][0]}</b>${s === "done" ? "Off" : cap(PALETTE[c[s]].name)}</span></li>`).join("")}</ul>
+  </div>`;
+}
+function presetRows() {
+  const on = presetOn();
+  return `<p class="label cp-label">Start from a preset</p>
+    <div class="presets" role="radiogroup" aria-label="Color presets">${PRESETS.map((p) => `<button class="card preset ${on === p ? "on" : ""}" role="radio" aria-checked="${on === p}" data-act="pickPreset" data-id="${p.id}">
+      ${p.rec ? `<span class="rec">Recommended</span>` : ""}${on === p ? `<span class="pre-check">${check(true)}</span>` : ""}
+      <span class="pre-jar">${sampleJar(p.c)}</span>
+      <span class="t">${p.t}</span><span class="d">${p.d}</span><span class="d names">${COLOR_STATES.map((s) => cap(PALETTE[p.c[s]].name)).join(" · ")}</span></button>`).join("")}</div>`;
+}
+function colorRows() {
+  const c = stoneColors(), warn = lookAlike();
   return `${COLOR_STATES.map((s) => `<div class="cp-row">
-      <div class="cp-head">${gem(s, { size: "s" })}<span><b>${STATE[s][0]}</b><small>${STATE[s][2]}</small></span></div>
-      <div class="swatches" role="radiogroup" aria-label="${STATE[s][0]} color">${Object.entries(PALETTE).map(([k, p]) => `<button class="swatch ${c[s] === k ? "on" : ""}" role="radio" aria-checked="${c[s] === k}" aria-label="${p.name}" data-act="pickColor" data-id="${s}" data-color="${k}" style="--sw:${p.mid};--swlo:${p.lo}"></button>`).join("")}</div>
+      <div class="cp-head">${gem(s, { size: "s" })}<span><b>${STATE[s][0]} · ${cap(PALETTE[c[s]].name)}</b><small>${STATE[s][2]}</small></span></div>
+      <div class="swatches named" role="radiogroup" aria-label="${STATE[s][0]} color">${Object.entries(PALETTE).map(([k, p]) => `<button class="sw-cell ${c[s] === k ? "on" : ""}" role="radio" aria-checked="${c[s] === k}" aria-label="${p.name}" data-act="pickColor" data-id="${s}" data-color="${k}"><span class="swatch ${c[s] === k ? "on" : ""}" style="--sw:${p.mid};--swlo:${p.lo}"></span><span class="sw-name">${cap(p.name)}</span></button>`).join("")}</div>
     </div>`).join("")}
-    <div class="cp-row"><div class="cp-head">${gem("done", { size: "s" })}<span><b>Done</b><small>Always off, so it's clear the task is finished</small></span></div></div>`;
+    <div class="cp-row"><div class="cp-head">${gem("done", { size: "s" })}<span><b>Done · Off</b><small>Always off, so it's clear the task is finished</small></span></div></div>
+    ${warn.length ? `<div class="cp-warn" role="status">${warn.map(([a, b, who]) => `<b>${cap(PALETTE[a].name)}</b> and <b>${PALETTE[b].name}</b> can look alike${who === "all" ? ", even with typical color vision" : ` with ${who} color blindness`}.`).join(" ")} Try <button class="linkish" data-act="pickPreset" data-id="clear">Easy to tell apart</button>.</div>` : ""}
+    <p class="small cp-marks">Color is never the only signal. Urgent stones show a !, and stones no one has yet get a dashed ring.</p>`;
 }
 const colorsChanged = () => COLOR_STATES.some((s) => stoneColors()[s] !== DEFAULT_COLORS[s]);
 
 function colorSheet() {
   const changed = colorsChanged();
   openSheet(`<h3>Stone colors</h3><p class="small">Pick colors that make sense to you and are easy to tell apart. Every stone and jar in the family switches together.</p>
-    ${colorRows()}
+    ${colorPreview()}
+    ${presetRows()}
+    <div class="cp-sheet">${colorRows()}</div>
     <div class="actions">${changed ? `<button class="btn-soft" data-act="resetColors">Reset colors</button>` : ""}<button class="btn-soft" data-act="closeSheet">Done</button></div>`);
 }
 
@@ -67,6 +114,9 @@ SCREENS.colors = () => `${topbar()}
     ${eyebrow("Stones")}
     <h1 class="title">Pick your stone colors</h1>
     <p class="sub">Each stone glows to show where a task stands. Choose colors that mean something to your family.</p>
+    ${colorPreview()}
+    ${presetRows()}
+    <p class="label cp-label">Or pick each one</p>
     <div class="card r20 cp-card">${colorRows()}</div>
     <p class="small" style="margin-top:12px">${colorsChanged() ? `<button class="linkish" data-act="resetColors">Reset colors</button> · ` : ""}You can change these anytime in Settings.</p>
   </div>
@@ -84,5 +134,6 @@ Object.assign(ACTIONS, {
     c[d.id] = d.color;
     render(); if (sheetOpen()) colorSheet();
   },
+  pickPreset: (d) => { S.colors = { ...PRESETS.find((p) => p.id === d.id).c }; render(); if (sheetOpen()) colorSheet(); },
   resetColors: () => { S.colors = { ...DEFAULT_COLORS }; render(); if (sheetOpen()) colorSheet(); },
 });

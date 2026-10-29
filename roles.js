@@ -26,8 +26,8 @@ const roleTask = (id, n, who, w, k, when, extra = {}) => ({
 // Leo, Nora, and the light or kid-friendly tasks they see, added once to whatever family is loaded.
 // Nora, Leo, and their tasks. A sample family has them from the start; a real one gets them only when someone previews their view.
 function roleCast() {
-  if (!S.people.some((p) => p.id === "nora")) S.people.push({ id: "nora", name: "Nora", img: "avatar-nora.png", tier: "trusted", cap: 2, about: "Neighbor", invited: true });
-  if (!S.people.some((p) => p.id === "leo")) S.people.push({ id: "leo", name: "Leo", tier: "kid", cap: 2, about: `${L()}'s grandson, 14`, invited: true });
+  if (!S.people.some((p) => p.id === "nora")) S.people.push({ id: "nora", name: "Nora", img: "avatar-nora.png", tier: "trusted", cap: 2, about: "Neighbor", invited: true, joined: true });
+  if (!S.people.some((p) => p.id === "leo")) S.people.push({ id: "leo", name: "Leo", tier: "kid", cap: 2, about: `${L()}'s grandson, 14`, invited: true, joined: true });
   const l = L();
   const add = (t) => { if (!S.tasks.some((x) => x.id === t.id)) S.tasks.push(t); };
   if (!S.tasks.some((t) => t.on && t.who === "nora")) add(roleTask("rn1", "Bring in the mail", "nora", 1, "there", ["Mon", "Thu"]));

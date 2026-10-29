@@ -18,10 +18,10 @@ const L = () => S.lovedOne || "Dad";
 /* ---------- Demo family (used when onboarding was skipped or left empty) ---------- */
 
 const DEMO_PEOPLE = [
-  { id: "mom", name: "Mom", img: "avatar-mom.png", tier: "main", cap: 9, about: "Lives with " },
-  { id: "bill", name: "Bill", img: "avatar-bill.png", tier: "main", cap: 6, about: "Free evenings · 10 min away" },
-  { id: "sam", name: "Sam", img: "avatar-sam.png", tier: "main", cap: 3, remote: true, about: "Helps from Portland" },
-  { id: "nora", name: "Nora", img: "avatar-nora.png", tier: "trusted", cap: 2, about: "Neighbor" },
+  { id: "mom", name: "Mom", img: "avatar-mom.png", tier: "main", cap: 9, about: "Lives with ", joined: true },
+  { id: "bill", name: "Bill", img: "avatar-bill.png", tier: "main", cap: 6, about: "Free evenings · 10 min away", joined: true },
+  { id: "sam", name: "Sam", img: "avatar-sam.png", tier: "main", cap: 3, remote: true, about: "Helps from Portland", via: "text", contact: "(503) 555-0188", rel: "Grandchild" },
+  { id: "nora", name: "Nora", img: "avatar-nora.png", tier: "trusted", cap: 2, about: "Neighbor", joined: true },
 ];
 
 function demoTasks() {
@@ -223,7 +223,7 @@ function familyJars({ empty = false, only = null, act = true } = {}) {
     return `<${tag} class="rjar" ${act ? `data-act="openPerson" data-id="${p.id}"` : ""}>
       <div class="glassbox"><img class="glass" src="${A("jar.png")}" alt="">
         ${ts.map((t, i) => (pos[i] ? gemOf(t, { size: "s", cls: `${S.app?.blink === t.id ? "blink" : ""} ${dropped.has(`${p.id}:${t.id}`) ? "still" : ""}`, style: `left:${pos[i].x}px;top:${pos[i].y}px` }) : "")).join("")}${jarMore(more)}
-      </div><span class="who">${esc(p.name)}</span>${empty ? "" : `<span class="jar-n">${(() => { const n = all.filter((t) => !t.done).length; return n ? `${n} to do` : "All done"; })()}</span>`}</${tag}>`;
+      </div><span class="who">${esc(p.name)}</span>${empty ? "" : `<span class="jar-n">${(() => { const n = all.filter((t) => !t.done).length; return typeof pending === "function" && pending(p) ? "Invited" : n ? `${n} to do` : "All done"; })()}</span>`}</${tag}>`;
   }).join("")}</div>`;
   ppl.forEach((p) => { if (!empty) mine(p.id).forEach((t) => dropped.add(`${p.id}:${t.id}`)); });
   return html;
@@ -696,7 +696,7 @@ SCREENS.peopleTab = () => {
   const done = all.filter((t) => t.done).length;
   const open = active().filter((t) => !t.who).length;
   return `<div class="content app">
-    <div class="apphead"><h1 class="title">People</h1><button class="btn-ghost sm" data-act="toast" data-msg="Invite link copied">+ Invite</button></div>
+    <div class="apphead"><h1 class="title">People</h1><button class="btn-ghost sm" data-act="inviteSheet">+ Invite</button></div>
     <button class="sub linkline" data-act="go" data-to="recap">October · ${done} of ${all.length} tasks done together ›</button>
     <div class="card shelf">
       <div class="shelf-top"><span class="eyebrow grey">Family jars</span>${open ? `<span class="small">${open} unassigned</span>` : ""}</div>
@@ -704,6 +704,9 @@ SCREENS.peopleTab = () => {
     </div>
     <div class="card tlist">${main.map((p) => {
       const ts = mine(p.id), d = ts.filter((t) => t.done).length;
+      if (pending(p)) return `<button class="prow" data-act="pendingSheet" data-id="${p.id}">${avatar(p, "s36 pending")}
+        <span class="tl-txt"><span class="n">${esc(p.name)}</span><span class="m">${viaShort(p)} · ${ts.length} task${ts.length === 1 ? "" : "s"} waiting</span></span>
+        <span class="badge plain">Pending</span>${chev}</button>`;
       return `<button class="prow" data-act="openPerson" data-id="${p.id}">${avatar(p, "s36")}
         <span class="tl-txt"><span class="n">${esc(p.name)}</span><span class="m">${p.remote ? "Remote · " : ""}${d} of ${ts.length} done</span></span>
         <span class="mini-bar"><i style="width:${ts.length ? (d / ts.length) * 100 : 0}%"></i></span>${chev}</button>`;

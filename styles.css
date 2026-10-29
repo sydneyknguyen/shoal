@@ -1495,25 +1495,56 @@ button, input, textarea { touch-action: manipulation; -webkit-tap-highlight-colo
 
 /* Alert: a notification. Tinted, with an icon and one action, unlike anything else on the screen. */
 .k-alert { display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px 12px 12px 14px; margin-bottom: 14px; text-align: left; border-radius: 18px; background: #fff4e0; border: 1px solid #f1d39b; color: var(--ink); }
-.k-alert-ic { width: 26px; height: 26px; flex: none; border-radius: 50%; display: grid; place-items: center; background: #e08a1e; color: #fff; font-weight: 800; font-size: 14px; }
+.k-alert-ic { position: relative; width: 34px; height: 34px; flex: none; display: grid; place-items: center; }
+.k-alert-ic .k-ring { position: absolute; inset: 0; }
+.k-alert-ic .trk { stroke: rgba(224, 138, 30, 0.22); }
+.k-alert-ic .val { stroke: #e08a1e; }
+.k-alert-ic i { font-style: normal; font-weight: 800; font-size: 14px; color: #c06f0c; }
 .k-alert .tl-txt { flex: 1; }
 .k-alert .n { font-weight: 600; font-size: 14.5px; }
 .k-alert .m { font-size: 12.5px; color: #8a5a14; }
 .k-pill { flex: none; height: 34px; padding: 0 16px; border-radius: 17px; display: inline-flex; align-items: center; justify-content: center; background: #ecebe7; color: var(--ink); font-size: 13.5px; font-weight: 600; }
 .k-pill.dark { background: #1d2025; color: #fff; }
 
-/* Readings: big numbers flat on the background. No card, nothing to tap. */
-.k-read { display: grid; grid-template-columns: repeat(3, 1fr); margin: 4px 0 18px; }
-.k-read span { display: flex; flex-direction: column; font-size: 12.5px; color: var(--muted); }
-.k-read b { font-family: Figtree, sans-serif; font-size: 30px; font-weight: 600; color: var(--ink); letter-spacing: -0.02em; line-height: 1.15; font-variant-numeric: tabular-nums; }
+/* Readings: rings flat on the background. No card, nothing to tap. */
+.k-read { display: grid; grid-template-columns: repeat(3, 1fr); margin: 6px 0 18px; }
+.k-r { position: relative; display: grid; justify-items: center; }
+.k-r b { position: absolute; top: 0; height: 72px; display: grid; place-items: center; font-family: Figtree, sans-serif; font-size: 19px; font-weight: 600; color: var(--ink); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.k-r em { font-style: normal; margin-top: 6px; font-size: 12.5px; color: var(--muted); }
+.k-ring { display: block; }
+.k-ring .trk { fill: none; stroke: rgba(19, 49, 93, 0.1); }
+.k-ring .val { fill: none; stroke: var(--blue); stroke-linecap: round; animation: ring-in 1s cubic-bezier(.3, .7, .2, 1) backwards; }
+.k-r.low .val { stroke: #e08a1e; }
+@keyframes ring-in { from { stroke-dashoffset: var(--c); } }
 .k-read small, .k-big small { font-size: 0.5em; font-weight: 500; color: var(--muted); margin-left: 2px; }
 
 /* Tiles: things you change. The control always sits in the top right. */
 .k-tile { display: flex; flex-direction: column; align-items: stretch; text-align: left; width: 100%; padding: 16px; border-radius: 24px; background: #fff; color: var(--ink); box-shadow: 0 1px 2px rgba(20, 22, 26, 0.04), 0 8px 24px -12px rgba(40, 60, 90, 0.12); }
 .k-tile-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 34px; }
 .k-lab { font-size: 14px; font-weight: 600; }
-.k-hero { margin-bottom: 12px; }
-.k-hero .shelf-jars { width: 100%; flex-wrap: nowrap; justify-content: space-between; gap: 6px; margin-top: 14px; zoom: 0.94; }
+/* The jar tile is a dark room, so the glow shows. A soft light pools under the jars and fades with Glow. */
+.k-hero { position: relative; overflow: hidden; isolation: isolate; margin-bottom: 12px; color: #fff;
+  background: linear-gradient(180deg, #1a2a44 0%, #101b2f 100%); box-shadow: 0 1px 2px rgba(16, 27, 47, 0.2), 0 14px 30px -14px rgba(16, 27, 47, 0.45); }
+.k-hero::before { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; transition: opacity 0.7s ease;
+  background: radial-gradient(80% 50% at 50% 78%, rgba(120, 170, 255, 0.28), rgba(120, 170, 255, 0) 70%); }
+.k-hero[data-glow="dim"]::before { opacity: 0.4; }
+.k-hero[data-glow="off"]::before { opacity: 0; }
+.k-hero .k-lab { color: #fff; }
+.k-hero .k-seg { background: rgba(255, 255, 255, 0.1); }
+.k-hero .k-seg button { color: rgba(255, 255, 255, 0.7); transition: background 0.25s, color 0.25s; }
+.k-hero .k-seg button.on { background: #fff; color: #101b2f; }
+.k-hero .rjar .who { color: #fff; }
+.k-hero .jar-n { color: rgba(255, 255, 255, 0.6); }
+.k-hero .rjar .glassbox > img.glass { opacity: 0.1; }
+.kit2 .k-hero .rjar .glassbox::before { border-color: rgba(255, 255, 255, 0.2); border-top-color: rgba(255, 255, 255, 0.34);
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.02) 35%, rgba(255, 255, 255, 0.02) 70%, rgba(255, 255, 255, 0.08));
+  box-shadow: inset 0 -5px 0 rgba(255, 255, 255, 0.07), inset 2px 0 0 rgba(255, 255, 255, 0.12); }
+.kit2 .k-hero .gem { transition: box-shadow 0.7s ease, filter 0.7s ease; }
+.kit2 .k-hero .shelf-jars .gem:not(.done) { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7), 0 0 12px 2px var(--glow); filter: none; }
+.kit2 .k-hero .shelf-jars.glow-dim .gem:not(.done) { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 0 5px 0 var(--glow); filter: brightness(0.78) saturate(0.85); }
+.kit2 .k-hero .shelf-jars.glow-off .gem:not(.done) { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 0 0 0 transparent; filter: brightness(0.55) saturate(0.45); }
+.kit2 .k-hero .gem.done { filter: brightness(0.62); box-shadow: none; }
+.kit2 .k-hero .shelf-jars { width: 100%; flex-wrap: nowrap; justify-content: space-between; gap: 6px; margin-top: 14px; zoom: 0.94; }
 .k-seg { display: flex; padding: 3px; border-radius: 20px; background: #f1f0ec; }
 .k-seg button { width: 58px; height: 30px; border-radius: 15px; font-size: 13px; font-weight: 600; color: var(--muted); }
 .k-seg button.on { background: #1d2025; color: #fff; }

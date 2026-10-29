@@ -4,6 +4,15 @@
 
 const kitOld = SCREENS.kit;
 
+// A thin progress ring. It fills in from empty when it first draws.
+function ring(f, size, w, cls = "") {
+  const r = (size - w) / 2, c = 2 * Math.PI * r, m = size / 2;
+  return `<svg class="k-ring ${cls}" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" aria-hidden="true">
+    <circle class="trk" cx="${m}" cy="${m}" r="${r}" stroke-width="${w}"/>
+    <circle class="val" cx="${m}" cy="${m}" r="${r}" stroke-width="${w}" stroke-dasharray="${c}" stroke-dashoffset="${c * (1 - Math.max(0, Math.min(1, f)))}" style="--c:${c}" transform="rotate(-90 ${m} ${m})"/></svg>`;
+}
+const reading = (f, val, lab, cls = "") => `<span class="k-r ${cls}">${ring(f, 72, 5)}<b><span>${val}</span></b><em>${lab}</em></span>`;
+
 // Three sizes, one rule. Readings sit flat on the background (nothing to tap). Tiles are things you
 // change: the big one is the jars with their glow, two smaller ones are night hours and colors, and
 // every tile has its control in the top right corner. Rarely used things are plain rows at the bottom.
@@ -23,17 +32,17 @@ function kitNew() {
     <p class="k-status"><i></i>Base connected</p>
 
     <div class="k-read" aria-label="Kit status">
-      <span><b>${charging}<small>/${S.stones.length}</small></b>charging</span>
-      <span><b>${avg}<small>%</small></b>avg battery</span>
-      <span><b>${spares.length}</b>spares</span>
+      ${reading(charging / S.stones.length, `${charging}<small>/${S.stones.length}</small>`, "charging")}
+      ${reading(avg / 100, `${avg}<small>%</small>`, "avg battery", avg < 30 ? "low" : "")}
+      ${reading(spares.length / KIT, spares.length, "spares ready")}
     </div>
 
     ${out.map((st) => `<button class="k-alert" data-act="openStone" data-id="${st.id}">
-      <span class="k-alert-ic" aria-hidden="true">!</span>
+      <span class="k-alert-ic" aria-hidden="true">${ring(st.battery / 100, 34, 3)}<i>!</i></span>
       ${txt(`Stone ${String(st.id).padStart(2, "0")} is ${outLabel(st)}`, `${st.battery}% · not charging`)}
       <span class="k-pill dark">Find</span></button>`).join("")}
 
-    <div class="k-tile k-hero">
+    <div class="k-tile k-hero" data-glow="${g}">
       <div class="k-tile-top"><span class="k-lab">Glow</span>
         <div class="k-seg" role="radiogroup" aria-label="Glow">${[["on", "On"], ["dim", "Dim"], ["off", "Off"]].map(([k, l]) => `<button role="radio" class="${g === k ? "on" : ""}" aria-checked="${g === k}" data-act="setGlow" data-id="${k}">${l}</button>`).join("")}</div>
       </div>
@@ -66,10 +75,21 @@ function kitNew() {
 
 SCREENS.kit = () => (S.app.kitLook === "old" ? kitOld().replace(navtop("Home"), navtop("Home", `<button class="k-look" data-act="kitLook">New look</button>`)) : kitNew());
 
+// On the kit, Glow changes the jars in place so the stones fade up or down instead of snapping.
+const setGlowApp = ACTIONS.setGlow;
 Object.assign(ACTIONS, {
+  setGlow: (d) => {
+    const hero = document.querySelector(".kit2 .k-hero");
+    if (!hero) return setGlowApp(d);
+    S.app.prefs.glow = d.id;
+    hero.dataset.glow = d.id;
+    hero.querySelector(".shelf-jars").className = `shelf-jars glow-${d.id}`;
+    hero.querySelectorAll(".k-seg button").forEach((b) => { const on = b.dataset.id === d.id; b.classList.toggle("on", on); b.setAttribute("aria-checked", on); });
+    toast(d.id === "on" ? "Stones glow" : d.id === "dim" ? "Stones dimmed" : "Glow off. Colors still show in the app.");
+  },
   kitLook: () => { S.app.kitLook = S.app.kitLook === "old" ? "new" : "old"; render(); },
 });
 
 NOTES.kit = ["Home kit", ["A test of a cleaner look. Readings (charging, battery, spares) sit flat on the background with nothing to tap. The off-power alert is a notification.",
-  "White tiles are things you change, in three sizes: the jars with their glow, then night hours and colors, then plain rows for what you rarely need. Every tile has its control in the top right.",
+  "Readings are rings: how much of the kit is charging, average battery, and spares ready.", "The jar tile is dark, like a room at night, so the glow shows. Changing Glow fades the stones live.", "White tiles are things you change, in three sizes: the jars with their glow, then night hours and colors, then plain rows for what you rarely need. Every tile has its control in the top right.",
   "The pill at the top right switches to the old look to compare.", "Everything physical lives here: glow, night hours, colors, the base, jars and every stone's battery."]];

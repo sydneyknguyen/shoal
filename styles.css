@@ -692,7 +692,7 @@ input { font: inherit; color: inherit; }
 .finished .fin-txt { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--muted); }
 .finished .fin-txt b { color: var(--ink, #21262e); font-weight: 600; }
 .x-btn { flex: none; width: 28px; height: 28px; border-radius: 14px; font-size: 18px; line-height: 1; color: var(--muted); }
-.card.shelf { position: relative; margin-top: 12px; }
+.shelf { position: relative; margin-top: 12px; }
 .shelf-jars.glow-dim .gem:not(.done) { box-shadow: 0 0 4px 0 var(--glow), inset 0 -3px 5px rgba(19, 49, 93, 0.07); filter: saturate(0.8) brightness(0.96); }
 .shelf-jars.glow-off .gem:not(.done) { box-shadow: inset 0 -3px 5px rgba(19, 49, 93, 0.07); }
 .glassbox .gem.still { animation: none; }
@@ -1884,15 +1884,14 @@ button, input, textarea { touch-action: manipulation; -webkit-tap-highlight-colo
 .h-ios::before { background: linear-gradient(160deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.3) 35%, rgba(255, 255, 255, 0.08) 60%, rgba(255, 255, 255, 0.55)); }
 .h-ios.dragging { transition: none; }
 .h-ios.gone { transform: translateX(-110%) !important; opacity: 0; }
-.h-ios-main { display: flex; align-items: center; gap: 11px; width: 100%; padding: 11px 13px 11px 11px; text-align: left; border-radius: inherit; }
-.h-ios-ic { flex: none; width: 38px; height: 38px; border-radius: 10px; background: #fff; display: grid; place-items: center; box-shadow: 0 1px 3px rgba(19, 49, 93, 0.14); }
+.h-ios-main { display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 10px 10px 10px; text-align: left; border-radius: inherit; }
+.h-ios-thumb { flex: none; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; background: rgba(255, 255, 255, 0.55); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.8); }
+.h-ios.urgent .h-ios-thumb { background: color-mix(in srgb, var(--u) 16%, rgba(255, 255, 255, 0.6)); }
 .h-ios-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
-.h-ios-head { display: flex; justify-content: space-between; font-size: 12px; line-height: 15px; color: rgba(34, 38, 46, 0.55); }
-.h-ios-head b { font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; font-size: 11px; }
-.h-ios-head em { font-style: normal; }
 .h-ios .n { font-size: 14.5px; font-weight: 600; line-height: 19px; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.h-ios .m { font-size: 13px; line-height: 17px; color: rgba(34, 38, 46, 0.7); }
-.h-ios-thumb { flex: none; display: grid; place-items: center; width: 34px; }
+.h-ios .m { font-size: 12.5px; line-height: 16px; color: rgba(34, 38, 46, 0.6); }
+.h-ios.urgent .m { color: color-mix(in srgb, var(--u) 70%, #3a2a00); }
+.h-ios-cta { flex: none; padding: 6px 12px; border-radius: 14px; font-size: 12.5px; font-weight: 600; color: var(--navy); background: rgba(255, 255, 255, 0.7); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.9); }
 .h-ios-x { position: absolute; z-index: 3; top: -7px; left: -7px; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font-size: 15px; line-height: 1; color: #5b6170;
   background: rgba(255, 255, 255, 0.9); box-shadow: 0 2px 8px rgba(19, 49, 93, 0.18); opacity: 0; transform: scale(0.6); transition: opacity 0.2s, transform 0.25s cubic-bezier(.34, 1.56, .64, 1); }
 .h-ios:hover .h-ios-x, .h-ios:focus-within .h-ios-x { opacity: 1; transform: none; }
@@ -1924,3 +1923,43 @@ button, input, textarea { touch-action: manipulation; -webkit-tap-highlight-colo
   .tab-blob.move, .tabbar.moved button.on svg, .switch i, .switch.flip-on i, .switch.flip-off i, .tline.just-done, .tline.just-done .gem { animation: none; transition: none; }
   .screen[class*="enter-"], .screen[class*="enter-"] * { animation-duration: 0.01s !important; }
 }
+
+/* Jars sit on the background everywhere, as the focal point. Cards below are the things you do. */
+.shelf, .stage-card, .kit-pitch, .kit-hero { background: none; box-shadow: none; border: 0; }
+.shelf { padding: 18px 0 8px; margin: 14px 0 22px; }
+.shelf-top { padding: 0 2px 10px; }
+.stage-card { padding: 30px 0 22px; }
+.jar-free { display: flex; justify-content: center; margin: 26px 0 22px; }
+.jar-free .shelf-jars { zoom: 1.45; }
+.jar-free .who { display: none; }
+.jh-stats { margin: 0 0 22px; }
+.jar-check { padding: 16px 18px 18px; margin: 0 0 12px; }
+.jar-check .jh-check { padding: 0; }
+.jar-check .jc-opts { flex-direction: row; flex-wrap: wrap; }
+.jar-check .jc-opts .chip { flex: 1 1 auto; justify-content: center; }
+.card.jar-hero { justify-content: center; margin: 0 0 12px; }
+
+/* ---------- Stones lit from inside (stones.js) ----------
+   A white shell, and the stone's colour as light inside it. --lit is that light, taken from the
+   palette so custom stone colours still work. Done stones have the light off. */
+#phone[data-stone] .gem:not(.none) { --lit: color-mix(in srgb, var(--lo) 72%, var(--mid)); --shell: #e3e8ef; }
+#phone[data-stone] .gem.open { --lit: #ffffff; }
+#phone[data-stone] .gem.dark { --shell: #cfd7e2; --lit: color-mix(in srgb, var(--mid) 82%, var(--lo)); }
+#phone[data-stone] .gem.dark.open { --lit: #ffffff; }
+#phone[data-stone] .gem.done { --shell: #c3c6cb; }
+#phone[data-stone="core"] .gem:not(.none) {
+  background: radial-gradient(ellipse 110% 100% at 52% 70%, color-mix(in srgb, var(--lit) 78%, transparent) 0, color-mix(in srgb, var(--lit) 50%, transparent) 40%, color-mix(in srgb, var(--lit) 14%, transparent) 75%, transparent 100%),
+    radial-gradient(ellipse at 38% 26%, #fff 0, #fbfcfd 30%, var(--shell) 100%);
+}
+#phone[data-stone="dawn"] .gem:not(.none) {
+  background: radial-gradient(ellipse 95% 85% at 50% 100%, var(--lit) 0, color-mix(in srgb, var(--lit) 55%, transparent) 45%, transparent 100%),
+    radial-gradient(ellipse at 38% 22%, #fff 0, #fbfcfd 34%, var(--shell) 100%);
+}
+#phone[data-stone="core"] .gem.done, #phone[data-stone="dawn"] .gem.done { background: radial-gradient(ellipse at 38% 26%, #f6f7f8 0, #e2e4e7 45%, var(--shell) 100%); }
+/* A thin rim keeps the white shell visible on the light backgrounds. */
+#phone[data-stone="core"] .gem:not(.none, .done)::before, #phone[data-stone="dawn"] .gem:not(.none, .done)::before {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  box-shadow: inset 0 0 0 0.5px rgba(19, 49, 93, 0.12), inset 0 1px 1px rgba(255, 255, 255, 0.9);
+}
+.stone-look { margin-top: 18px; }
+.stone-look strong { display: block; margin-bottom: 6px; font-size: 13px; }

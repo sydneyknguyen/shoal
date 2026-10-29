@@ -301,7 +301,7 @@ function setupDone(id) {
 function kitSheet() {
   openSheet(`<h3>Do you have a Shoal kit?</h3>
     <p class="small">Shoal works fully in the app. The kit adds real jars and stones that glow at home, so the family can see the plan without picking up a phone.</p>
-    <div class="card kit-pitch">${familyJars({ act: false })}</div>
+    <div class="kit-pitch">${familyJars({ act: false })}</div>
     <div class="actions col"><button class="btn-primary" data-act="kitYes">Yes, set it up</button><button class="btn-soft" data-act="kitNo">Not now, just the app</button></div>`);
 }
 
@@ -324,7 +324,7 @@ SCREENS.ready = () => {
     <p class="eyebrow">Setup · about 5 minutes</p>
     <h1 class="title">Your plan is ready</h1>
     <p class="sub">${active().length} tasks, shared by ${helpers} of you. Next, set up the jars and pair your first stone.</p>
-    <div class="card shelf">${familyJars({ act: false })}</div>
+    <div class="shelf">${familyJars({ act: false })}</div>
     <div class="card steps-list">${steps.map(([t, d], i) => `<div class="step"><span class="num">${i + 1}</span><span><b>${t}</b><small>${d}</small></span></div>`).join("")}</div>
   </div>
   ${solo("Start setup", "setupNext", ["Do it later", "tab", 'data-to="home"'])}`;
@@ -339,7 +339,7 @@ SCREENS.jars = () => {
     <p class="eyebrow">Step 1 of 8</p>
     <h1 class="title">Set up the jars</h1>
     <p class="sub">One jar for each person who takes on tasks.${others.length ? ` ${esc(listNames(others))} can follow along without one.` : ""}</p>
-    <div class="card shelf">${familyJars({ empty: true, act: false })}</div>
+    <div class="shelf">${familyJars({ empty: true, act: false })}</div>
     <div class="card steps-list">${steps.map(([t, d], i) => `<div class="step"><span class="num">${i + 1}</span><span><b>${t}</b><small>${esc(d)}</small></span></div>`).join("")}</div>
   </div>
   ${solo("The jars are on", "setupNext")}`;
@@ -352,7 +352,7 @@ SCREENS.pick = () => {
     <p class="eyebrow">Step 2 of 8 · First stone</p>
     <h1 class="title">Pick up a ${sizeName(w)} stone</h1>
     <p class="sub">${t ? `“${esc(t.n)}” is a ${sizeName(w)} task, so it gets a ${sizeName(w)} stone. ` : ""}Lift one from the round end of the base. It glows white when it's ready to pair.</p>
-    <div class="card stage-card tall">${gem("open", { size: "xl", cls: `breathe w${w}` })}<p class="cap">${WEIGHT_LABEL[w]} stone · white glow · ready to pair</p></div>
+    <div class="stage-card tall">${gem("open", { size: "xl", cls: `breathe w${w}` })}<p class="cap">${WEIGHT_LABEL[w]} stone · white glow · ready to pair</p></div>
     <div class="card kit-sizes">${[1, 2, 3].map((k) => `<div class="${k === w ? "on" : ""}">${gem("open", { size: "s", cls: `w${k}` })}<b>${WEIGHT_LABEL[k]}</b><small>${S.stones.filter((x) => x.size === k).length} in the kit</small></div>`).join("")}</div>
   </div>
   ${solo("I've got one", "setupNext")}`;
@@ -365,7 +365,7 @@ SCREENS.hold = () => {
     <p class="eyebrow">Step 3 of 8 · First stone</p>
     <h1 class="title">Hold it to your phone</h1>
     <p class="sub">Touch the stone to the back of your phone. This is the only screen that listens for stones, so nothing pairs by accident.</p>
-    <div class="card stage-card">
+    <div class="stage-card">
       ${gem(S.app.heard ? stateOf(t) : "open", { size: "l", dark: S.app.heard && t.kind === "repeat", cls: `${S.app.heard ? "" : "breathe"} w${t?.w || 2}` })}
       <span class="status-pill">${S.app.heard ? (() => { const st = stoneOf(t) || freeStone(t?.w); return `✓ Stone ${String(st?.id || 1).padStart(2, "0")} found · ${WEIGHT_LABEL[st?.size || 2]}`; })() : "<i></i> Listening for a stone…"}</span>
     </div>
@@ -382,7 +382,7 @@ SCREENS.paired = () => {
     <p class="eyebrow">Step 4 of 8 · First stone</p>
     <h1 class="title">Paired. Now drop it in your jar.</h1>
     <p class="sub">Your stone now glows ${STATE[st][1]} because ${st === "urgent" ? `the task is urgent. Once it's underway, it turns ${STATE.progress[1]}.` : st === "progress" ? `someone is on it. It turns ${STATE.urgent[1].replace("glowing ", "")} when it's due soon.` : "no one has it yet."}</p>
-    <div class="card stage-card tall"><span class="okdot"><img src="${A("check.svg")}" alt=""></span>${gemOf(t, { size: "xl", cls: "breathe" })}
+    <div class="stage-card tall"><span class="okdot"><img src="${A("check.svg")}" alt=""></span>${gemOf(t, { size: "xl", cls: "breathe" })}
       <span class="badge ${st === "urgent" ? "amber" : ""}">${STATE[st][0]} · ${STATE[st][1]}</span>
       <p class="cap">${esc(t.n)} · ${esc(nameOf(t.who))}</p>
     </div>
@@ -398,7 +398,7 @@ SCREENS.find = () => {
     <p class="eyebrow">Step 5 of 8 · Try it</p>
     <h1 class="title">Find a stone</h1>
     <p class="sub">Tap Find stone on any task. Its stone blinks so you can spot it in the jar.</p>
-    <div class="card stage-card">${familyJars({ only: "you", act: false })}<span class="badge amber ${blinking ? "" : "ghost"}">Blinking</span></div>
+    <div class="stage-card">${familyJars({ only: "you", act: false })}<span class="badge amber ${blinking ? "" : "ghost"}">Blinking</span></div>
     <div class="card pair-to">${taskLine(t, { act: "noop" })}<button class="btn-wide" data-act="findStone" data-id="${t.id}">Find stone</button></div>
     ${blinking ? `<p class="label">Did it blink?</p>` : ""}
   </div>
@@ -435,7 +435,7 @@ SCREENS.charge = () => `${setupTop(7)}
     <p class="eyebrow">Step 7 of 8 · Try it</p>
     <h1 class="title">Stones charge in the jar</h1>
     <p class="sub">The jars sit on the base, so every stone charges while it's in a jar. Spare stones charge on the round end. You never have to move a stone just to charge it.</p>
-    <div class="card stage-card">
+    <div class="stage-card">
       <div class="base"><i></i><i></i><i></i><b>${gem("open", { size: "s" })}</b></div>
       <div class="base-caps"><small class="blue">Jars charge here</small><small class="blue">Spares charge here</small></div>
       <div class="fade-row"><span>${gem("done", { size: "m", cls: "faded" })}<small>Left out, it fades</small></span><span class="arrow">→</span><span>${gem("open", { size: "m" })}<small>Back in a jar</small></span></div>
@@ -500,7 +500,7 @@ SCREENS.home = () => {
       </button>` : ""}
     ${finished ? `<div class="finished">${avatar(person(finished.who), "s20")}<span class="fin-txt"><b>${esc(person(finished.who).name)}</b> finished “${esc(finished.n)}”</span>
       <button class="linkish" data-act="sayThanks" data-id="${finished.id}">Thank</button><button class="x-btn" data-act="dismissThanks" data-id="${finished.id}" aria-label="Dismiss"><span aria-hidden="true">×</span></button></div>` : ""}
-    ${homeSec("jars", "Family jars", "", `<div class="card shelf">${familyJars()}</div>`)}
+    ${homeSec("jars", "Family jars", "", `<div class="shelf">${familyJars()}</div>`)}
     ${homeSec("week", "This week", "", `<div class="card week">
       ${active().length ? `${loadChart(week)}
       <div class="tlist flat">${today.length ? today.map((t) => taskLine(t)).join("") : `<p class="small empty">Nothing on ${DAY_FULL[dayKey(day)]}.</p>`}</div>`
@@ -547,16 +547,14 @@ SCREENS.myjar = () => {
   const count = (k) => live.filter((t) => k === "all" || t.kind === k).length;
   return `<div class="content app">
     <div class="apphead"><h1 class="title">Your jar</h1><button class="round-btn" data-act="newTask" aria-label="Add a task"><img src="${A("plus.svg")}" alt=""></button></div>
-    <div class="card jar-hero">
-      <div class="jh-jar">${familyJars({ only: "you", act: false })}</div>
-      ${S.app.prefs.ring ? `<div class="jh-ring" role="img" aria-label="${done.length} of ${all.length} done, ${urgent.length} urgent, ${today} for today">
-        ${ring([{ v: done.length, color: "#418ef3" }, { v: urgent.length, color: urgentHex() }, { v: live.length - urgent.length, color: "transparent" }], { size: 150, stroke: 10 })}
-        <div class="ring-mid"><b>${done.length}<small>/${all.length}</small></b><span>done</span></div>
-      </div>` : checkIn()}
-    </div>
+    <section class="jar-free" aria-label="Your jar">${familyJars({ only: "you", act: false })}</section>
     <div class="jh-stats">
       <span><b>${today}</b> today</span><span><b class="st-urgent">${urgent.length}</b> urgent</span><span><b>${live.length}</b> left</span>
     </div>
+    ${S.app.prefs.ring ? `<div class="card jar-hero"><div class="jh-ring" role="img" aria-label="${done.length} of ${all.length} done, ${urgent.length} urgent, ${today} for today">
+        ${ring([{ v: done.length, color: "#418ef3" }, { v: urgent.length, color: urgentHex() }, { v: live.length - urgent.length, color: "transparent" }], { size: 150, stroke: 10 })}
+        <div class="ring-mid"><b>${done.length}<small>/${all.length}</small></b><span>done</span></div>
+      </div></div>` : `<div class="card jar-check">${checkIn()}</div>`}
     <div class="card jar-list">
       <div class="utabs" role="tablist">${[["all", "All"], ["once", "One-time"], ["repeat", "Ongoing"]].map(([id, l]) => `<button role="tab" class="${tab === id ? "on" : ""}" aria-selected="${tab === id}" data-act="jarTab" data-id="${id}">${l}<small>${count(id)}</small></button>`).join("")}</div>
       ${tab !== "repeat" ? S.app.requests.map((r) => `<div class="jl-req"><span class="tl-txt"><span class="eyebrow">Request from ${esc(nameOf(r.from))}</span><span class="n">${esc(r.n)}</span></span><button class="linkish" data-act="review" data-id="${r.id}">Review</button></div>`).join("") : ""}
@@ -677,7 +675,7 @@ SCREENS.newStone = () => {
   <div class="content">
     <h1 class="title">Link a real stone</h1>
     <p class="sub">Optional. The task already has a stone in the app. Link a real one and it lights up in the jar at home too.</p>
-    <div class="card stage-card tall">
+    <div class="stage-card tall">
       ${gem(S.app.heard ? stateOf(t) : "open", { size: "l", dark: t.kind === "repeat", cls: `${S.app.heard ? "" : "breathe"} w${t.w || 2}` })}
       <p class="n" style="margin:4px 0 0">${S.app.heard ? `Stone ${String(freeStone(t.w)?.id || 0).padStart(2, "0")} found · ${WEIGHT_LABEL[freeStone(t.w)?.size || 2]}` : `Hold a ${sizeName(t.w || 2)} stone to your phone`}</p>
       <span class="small">${S.app.heard ? `It will glow ${STATE[stateOf(t)][1]}` : "Looking for a stone…"}</span>
@@ -698,7 +696,7 @@ SCREENS.peopleTab = () => {
   return `<div class="content app">
     <div class="apphead"><h1 class="title">People</h1><button class="btn-ghost sm" data-act="inviteSheet">+ Invite</button></div>
     <button class="sub linkline" data-act="go" data-to="recap">October · ${done} of ${all.length} tasks done together ›</button>
-    <div class="card shelf">
+    <div class="shelf">
       <div class="shelf-top"><span class="eyebrow grey">Family jars</span>${open ? `<span class="small">${open} unassigned</span>` : ""}</div>
       ${familyJars()}
     </div>
@@ -788,7 +786,7 @@ SCREENS.kit = () => {
   return `${navtop("Home")}
   <div class="content">
     <h1 class="title">Home kit</h1>
-    <div class="card kit-hero">${familyJars({ act: false })}
+    <div class="kit-hero">${familyJars({ act: false })}
       <div class="base-line"></div>
       <span class="badge ${out.length ? "amber" : ""}">${out.length ? `${out.length} stone off power` : "Base connected · everything charging"}</span>
     </div>
@@ -850,7 +848,7 @@ SCREENS.stoneDetail = () => {
   const where = placeOf(s);
   return `${navtop("Stones", `<button class="btn-soft sm" data-act="toast" data-msg="Renaming is coming soon">Rename</button>`)}
   <div class="content">
-    <div class="card stage-card tall ${S.app.blink === `s${s.id}` ? "blinking" : ""}">${t ? gemOf(t, { size: "xl", cls: "breathe", w: s.size }) : gem("open", { size: "xl", cls: `dim w${s.size}` })}</div>
+    <div class="stage-card tall ${S.app.blink === `s${s.id}` ? "blinking" : ""}">${t ? gemOf(t, { size: "xl", cls: "breathe", w: s.size }) : gem("open", { size: "xl", cls: `dim w${s.size}` })}</div>
     <h1 class="title center">Stone ${String(s.id).padStart(2, "0")}</h1>
     <p class="small center">${where} · last seen 2 min ago</p>
     <div class="badges center">${t ? `<span class="badge ${st === "urgent" ? "amber" : ""}">${st === "done" ? "Resting" : `Glowing · ${STATE[st][0].toLowerCase()}`}</span>` : `<span class="badge plain">Spare</span>`}
@@ -935,7 +933,7 @@ SCREENS.recap = () => {
   <div class="content">
     <p class="eyebrow">Oct 12–18 · Sunday recap</p>
     <h1 class="title">Your week together</h1>
-    <div class="card shelf">${familyJars({ act: false })}
+    <div class="shelf">${familyJars({ act: false })}
       <div class="recap-meter"><b>${done} things done together</b><div class="bar"><i style="width:${(done / (done + open)) * 100}%"></i></div><span class="small">${open} still open, and ${active().filter((t) => !t.who).length ? "a few need someone" : "all have someone"}</span></div>
     </div>
     <p class="section-h">What went well</p>

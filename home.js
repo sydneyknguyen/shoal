@@ -62,9 +62,9 @@ function notifStack(urgent, finished) {
   const items = [];
   const u = urgent[0];
   if (u && !S.app.dismissed[`u${u.id}`]) items.push({ key: `u${u.id}`, act: "openTask", id: u.id, cls: "urgent", style: `--u:${urgentHex()}`,
-    icon: gemOf(u, { size: "s" }), title: `${u.n}`, body: `Urgent · ${dueLabel(u)} · ${nameOf(u.who)}${urgent.length > 1 ? ` · ${urgent.length - 1} more urgent` : ""}` });
+    icon: gemOf(u, { size: "s" }), title: `${u.n}`, body: `${cap(dueLabel(u))} · ${nameOf(u.who)}${urgent.length > 1 ? ` · +${urgent.length - 1} urgent` : ""}`, cta: "View" });
   if (finished) items.push({ key: finished.id, act: "sayThanks", id: finished.id, cls: "done",
-    icon: avatar(person(finished.who), "s28"), title: `${person(finished.who).name} finished “${finished.n}”`, body: "Tap to make them a thank-you card" });
+    icon: avatar(person(finished.who), "s28"), title: `${person(finished.who).name.split(" ")[0]} finished ${finished.n}`, body: finished.doneAt || "Today", cta: "Thank" });
   if (!items.length) return "";
   const open = S.app.stackOpen || items.length === 1, fresh = items.some((n) => !notesSeen.has(n.key));
   items.forEach((n) => notesSeen.add(n.key));
@@ -72,9 +72,9 @@ function notifStack(urgent, finished) {
     ${!open ? `<button class="h-stack-hit" data-act="stackOpen" aria-label="Show ${items.length} notifications"></button>` : ""}
     ${items.map((n, i) => `<div class="h-ios ${n.cls}" style="--i:${i};${n.style || ""}" data-key="${n.key}">
       <button class="h-ios-main" data-act="${n.act}" data-id="${n.id}" ${!open && i ? 'tabindex="-1" aria-hidden="true"' : ""}>
-        <span class="h-ios-ic">${shoalMark(20)}</span>
-        <span class="h-ios-txt"><span class="h-ios-head"><b>Shoal</b><em>now</em></span><span class="n">${esc(n.title)}</span><span class="m">${esc(n.body)}</span></span>
-        <span class="h-ios-thumb">${n.icon}</span></button>
+        <span class="h-ios-thumb">${n.icon}</span>
+        <span class="h-ios-txt"><span class="n">${esc(n.title)}</span><span class="m">${esc(n.body)}</span></span>
+        <span class="h-ios-cta">${n.cta}</span></button>
       <button class="h-ios-x" data-act="clearNote" data-key="${n.key}" aria-label="Clear"><span aria-hidden="true">×</span></button></div>`).join("")}
     ${open && items.length > 1 ? `<button class="h-stack-less" data-act="stackOpen">Show less</button>` : ""}
   </div>`;

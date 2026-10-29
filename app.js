@@ -872,7 +872,7 @@ SCREENS.review = () => {
     <p class="eyebrow">Last look</p>
     <h1 class="title">${esc(S.lovedOne)}'s plan is ready</h1>
     <p class="sub">${hasKit() ? "Tap any stone to hear it, or to make the real one glow so you can find it." : "Tap any stone to hear it. Bigger stones are bigger tasks."}</p>
-    <div class="card shelf">
+    <div class="shelf">
       <div class="shelf-jars">${main.map((p) => {
         const mine = picked().filter((t) => t.who === p.id).sort((a, b) => b.w - a.w);
         const pos = slots(mine);

@@ -91,7 +91,7 @@ SCREENS.inviteTime = () => {
 SCREENS.inviteDone = () => {
   const p = invitee(), n = mine(p.id).filter((t) => !t.done).length;
   return `<div class="content center-col">
-    <div class="card stage-card">${familyJars({ only: p.id, act: false })}</div>
+    <div class="stage-card">${familyJars({ only: p.id, act: false })}</div>
     <h1 class="title">You're in, ${esc(p.name)}</h1>
     <p class="sub">${n ? `${n} task${n === 1 ? " is" : "s are"} in your jar.` : "Your jar is ready."} ${esc(inviter())} can see you joined${S.app.inv.cant.length ? `, and that ${S.app.inv.cant.length} went back to the family` : ""}.</p>
   </div>
@@ -111,7 +111,7 @@ SCREENS.asHelper = () => {
       <span class="tl-txt"><span class="n">${esc(t.n)}</span><span class="m">${t.done ? "Done. The family can see it." : `${WEIGHT_LABEL[t.w || 2]} · ${t.kind === "once" ? dueLabel(t) : repeatLabel(t.days)}`}</span></span></div>
       ${t.done ? "" : `<button class="pill-btn" data-act="roleDone" data-id="${t.id}">Mark done</button>`}</div>`).join("") : `<p class="small empty">Nothing in your jar yet.</p>`}</div>
     <p class="section-h">The whole family</p>
-    <div class="card shelf">${familyJars({ act: false })}</div>
+    <div class="shelf">${familyJars({ act: false })}</div>
     ${sees(`${esc(p.name)} sees the whole plan and can hand off tasks. Only ${esc(inviter())} can change the setup or invite people.`)}
   </div>`;
 };

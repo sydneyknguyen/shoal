@@ -1480,7 +1480,7 @@ button, input, textarea { touch-action: manipulation; -webkit-tap-highlight-colo
 .cp-sheet { margin-top: 8px; }
 
 /* ---------- Home kit, cleaner look (test). Scoped to .kit2 so the rest of the app is unchanged. ---------- */
-.kit2 { position: absolute; inset: 0; display: flex; flex-direction: column; background: #f1f0ed; }
+.kit2 { position: absolute; inset: 0; display: flex; flex-direction: column; }
 .kit2 .navtop { flex: none; }
 .kit2 .content { padding-bottom: 40px; }
 .k-look { margin-left: auto; height: 30px; padding: 0 12px; border-radius: 15px; background: #fff; font-size: 12.5px; font-weight: 600; color: var(--muted); }

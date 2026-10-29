@@ -1630,7 +1630,7 @@ button, input, textarea { touch-action: manipulation; -webkit-tap-highlight-colo
 .h-note .k-pill:not(.dark) { background: #fff; box-shadow: 0 0 0 1px rgba(19, 49, 93, 0.1); }
 
 /* The jars sit straight on the ombre, like the kit. */
-.h-jars { margin: 8px 0 18px; }
+.h-jars { margin: 22px 0 30px; padding: 0 2px; }
 .h-jars .shelf-jars { width: 100%; flex-wrap: nowrap; justify-content: space-between; gap: 6px; }
 
 /* Widgets: frosted white, because the ombre behind gives the blur something to show. */
@@ -1872,6 +1872,53 @@ button, input, textarea { touch-action: manipulation; -webkit-tap-highlight-colo
 .im-send { flex: none; width: 30px; height: 30px; margin-bottom: 4px; border-radius: 50%; background: #007aff; display: grid; place-items: center; }
 .im-send:active { transform: scale(0.9); }
 .imsg.sent .im-send { background: #c7c7cc; }
+
+/* Home notifications: iOS banners at the top. Glass, app icon, swipe left or × to clear, and two or more stack. */
+.h-stack { position: relative; display: grid; gap: 8px; margin: 0 0 18px; }
+.h-stack.stacked { margin-bottom: calc(18px + (var(--n) - 1) * 9px); }
+.h-ios { position: relative; z-index: 2; border-radius: 22px; background: rgba(255, 255, 255, 0.42);
+  -webkit-backdrop-filter: blur(20px) saturate(1.6); backdrop-filter: blur(20px) saturate(1.6);
+  box-shadow: inset 0 0 18px rgba(255, 255, 255, 0.2), 0 12px 30px -24px rgba(19, 49, 93, 0.4);
+  transition: transform 0.45s cubic-bezier(.32, .72, 0, 1), opacity 0.3s ease; }
+.h-ios.urgent { background: color-mix(in srgb, var(--u) 14%, rgba(255, 255, 255, 0.46)); }
+.h-ios::before { background: linear-gradient(160deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.3) 35%, rgba(255, 255, 255, 0.08) 60%, rgba(255, 255, 255, 0.55)); }
+.h-ios.dragging { transition: none; }
+.h-ios.gone { transform: translateX(-110%) !important; opacity: 0; }
+.h-ios-main { display: flex; align-items: center; gap: 11px; width: 100%; padding: 11px 13px 11px 11px; text-align: left; border-radius: inherit; }
+.h-ios-ic { flex: none; width: 38px; height: 38px; border-radius: 10px; background: #fff; display: grid; place-items: center; box-shadow: 0 1px 3px rgba(19, 49, 93, 0.14); }
+.h-ios-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.h-ios-head { display: flex; justify-content: space-between; font-size: 12px; line-height: 15px; color: rgba(34, 38, 46, 0.55); }
+.h-ios-head b { font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; font-size: 11px; }
+.h-ios-head em { font-style: normal; }
+.h-ios .n { font-size: 14.5px; font-weight: 600; line-height: 19px; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.h-ios .m { font-size: 13px; line-height: 17px; color: rgba(34, 38, 46, 0.7); }
+.h-ios-thumb { flex: none; display: grid; place-items: center; width: 34px; }
+.h-ios-x { position: absolute; z-index: 3; top: -7px; left: -7px; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font-size: 15px; line-height: 1; color: #5b6170;
+  background: rgba(255, 255, 255, 0.9); box-shadow: 0 2px 8px rgba(19, 49, 93, 0.18); opacity: 0; transform: scale(0.6); transition: opacity 0.2s, transform 0.25s cubic-bezier(.34, 1.56, .64, 1); }
+.h-ios:hover .h-ios-x, .h-ios:focus-within .h-ios-x { opacity: 1; transform: none; }
+.h-stack.stacked .h-ios:not(:first-of-type) { position: absolute; left: 0; right: 0; top: 0; bottom: 0; z-index: 1; transform: translateY(calc(var(--i) * 9px)) scale(calc(1 - var(--i) * 0.05)); }
+.h-stack.stacked .h-ios:not(:first-of-type) > * { opacity: 0; }
+.h-stack-hit { position: absolute; z-index: 4; inset: 0 0 calc((var(--n) - 1) * -9px); border-radius: 22px; }
+.h-stack.open .h-ios { animation: fan 0.5s cubic-bezier(.32, .72, 0, 1) calc(var(--i) * 50ms) backwards; }
+@keyframes fan { from { transform: translateY(calc(var(--i) * -64px)) scale(calc(1 - var(--i) * 0.05)); opacity: 0.4; } }
+.h-stack.fresh .h-ios { animation: dropIn 0.7s cubic-bezier(.34, 1.3, .64, 1) calc(0.25s + var(--i) * 90ms) backwards; }
+@keyframes dropIn { from { transform: translateY(-110px) scale(0.92); opacity: 0; } }
+.h-stack-less { justify-self: end; padding: 5px 12px; border-radius: 14px; font-size: 12.5px; font-weight: 600; color: var(--navy); background: rgba(255, 255, 255, 0.6); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); }
+
+/* Tab bar: thin, sheer glass. Barely any fill, a frost behind, and a hairline rim that catches light at
+   the top left and fades round the sides, with a faint prism edge. No raised shadow, no puffy shine. */
+.tabbar { background: rgba(255, 255, 255, 0.16); border: 0;
+  -webkit-backdrop-filter: blur(14px) saturate(1.6) brightness(1.03); backdrop-filter: blur(14px) saturate(1.6) brightness(1.03);
+  box-shadow: inset 0 0 18px rgba(255, 255, 255, 0.14), 0 10px 30px -22px rgba(19, 49, 93, 0.35); }
+.tabbar::before, .tabbar::after, .tab-blob::before, .h-ios::before { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; padding: 1px;
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); mask-composite: exclude; }
+.tabbar::before { background: linear-gradient(160deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.35) 30%, rgba(255, 255, 255, 0.08) 55%, rgba(255, 255, 255, 0.5) 100%); }
+.tabbar::after { inset: 1px; background: linear-gradient(90deg, rgba(255, 170, 210, 0.35), rgba(255, 230, 160, 0.25) 30%, rgba(150, 210, 255, 0.35) 65%, rgba(190, 160, 255, 0.3)); opacity: 0.6; }
+.tab-blob { background: rgba(255, 255, 255, 0.22); box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.18); }
+.tab-blob::before { background: linear-gradient(160deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.2) 45%, rgba(255, 255, 255, 0.6)); }
+.tabbar button.on { color: var(--navy); }
+.tabbar button.on svg { color: var(--blue); }
+.tabbar button:active svg { transform: scale(0.86); transition: transform 0.15s; }
 
 @media (prefers-reduced-motion: reduce) {
   .tab-blob.move, .tabbar.moved button.on svg, .switch i, .switch.flip-on i, .switch.flip-off i, .tline.just-done, .tline.just-done .gem { animation: none; transition: none; }

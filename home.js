@@ -33,17 +33,10 @@ function homeNew() {
     <div class="apphead">${shoalMark(30)}<span class="head-btns">
       <button class="k-look" data-act="homeLook">Old look</button>
       <button class="bell" data-act="go" data-to="notifications" aria-label="Notifications">${icon("bell")}${unread() ? `<i class="dot"></i>` : ""}</button></span></div>
+    ${notifStack(urgent, finished)}
     <p class="eyebrow grey">${TODAY.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}</p>
     <h1 class="title">Good morning</h1>
     ${setupCard()}
-
-    ${urgent.length ? `<button class="h-note" data-act="openTask" data-id="${urgent[0].id}" style="--u:${urgentHex()}">${gemOf(urgent[0], { size: "s" })}
-        <span class="tl-txt"><span class="n">${esc(urgent[0].n)}</span><span class="m">Urgent · ${dueLabel(urgent[0])} · ${esc(nameOf(urgent[0].who))}${urgent.length > 1 ? ` · ${urgent.length - 1} more` : ""}</span></span>
-        <span class="k-pill dark">Open</span></button>` : ""}
-    ${finished ? `<div class="h-note done">${avatar(person(finished.who), "s28")}
-        <span class="tl-txt"><span class="n">${esc(person(finished.who).name)} finished “${esc(finished.n)}”</span></span>
-        <button class="k-pill" data-act="sayThanks" data-id="${finished.id}">Thank</button>
-        <button class="x-btn" data-act="dismissThanks" data-id="${finished.id}" aria-label="Dismiss"><span aria-hidden="true">×</span></button></div>` : ""}
 
     <section class="h-jars" aria-label="Family jars">${familyJars()}</section>
 
@@ -60,16 +53,87 @@ function homeNew() {
   ${tabbar()}</div>`;
 }
 
+/* ---------- Notifications: iOS banners at the top, not widgets ---------- */
+
+// Each one shows until you open it or clear it, then lives on in the bell. Two or more stack like iOS;
+// tap the stack to fan them out. They drop in once, the first time Home shows them.
+let notesSeen = new Set();
+function notifStack(urgent, finished) {
+  const items = [];
+  const u = urgent[0];
+  if (u && !S.app.dismissed[`u${u.id}`]) items.push({ key: `u${u.id}`, act: "openTask", id: u.id, cls: "urgent", style: `--u:${urgentHex()}`,
+    icon: gemOf(u, { size: "s" }), title: `${u.n}`, body: `Urgent · ${dueLabel(u)} · ${nameOf(u.who)}${urgent.length > 1 ? ` · ${urgent.length - 1} more urgent` : ""}` });
+  if (finished) items.push({ key: finished.id, act: "sayThanks", id: finished.id, cls: "done",
+    icon: avatar(person(finished.who), "s28"), title: `${person(finished.who).name} finished “${finished.n}”`, body: "Tap to make them a thank-you card" });
+  if (!items.length) return "";
+  const open = S.app.stackOpen || items.length === 1, fresh = items.some((n) => !notesSeen.has(n.key));
+  items.forEach((n) => notesSeen.add(n.key));
+  return `<div class="h-stack ${open ? "open" : "stacked"} ${fresh ? "fresh" : ""}" style="--n:${items.length}">
+    ${!open ? `<button class="h-stack-hit" data-act="stackOpen" aria-label="Show ${items.length} notifications"></button>` : ""}
+    ${items.map((n, i) => `<div class="h-ios ${n.cls}" style="--i:${i};${n.style || ""}" data-key="${n.key}">
+      <button class="h-ios-main" data-act="${n.act}" data-id="${n.id}" ${!open && i ? 'tabindex="-1" aria-hidden="true"' : ""}>
+        <span class="h-ios-ic">${shoalMark(20)}</span>
+        <span class="h-ios-txt"><span class="h-ios-head"><b>Shoal</b><em>now</em></span><span class="n">${esc(n.title)}</span><span class="m">${esc(n.body)}</span></span>
+        <span class="h-ios-thumb">${n.icon}</span></button>
+      <button class="h-ios-x" data-act="clearNote" data-key="${n.key}" aria-label="Clear"><span aria-hidden="true">×</span></button></div>`).join("")}
+    ${open && items.length > 1 ? `<button class="h-stack-less" data-act="stackOpen">Show less</button>` : ""}
+  </div>`;
+}
+
+// Clearing slides the banner off to the side, then the space closes up.
+function clearNote(key, el) {
+  const card = el || document.querySelector(`.h-ios[data-key="${key}"]`);
+  const done = () => { S.app.dismissed[key] = true; render(); };
+  if (!card) return done();
+  card.classList.add("gone");
+  setTimeout(done, 280);
+}
+
+// Swipe a banner left to clear it, like iOS.
+let nSwipe = null, nSwallow = false;
+document.addEventListener("pointerdown", (e) => {
+  const card = e.target.closest(".h-stack.open .h-ios");
+  if (!card || e.button || e.target.closest(".h-ios-x")) return;
+  nSwipe = { card, x: e.clientX, y: e.clientY, dx: 0, on: false, style: card.getAttribute("style") };
+});
+document.addEventListener("pointermove", (e) => {
+  if (!nSwipe) return;
+  const dx = e.clientX - nSwipe.x, dy = e.clientY - nSwipe.y;
+  if (!nSwipe.on) {
+    if (Math.abs(dy) > 10 && Math.abs(dy) > Math.abs(dx)) { nSwipe = null; return; }
+    if (dx > -10) return;
+    nSwipe.on = true;
+    nSwipe.card.classList.add("dragging");
+  }
+  nSwipe.dx = Math.min(0, dx);
+  nSwipe.card.style.transform = `translateX(${nSwipe.dx}px)`;
+  nSwipe.card.style.opacity = 1 - Math.min(0.6, -nSwipe.dx / 400);
+});
+const endNSwipe = () => {
+  if (!nSwipe) return;
+  const s = nSwipe; nSwipe = null;
+  if (!s.on) return;
+  nSwallow = true; setTimeout(() => { nSwallow = false; }, 50);
+  s.card.classList.remove("dragging");
+  s.card.setAttribute("style", s.style);
+  if (s.dx < -s.card.offsetWidth * 0.3) clearNote(s.card.dataset.key, s.card);
+};
+document.addEventListener("pointerup", endNSwipe);
+document.addEventListener("pointercancel", endNSwipe);
+window.addEventListener("click", (e) => { if (nSwallow) { e.stopPropagation(); e.preventDefault(); nSwallow = false; } }, true);
+
 SCREENS.home = () => (S.app.homeLook === "old"
   ? homeOld().replace(`<span class="head-btns">`, `<span class="head-btns"><button class="k-look" data-act="homeLook">New look</button>`)
   : homeNew());
 
 Object.assign(ACTIONS, {
+  stackOpen: () => { S.app.stackOpen = !S.app.stackOpen; render(); },
+  clearNote: (d) => clearNote(d.key),
   weekAll: () => { S.app.weekAll = !S.app.weekAll; render(); },
   homeLook: () => { S.app.homeLook = S.app.homeLook === "old" ? "new" : "old"; render(); },
 });
 
 NOTES.home = ["Home", ["An overview, like a phone's home screen: a bright ombre, the family jars, and widgets that each open the screen with the detail.",
-  "Urgent and thank-you notes are banners at the top. Tap a jar to see that person.", "Widgets: your jar (how many left, ring is how much is done), the home kit (charging, and any stone off power), and this week (tap a day).",
+  "Urgent and finished-task alerts are iOS-style notifications at the very top. They drop in once, stack when there are two (tap to fan them out), and clear with a swipe left or the × on hover. Once cleared, they live in the bell. Tap a jar to see that person.", "Widgets: your jar (how many left, ring is how much is done), the home kit (charging, and any stone off power), and this week (tap a day).",
   "The home kit widget is night blue like the kit screen, so you know where it goes. Without a kit, that spot shows who's helping.",
   "The pill at the top right switches to the old look to compare."]];

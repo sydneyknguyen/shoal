@@ -1032,12 +1032,39 @@ function renderNotes() {
     <button class="reset" data-act="skipToApp">Skip to the main app →</button>`;
 }
 
+// Matches nodes by tag (and data-id / data-key when they have one) and updates them in place.
+const nodeKey = (n) => n.nodeType === 1 ? `${n.nodeName}#${n.getAttribute("data-key") ?? n.getAttribute("data-id") ?? ""}` : `#${n.nodeType}`;
+function patchNode(a, b) {
+  if (a.nodeType !== 1) { if (a.nodeValue !== b.nodeValue) a.nodeValue = b.nodeValue; return; }
+  for (const { name } of [...a.attributes]) if (!b.hasAttribute(name)) a.removeAttribute(name);
+  for (const { name, value } of b.attributes) if (a.getAttribute(name) !== value) a.setAttribute(name, value);
+  if (a.nodeName === "TEXTAREA" || a.nodeName === "INPUT") {
+    if (a !== document.activeElement) a.value = a.nodeName === "TEXTAREA" ? b.textContent : b.getAttribute("value") ?? "";
+    if (a.type === "checkbox" || a.type === "radio") a.checked = b.hasAttribute("checked");
+    if (a.nodeName === "TEXTAREA") return;
+  }
+  patchChildren(a, b);
+}
+function patchChildren(a, b) {
+  const old = [...a.childNodes], used = new Set();
+  [...b.childNodes].forEach((n, i) => {
+    const k = nodeKey(n);
+    let m = old[i] && !used.has(old[i]) && nodeKey(old[i]) === k ? old[i] : old.find((o) => !used.has(o) && nodeKey(o) === k);
+    if (m) { used.add(m); patchNode(m, n); } else m = n;
+    if (a.childNodes[i] !== m) a.insertBefore(m, a.childNodes[i] || null);
+  });
+  old.forEach((o) => { if (!used.has(o)) o.remove(); });
+}
+
 function render() {
   const el = document.getElementById("screen");
   const prevScreen = el.dataset.s;
   const keepScroll = prevScreen === S.screen ? el.querySelector(".content")?.scrollTop : 0;
   if (S.app) S.tasks.forEach(normTask);
-  el.innerHTML = SCREENS[S.screen]();
+  // A new screen is drawn fresh so it can animate in. The same screen is patched in place,
+  // so a tab or toggle only moves what changed instead of replaying the whole page.
+  if (prevScreen === S.screen) patchChildren(el, Object.assign(document.createElement("template"), { innerHTML: SCREENS[S.screen]() }).content);
+  else el.innerHTML = SCREENS[S.screen]();
   el.dataset.s = S.screen;
   if (prevScreen !== S.screen) {
     el.classList.remove("enter-fwd", "enter-back", "enter-fade");

@@ -38,7 +38,7 @@ function kitNew() {
 
     <section class="k-hero" data-glow="${g}" aria-label="Your jars">
       <div class="k-tile-top"><span class="k-lab">Glow</span>
-        <div class="k-seg" role="radiogroup" aria-label="Glow">${[["on", "On"], ["dim", "Dim"], ["off", "Off"]].map(([k, l]) => `<button role="radio" class="${g === k ? "on" : ""}" aria-checked="${g === k}" data-act="setGlow" data-id="${k}">${l}</button>`).join("")}</div>
+        <div class="k-seg" role="radiogroup" aria-label="Glow"><i class="seg-thumb" style="--i:${["on", "dim", "off"].indexOf(g)}" aria-hidden="true"></i>${[["on", "On"], ["dim", "Dim"], ["off", "Off"]].map(([k, l]) => `<button role="radio" class="${g === k ? "on" : ""}" aria-checked="${g === k}" data-act="setGlow" data-id="${k}">${l}</button>`).join("")}</div>
       </div>
       ${familyJars({ act: false })}
     </section>
@@ -84,6 +84,7 @@ Object.assign(ACTIONS, {
     S.app.prefs.glow = d.id;
     hero.dataset.glow = d.id;
     hero.querySelector(".shelf-jars").className = `shelf-jars glow-${d.id}`;
+    hero.querySelector(".seg-thumb").style.setProperty("--i", ["on", "dim", "off"].indexOf(d.id));
     hero.querySelectorAll(".k-seg button").forEach((b) => { const on = b.dataset.id === d.id; b.classList.toggle("on", on); b.setAttribute("aria-checked", on); });
     toast(d.id === "on" ? "Stones glow" : d.id === "dim" ? "Stones dimmed" : "Glow off. Colors still show in the app.");
   },

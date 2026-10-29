@@ -112,10 +112,14 @@ input { font: inherit; color: inherit; }
 .statusbar img { position: absolute; left: 310px; top: 20px; width: 66px; height: 12.6px; }
 
 .screen { position: absolute; inset: 0; display: flex; flex-direction: column; }
-.screen.enter-fwd { animation: inR 0.32s cubic-bezier(.2, .8, .2, 1); }
-.screen.enter-back { animation: inL 0.32s cubic-bezier(.2, .8, .2, 1); }
-@keyframes inR { from { opacity: 0; transform: translateX(28px); } }
-@keyframes inL { from { opacity: 0; transform: translateX(-28px); } }
+.screen.enter-fwd { animation: inR 0.42s cubic-bezier(.22, 1, .36, 1); }
+.screen.enter-back { animation: inL 0.42s cubic-bezier(.22, 1, .36, 1); }
+@keyframes inR { from { opacity: 0; transform: translateX(36px) scale(0.985); } }
+@keyframes inL { from { opacity: 0; transform: translateX(-36px) scale(0.985); } }
+/* Tabs: a shorter slide toward the tab you tapped. The tab bar itself stays put. */
+.screen.enter-tabR > :not(.tabbar, .home2), .screen.enter-tabR > .home2 > :not(.tabbar) { animation: tabIn 0.4s cubic-bezier(.22, 1, .36, 1); --sx: 22px; }
+.screen.enter-tabL > :not(.tabbar, .home2), .screen.enter-tabL > .home2 > :not(.tabbar) { animation: tabIn 0.4s cubic-bezier(.22, 1, .36, 1); --sx: -22px; }
+@keyframes tabIn { from { opacity: 0; transform: translateX(var(--sx)); } }
 
 .topbar { position: relative; height: 96px; flex: none; }
 .topbar .back { position: absolute; left: 10px; top: 50px; width: 44px; height: 44px; }
@@ -1045,8 +1049,9 @@ input { font: inherit; color: inherit; }
 .nf-kind { letter-spacing: 0.6px; }
 
 /* Everything tappable eases and presses like a physical button */
-.card, .srow, .notif, .tl-main, .pill-btn, .chip, .btn-ghost, .btn-soft, .btn-social, .bell, .x-btn, .round-btn, .radio-row, .tabbar button, .day-strip button, .seg button, .linkish, .stone-card {
-  transition: transform 0.18s cubic-bezier(.2, .8, .2, 1), background-color 0.18s, box-shadow 0.18s, border-color 0.18s, color 0.18s;
+.card, .srow, .notif, .tl-main, .pill-btn, .chip, .btn-ghost, .btn-soft, .btn-social, .bell, .x-btn, .round-btn, .radio-row, .tabbar button, .day-strip button, .seg button, .linkish, .stone-card,
+.h-w, .h-note, .k-tile, .k-set, .k-alert, .k-pill, .k-look, .rjar, .lc-day, .btn-primary {
+  transition: transform 0.34s cubic-bezier(.34, 1.56, .64, 1), background-color 0.18s, box-shadow 0.18s, border-color 0.18s, color 0.18s;
 }
 button.card:not(:disabled):active, .notif.needs:not(:disabled):active, .kit-alert:active, .stone-card:active { transform: scale(0.985); }
 .pill-btn:active, .chip:active, .btn-ghost:active, .btn-soft:active, .round-btn:active, .bell:active, .x-btn:active, .seg button:active, .day-strip button:active { transform: scale(0.95); }
@@ -1650,3 +1655,62 @@ button, input, textarea { touch-action: manipulation; -webkit-tap-highlight-colo
 .h-kit .k-ring .trk { stroke: rgba(255, 255, 255, 0.14); }
 .h-kit .k-ring .val { stroke: #7fb1ff; }
 .h-warn { color: #f5c47e; font-weight: 600; }
+
+/* ---------- Micro-interactions (motion.js) ---------- */
+.btn-primary:not(:disabled):active, .k-pill:active, .k-look:active { transform: scale(0.95); }
+.h-w:active, .k-tile:is(button):active, .h-note:is(button):active, .k-alert:active { transform: scale(0.97); }
+.k-set:active, .rjar:is(button):active { transform: scale(0.985); }
+.lc-day:active { transform: scale(0.9); }
+
+/* Tab bar: one blob that stretches toward the new tab, overshoots a touch, and settles like liquid. */
+.tab-blob { position: absolute; z-index: 0; top: 6px; bottom: 6px; left: 6px; width: calc((100% - 12px) / 4); border-radius: 24px; background: var(--blue-tint);
+  transform: translateX(calc(var(--to) * 100%)); pointer-events: none; }
+.tab-blob.move { animation: blob 0.6s cubic-bezier(.3, .7, .2, 1); }
+@keyframes blob {
+  0% { transform: translateX(calc(var(--from) * 100%)) scale(1, 1); }
+  38% { transform: translateX(calc((var(--from) + (var(--to) - var(--from)) * 0.55) * 100%)) scale(1.5, 0.8); }
+  70% { transform: translateX(calc(var(--to) * 100%)) scale(0.92, 1.08); }
+  100% { transform: translateX(calc(var(--to) * 100%)) scale(1, 1); }
+}
+.tabbar button { position: relative; z-index: 1; }
+.tabbar:has(.tab-blob) button.on { background: transparent; }
+.tabbar.moved button.on svg { animation: tabPop 0.5s cubic-bezier(.34, 1.56, .64, 1) 0.12s backwards; }
+@keyframes tabPop { 0% { transform: scale(0.7) translateY(3px); } 60% { transform: scale(1.12); } }
+
+/* Switches: the knob stretches while pressed and springs across. */
+.switch i { transition: transform 0.4s cubic-bezier(.34, 1.56, .64, 1), width 0.2s ease, left 0.2s ease; }
+.switch:active i { width: 30px; }
+.switch.on:active i { left: -3px; }
+.switch.flip-on i { animation: knobOn 0.45s cubic-bezier(.34, 1.56, .64, 1); }
+.switch.flip-off i { animation: knobOff 0.45s cubic-bezier(.34, 1.56, .64, 1); }
+.switch.flip-on { animation: trackOn 0.3s ease; }
+@keyframes knobOn { from { transform: translateX(0); } }
+@keyframes knobOff { from { transform: translateX(20px); } }
+@keyframes trackOn { from { background: rgba(110, 115, 124, 0.25); } }
+
+/* Glow: a thumb that slides under the choice instead of jumping. */
+.k-seg { position: relative; }
+.k-seg .seg-thumb { position: absolute; top: 3px; left: 3px; width: 58px; height: 30px; border-radius: 15px; background: #1d2025;
+  transform: translateX(calc(var(--i) * 58px)); transition: transform 0.45s cubic-bezier(.34, 1.4, .64, 1); }
+.k-hero .k-seg .seg-thumb { background: #fff; }
+.k-seg button { position: relative; z-index: 1; }
+.k-seg button.on, .k-hero .k-seg button.on { background: transparent; }
+
+/* Swipe to finish: the row slides off a blue "Done" that fills in as you pull. */
+.tline { touch-action: pan-y; }
+.tline.swiping { z-index: 1; background: #fff; border-radius: 14px; user-select: none; box-shadow: 0 6px 18px -8px rgba(19, 49, 93, 0.3); }
+.tline.swiping::before { display: none; }
+.swipe-under { position: absolute; left: 0; right: 0; z-index: 0; border-radius: 14px; display: flex; align-items: center; padding-left: 16px; overflow: hidden;
+  color: #fff; font-weight: 600; font-size: 14px; background: color-mix(in srgb, var(--blue) calc(35% + var(--p, 0) * 65%), #dfe9f7); transition: background 0.15s; }
+.swipe-under span { display: inline-flex; align-items: center; gap: 6px; opacity: calc(0.4 + var(--p, 0) * 0.6); transform: scale(calc(0.85 + var(--p, 0) * 0.15)); transition: transform 0.25s cubic-bezier(.34, 1.56, .64, 1); }
+.swipe-under.armed span { transform: scale(1.08); }
+.swipe-under.go { background: var(--blue); }
+.tline.just-done .gem { animation: donePop 0.55s cubic-bezier(.34, 1.56, .64, 1); }
+.tline.just-done { animation: doneRow 0.6s ease; }
+@keyframes donePop { 0% { transform: scale(1.5); filter: brightness(1.3); } 100% { transform: scale(1); } }
+@keyframes doneRow { from { background: color-mix(in srgb, var(--blue) 12%, transparent); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .tab-blob.move, .tabbar.moved button.on svg, .switch i, .switch.flip-on i, .switch.flip-off i, .tline.just-done, .tline.just-done .gem { animation: none; transition: none; }
+  .screen[class*="enter-"], .screen[class*="enter-"] * { animation-duration: 0.01s !important; }
+}

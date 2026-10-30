@@ -20,10 +20,14 @@ const L = () => S.lovedOne || "Dad";
 /* ---------- Demo family (used when onboarding was skipped or left empty) ---------- */
 
 const DEMO_PEOPLE = [
-  { id: "mom", name: "Mom", img: "avatar-mom.png", tier: "main", cap: 9, about: "Lives with ", joined: true },
-  { id: "bill", name: "Bill", img: "avatar-bill.png", tier: "main", cap: 6, about: "Free evenings · 10 min away", joined: true },
-  { id: "sam", name: "Sam", img: "avatar-sam.png", tier: "main", cap: 3, remote: true, about: "Helps from Portland", via: "text", contact: "(503) 555-0188", rel: "Grandchild" },
-  { id: "nora", name: "Nora", img: "avatar-nora.png", tier: "trusted", cap: 2, about: "Neighbor", joined: true },
+  { id: "mom", name: "Mom", img: "avatar-mom.png", tier: "main", cap: 9, about: "Lives with ", joined: true,
+    best: "Mornings", reach: "Call", contact: "(408) 555-0142", know: ["Doesn't drive after dark", "Needs a nap around 2, so no calls then", "Knows all the meds by heart"] },
+  { id: "bill", name: "Bill", img: "avatar-bill.png", tier: "main", cap: 6, about: "Free evenings · 10 min away", joined: true,
+    best: "After 6 PM", reach: "Text", contact: "(408) 555-0179", know: ["Bad back, so no heavy lifting", "Has the truck, good for big pickups", "Works days, can't take calls till lunch"] },
+  { id: "sam", name: "Sam", img: "avatar-sam.png", tier: "main", cap: 3, remote: true, about: "Helps from Portland", via: "text", contact: "(503) 555-0188", rel: "Grandchild",
+    best: "Weekends", reach: "Text", know: ["Great with insurance and forms", "Visiting Thanksgiving week", "Can make calls on work breaks"] },
+  { id: "nora", name: "Nora", img: "avatar-nora.png", tier: "trusted", cap: 2, about: "Neighbor", joined: true,
+    best: "Weekdays", reach: "Text", contact: "(408) 555-0115", know: ["Has a spare key", "Can check in if no one answers"] },
 ];
 
 function demoTasks() {
@@ -129,7 +133,7 @@ function stateOf(t) {
   return isUrgent(t) ? "urgent" : "progress";
 }
 const STATE = {
-  urgent: ["Urgent", "glowing honey", "Due soon"],
+  urgent: ["Urgent", "yellow", "Due soon"],
   progress: ["In progress", "ice blue", "Someone is on it"],
   open: ["Unassigned", "white", "No one has it yet"],
   done: ["Done", "light off", "Light is off"],
@@ -523,7 +527,7 @@ SCREENS.home = () => {
 
 /* ---------- My jar ---------- */
 
-// Completion ring: done (blue), urgent (honey), still to do (grey), one gap between each.
+// Completion ring: done (blue), urgent (yellow), still to do (grey), one gap between each.
 function ring(segs, { size = 220, stroke = 12 } = {}) {
   const r = (size - stroke) / 2, c = 2 * Math.PI * r, total = segs.reduce((n, x) => n + x.v, 0) || 1;
   const gap = segs.filter((x) => x.v).length > 1 ? 6 : 0;
@@ -568,7 +572,8 @@ SCREENS.myjar = () => {
       </div></div>` : `<div class="card jar-check">${checkIn()}</div>`}
     <div class="card jar-list">
       <div class="utabs" role="tablist">${[["all", "All"], ["once", "One-time"], ["repeat", "Ongoing"]].map(([id, l]) => `<button role="tab" class="${tab === id ? "on" : ""}" aria-selected="${tab === id}" data-act="jarTab" data-id="${id}">${l}<small>${count(id)}</small></button>`).join("")}</div>
-      ${tab !== "repeat" ? S.app.requests.map((r) => `<div class="jl-req"><span class="tl-txt"><span class="eyebrow">Request from ${esc(nameOf(r.from))}</span><span class="n">${esc(r.n)}</span></span><button class="linkish" data-act="review" data-id="${r.id}">Review</button></div>`).join("") : ""}
+      ${tab !== "repeat" && S.app.checkin === "break" && !S.app.heldOpen && S.app.requests.length ? `<button class="jl-req held" data-act="showHeld"><span class="tl-txt"><span class="eyebrow">On hold till Sunday</span><span class="n">${S.app.requests.length} ask${S.app.requests.length === 1 ? "" : "s"} waiting</span></span><span class="linkish">See</span></button>` : ""}
+      ${tab !== "repeat" && (S.app.checkin !== "break" || S.app.heldOpen) ? S.app.requests.map((r) => `<div class="jl-req"><span class="tl-txt"><span class="eyebrow">Request from ${esc(nameOf(r.from))}</span><span class="n">${esc(r.n)}</span></span><button class="linkish" data-act="review" data-id="${r.id}">Review</button></div>`).join("") : ""}
       ${shown.map((t) => taskLine(t, { meta: jarMeta(t), trail: `<button class="tick" data-act="markDone" data-id="${t.id}" aria-label="Mark ${esc(t.n)} done">${check(false)}</button>` })).join("")}
       ${!shown.length ? `<p class="small empty">Nothing here. Tap + to add a task.</p>` : ""}
     </div>
@@ -621,23 +626,23 @@ SCREENS.task = () => {
     </div>
     ${medCard(t)}
     ${handoffCard(t)}
-    ${pebbleTaskHelp(t)}
     ${t.steps.length ? `<div class="card stepsc">
       <div class="meter-top"><b>Steps</b><span class="small">${stepsDone} of ${t.steps.length}</span></div>
       <div class="bar"><i style="width:${(stepsDone / t.steps.length) * 100}%"></i></div>
       ${t.steps.map((x, i) => `<div class="stp">
         <button data-act="toggleStep" data-id="${i}" aria-label="Toggle step">${check(x.done, true)}</button>
-        <span class="tl-txt"><span class="n">${esc(x.n)}</span><span class="m">${x.who ? `${esc(nameOf(x.who))}${x.done ? ` · ${x.when || "Today"}` : " is on it"}` : "Open"}</span></span>
-        ${x.who && x.who !== "you" ? avatar(person(x.who) || { name: "?" }, "s20") : !x.who ? `<button class="linkish" data-act="takeStep" data-id="${i}">Take step</button>` : ""}
+        <span class="tl-txt"><span class="n">${esc(x.n)}</span><span class="m">${x.who ? `${esc(nameOf(x.who))}${x.done ? ` · ${x.when || "Today"}` : " is on it"}` : x.ask ? `Asked ${esc(namesList(x.ask))}` : "Open"}</span></span>
+        ${x.who && x.who !== "you" ? avatar(person(x.who) || { name: "?" }, "s20") : !x.who && !x.ask ? `<button class="linkish" data-act="takeStep" data-id="${i}">Take step</button>` : ""}
       </div>`).join("")}
     </div>` : ""}
-    ${t.notes ? `<div class="card notes-card"><p class="eyebrow grey">Notes</p><p>${pebbleTerms(t.notes)}</p><span class="small">Added by you</span></div>` : ""}
+    ${t.notes ? `<div class="card notes-card"><p class="eyebrow grey">Notes</p><p>${pebbleTerms(t.notes)}</p><span class="small">Added by you${pebbleOn() && HAS_TERM.test(t.notes) ? " · tap an underlined word to explain it" : ""}</span></div>` : ""}
+    ${pebbleTaskHelp(t)}
   </div>
   ${t.done ? solo("Mark not done", "undoDone", null, `data-id="${t.id}"`) : duo(["Hand off", "handoff"], ["Mark done", "markDone", `data-id="${t.id}"`])}`;
 };
 
 SCREENS.handoff = () => {
-  const t = curTask();
+  const t = curTask(), step = t.steps[S.app.handStep];
   const options = S.people.filter((p) => p.id !== t.who);
   const able = options.filter((p) => canTake(p, t));
   const to = S.app.handTo; // undefined = nothing picked, null = unassigned, else a list of ids
@@ -651,9 +656,10 @@ SCREENS.handoff = () => {
     : all ? "Ask everyone" : `Ask ${picked.length} people`;
   return `${navtop("Back")}
   <div class="content">
-    <h1 class="title">Hand it off</h1>
-    <p class="sub">Ask one person, a few, or everyone. The first to say yes takes it, and the task moves to their jar.</p>
+    <h1 class="title">${step ? "Ask for help with a step" : t.who ? "Hand it off" : "Find someone"}</h1>
+    <p class="sub">${step ? `Just “${esc(step.n)}”. The rest of the task stays with ${t.who === "you" ? "you" : esc(nameOf(t.who))}.` : "Ask one person, a few, or everyone. The first to say yes takes it, and the task moves to their jar."}</p>
     <div class="card pair-to">${taskLine(t, { act: "noop" })}</div>
+    ${typeof pebbleHandPick === "function" ? pebbleHandPick(t) : ""}
     <div class="card tlist pick-list">
       ${able.length > 1 ? `<button class="radio-row" data-act="handTo" data-id="all"><span class="stack hand-stack">${able.slice(0, 3).map((p) => avatar(p, "s24")).join("")}</span>
         <span class="tl-txt"><span class="n">Everyone who can</span><span class="m">${able.length} people · first yes takes it</span></span>${check(all, true)}</button>` : ""}
@@ -664,9 +670,9 @@ SCREENS.handoff = () => {
           <span class="tl-txt"><span class="n">${esc(p.name)}</span><span class="m">${ok ? `${n} task${n === 1 ? "" : "s"}${p.remote ? " · remote" : ""}${p.tier === "trusted" ? " · gets a text" : ""}` : p.tier === "kid" ? "Kid tasks only" : "Light tasks only"}</span></span>
           ${check(picked.includes(p.id), true)}</button>`;
       }).join("")}
-      ${t.who ? `<button class="radio-row" data-act="handTo" data-id="">${gem("open", { size: "s" })}<span class="tl-txt"><span class="n">Unassigned</span><span class="m">Glows white for whoever is free</span></span>${check(to === null)}</button>` : ""}
+      ${t.who && !step ? `<button class="radio-row" data-act="handTo" data-id="">${gem("open", { size: "s" })}<span class="tl-txt"><span class="n">Unassigned</span><span class="m">Glows white for whoever is free</span></span>${check(to === null)}</button>` : ""}
     </div>
-    <p class="label">Note <span class="small">optional</span></p>
+    <p class="label hand-note">Note <span class="small">optional</span>${pebbleOn() && !S.app.notePebble ? `<button class="peb-chip sm" data-act="pebbleNote">Write it for me</button>` : ""}</p>
     <textarea class="note-input" data-input="handoffNote" placeholder="Anything they should know?">${esc(S.app.note)}</textarea>
     ${target ? `<p class="small" style="text-align:center">We'll ${target.tier === "main" && target.via !== "text" ? "send it to the app" : "text"} ${esc(target.name)}.</p>`
       : picked.length > 1 ? `<p class="small" style="text-align:center">${esc(namesList(picked))} each get the request${texts ? ` (${texts === 1 ? "one gets a text" : `${texts} get a text`})` : ""}. Once someone says yes, the rest are told it's covered.</p>` : ""}
@@ -677,6 +683,14 @@ SCREENS.handoff = () => {
 /* ---------- Add a task ---------- */
 
 const draft = () => S.tasks.find((t) => t.id === S.app.draft);
+// Which kinds of helper a task is open to. Until someone picks, it follows the usual rule: trusted circle for small jobs, kids for kid tasks.
+const OPEN_TIERS = [["main", "Main caregivers"], ["trusted", "Trusted circle"], ["kid", "Kids & teens"]];
+const openTo = (t) => t.open || ["main", ...(t.w === 1 ? ["trusted"] : []), ...(t.y ? ["kid"] : [])];
+function remoteNote(t) {
+  const far = S.people.filter((p) => p.remote && openTo(t).includes(p.tier)).map((p) => p.id);
+  if (!far.length) return "Phone calls, forms, ordering online";
+  return t.remote ? `${namesList(far)} can take it too` : `Lets ${namesList(far)} take it from afar`;
+}
 
 SCREENS.newTask = () => {
   const t = draft();
@@ -684,17 +698,22 @@ SCREENS.newTask = () => {
   return `${navtop("Cancel")}
   <div class="content">
     <h1 class="title">New task</h1>
-    <label class="card field"><span class="eyebrow grey">What needs doing</span><input data-input="draftName" value="${esc(t.n)}" placeholder="Pick up shower chair" ${t.n ? "" : "autofocus"}></label>
+    <label class="nt-label" for="draftName">What needs doing?</label>
+    <input class="nt-input" id="draftName" data-input="draftName" value="${esc(t.n)}" placeholder="e.g. Pick up shower chair" ${t.n ? "" : "autofocus"}>
     <div class="seg big">${[["once", "One-time"], ["repeat", "Ongoing"]].map(([k, l]) => `<button class="${t.kind === k ? "on" : ""}" aria-pressed="${t.kind === k}" data-act="draftKind" data-id="${k}">${l}</button>`).join("")}</div>
     <button class="card field-row" data-act="editDraftDate"><span>${t.kind === "once" ? "Due date" : "Repeats"} <em>Required</em></span><b>${t.kind === "once" ? fmtDate(t.date) : repeatLabel(t.days)}${t.time ? ` · ${fmtTime(t.time)}` : ""}</b>${chev}</button>
-    <button class="card field-row" data-act="sizeSheet" data-id="${t.id}"><span>Size <em>${t.sizeSet || !t.n.trim() || !pebbleOn() ? "" : "Pebble's guess"}</em></span><b data-size-label>${WEIGHT_LABEL[t.w]}</b>${chev}</button>
+    <button class="card field-row" data-act="sizeSheet" data-id="${t.id}"><span class="fr-txt">Stone size <em>${t.sizeSet || !t.n.trim() || !pebbleOn() ? "" : "Pebble's guess"}</em><small>Bigger stone, bigger job</small></span>${gem("open", { size: "xs", cls: `w${t.w}` })}<b data-size-label>${WEIGHT_LABEL[t.w]}</b>${chev}</button>
+    <p class="section-h">Who can help</p>
+    <div class="card nt-open">
+      <div class="chips">${OPEN_TIERS.map(([k, l]) => `<button class="chip ${openTo(t).includes(k) ? "on" : ""}" aria-pressed="${openTo(t).includes(k)}" data-act="draftOpen" data-id="${k}">${l}</button>`).join("")}</div>
+      <div class="srow"><span class="tl-txt"><span class="n">Can be done from anywhere</span><span class="m">${remoteNote(t)}</span></span>${toggle(t.remote, "draftRemote", "", "Can be done from anywhere")}</div>
+    </div>
     <p class="section-h">Who takes it</p>
     <div class="card who-card"><div class="pickers wrap">
-      ${helpers.map((p) => `<button class="pick ${t.who === p.id ? "on" : ""}" data-act="draftWho" data-who="${p.id}" ${canTake(p, t) ? "" : "disabled style=\"opacity:.35\""}>
+      ${helpers.map((p) => `<button class="pick ${t.who === p.id ? "on" : ""}" data-act="draftWho" data-who="${p.id}" ${canTake(p, t) && (t.remote || !p.remote) ? "" : "disabled style=\"opacity:.35\""}>
         <span class="ringwrap">${avatar(p, "s36")}<img class="ring" src="${A("selected-ring.svg")}" alt=""></span>${esc(p.name)}</button>`).join("")}
       <button class="pick ${!t.who ? "on" : ""}" data-act="draftWho" data-who=""><span class="ringwrap"><img class="none" src="${A("none.svg")}" alt=""><img class="ring" src="${A("selected-ring.svg")}" alt=""></span>Open</button>
     </div></div>
-    <div class="card toggle-row"><span class="tl-txt"><span class="n">Remote OK</span><span class="m">Can be done from anywhere</span></span>${toggle(t.remote, "draftRemote", "", "Remote OK")}</div>
     <p class="section-h">Notes</p>
     <textarea class="note-input" data-input="draftNote" placeholder="Add a note (optional)">${esc(t.notes)}</textarea>
   </div>
@@ -763,15 +782,29 @@ SCREENS.person = () => {
   return `${navtop("People")}
   <div class="content">
     <div class="phead">${avatar(p, "lg")}<h1 class="title">${esc(p.name)}</h1></div>
-    <p class="sub">${ts.length} task${ts.length === 1 ? "" : "s"}${p.about ? ` · ${esc(p.about)}` : p.tier === "trusted" ? " · Trusted circle, light tasks" : p.tier === "kid" ? " · Kid tasks, never urgent" : ""}</p>
+    <p class="sub">${p.about ? esc(p.about.trim() === "Lives with" ? `Lives with ${L()}` : p.about) : p.tier === "trusted" ? "Trusted circle, light tasks" : p.tier === "kid" ? "Kid tasks, never urgent" : "Main caregiver"}</p>
+    ${personGlance(p, ts)}
     <p class="section-h">Their tasks, and why</p>
     <div class="card tlist">${ts.length ? ts.map((t) => taskLine(t, {
       meta: `${avatar(p, "s20")} ${esc(p.name)} · ${dueLabel(t)}</span><span class="why">Why: ${esc(whyOf(t, p))}`,
     })).join("") : `<p class="small empty">Nothing on ${esc(p.name)}'s plate right now.</p>`}</div>
     <div class="card info"><img src="${A("lock.svg")}" alt=""><span><b class="small-b">What Pebble used</b><span class="small">Everyone's answers and ${esc(L())}'s goals. Not notes or medical records.</span></span></div>
   </div>
-  ${ts.length ? `<div class="footer"><button class="btn-ghost wide" data-act="moveTask">Move a task</button><span style="height:20px"></span></div>` : ""}`;
+  ${ts.length ? `<div class="footer"><button class="btn-ghost wide" data-act="moveTask">${p.id === "you" ? "Hand one of yours off" : `Move one of ${esc(p.name)}'s tasks`}</button><p class="small center pf-cap">${p.id === "you" ? "Ask someone else to take it." : `Ask someone else to take it, so ${esc(p.name)} has less to carry.`}</p></div>` : ""}`;
 };
+
+// What the rest of the family should know before asking this person for something.
+function personGlance(p, ts) {
+  const load = loadOf(p.id), f = p.cap ? Math.min(1, load / p.cap) : 0;
+  const room = p.cap == null ? "" : `<div class="h-w pg-tile"><span class="k-lab">This week</span>
+      <div class="h-num">${kitRing(f, 40, 5, load > p.cap ? "over" : "")}<b>${load}<small>of ${p.cap} hrs</small></b></div>
+      <span class="k-note">${load > p.cap ? "More than they said they have" : `${p.cap - load} hr${p.cap - load === 1 ? "" : "s"} of room left`}</span></div>`;
+  const best = p.best ? `<div class="h-w pg-tile"><span class="k-lab">Best time to ask</span><b class="k-big">${esc(p.best)}</b><span class="k-note">Prefers ${esc((p.reach || "the app").toLowerCase())}</span></div>` : "";
+  const reach = p.id === "you" ? "" : `<div class="card pg-reach">${avatar(p, "s36")}<span class="tl-txt"><span class="n">${p.contact ? esc(p.contact) : "In Shoal"}</span><span class="m">${p.reach ? `${esc(p.reach)} works best` : "Gets asks in the app"}</span></span>
+      ${p.contact ? `<button class="pill-btn" data-act="reachOut" data-id="text">Text</button><button class="pill-btn" data-act="reachOut" data-id="call">Call</button>` : ""}</div>`;
+  const know = p.know?.length ? `<p class="section-h">Good to know</p><div class="card pg-know">${p.know.map((k) => `<p>${esc(k)}</p>`).join("")}</div>` : "";
+  return `${room || best ? `<div class="k-grid pg-grid">${room}${best}</div>` : ""}${reach}${know}`;
+}
 
 /* ---------- Settings & stones ---------- */
 
@@ -1077,7 +1110,9 @@ const nfBadge = (k) => `<span class="nf-badge nb-${k}"><svg viewBox="0 0 24 24" 
 function notifications() {
   const others = S.people.filter((p) => p.id !== "you");
   const list = [];
-  S.app.requests.forEach((r) => list.push({ kind: "request", needs: true, cta: "Review", when: "Today", who: person(r.from), n: `${nameOf(r.from)} asked you to take “${r.n}”`, m: r.note, act: "review", id: r.id }));
+  const held = S.app.checkin === "break" && !S.app.heldOpen;
+  if (held && S.app.requests.length) list.push({ kind: "request", when: "Today", n: `${S.app.requests.length} ask${S.app.requests.length === 1 ? " is" : "s are"} waiting for you`, m: "Held until Sunday, since you asked for a break", cta: "See", needs: false, act: "showHeld" });
+  if (!held) S.app.requests.forEach((r) => list.push({ kind: "request", needs: true, cta: "Review", when: "Today", who: person(r.from), n: `${nameOf(r.from)} asked you to take “${r.n}”`, m: r.note, act: "review", id: r.id }));
   active().filter(isUrgent).slice(0, 2).forEach((t) => list.push({ kind: "urgent", needs: t.who === "you" || !t.who, cta: "Open", when: "Now", gem: gemOf(t, { size: "s" }), n: `${t.n} is ${dueLabel(t)}`, m: t.who ? `${t.who === "you" ? "You have" : `${nameOf(t.who)} has`} it` : "No one has it yet", act: "openTask", id: t.id }));
   S.tasks.filter((t) => t.done && t.doneAt && t.who !== "you").forEach((t) => list.push({ kind: "done", when: t.doneAt.split(",")[0], who: person(t.who), n: `${nameOf(t.who)} finished “${t.n}”`, m: S.app.thanked[t.id] ? "You said thanks" : "Tap to say thanks", act: S.app.thanked[t.id] ? "openTask" : "sayThanks", id: t.id }));
   [...care().doses].sort((a, b) => b.at - a.at).filter((x) => medOf(x.med)?.prn).slice(0, 2).forEach((x) => {
@@ -1122,14 +1157,14 @@ const CHECKIN = [["fine", "Doing okay"], ["stretched", "Stretched thin"], ["brea
 function checkIn() {
   const c = S.app.checkin;
   const reply = {
-    fine: ["Glad to hear it.", "We'll ask again on Sunday.", ""],
-    stretched: ["That's a lot to carry.", "Handing one task off can help.", `<button class="btn-soft sm" data-act="checkinHand">Hand one off</button>${pebbleCheckinHint()}`],
-    break: ["You're allowed to rest.", "Want the family to know? Only if you say so.", `<button class="btn-soft sm" data-act="checkinTell">Tell the family</button>`],
+    fine: ["Glad to hear it.", "Nothing changes. We'll ask again Sunday.", ""],
+    stretched: ["That's a lot to carry.", "Pebble looked for someone with room.", `<button class="btn-soft sm" data-act="checkinHand">Hand one off</button>${pebbleCheckinHint()}`],
+    break: ["You're allowed to rest.", "New asks are held until Sunday. The family only knows if you tell them.", S.app.toldFamily ? `<p class="small jc-told">The family knows you could use a hand.</p>` : `<button class="btn-soft sm" data-act="checkinTell">Tell the family</button>`],
   }[c];
   return `<div class="jh-check">
     <p class="eyebrow grey">This week</p>
     ${c ? `<p class="jc-q">${reply[0]}</p><p class="small">${reply[1]}</p>${reply[2]}<button class="linkish" data-act="checkin" data-id="">Change answer</button>`
-      : `<p class="jc-q">How's your load feeling?</p><div class="jc-opts">${CHECKIN.map(([k, l]) => `<button class="chip" data-act="checkin" data-id="${k}">${l}</button>`).join("")}</div>`}
+      : `<p class="jc-q">How's your load feeling?</p><p class="small jc-why">Only you see this. Shoal asks less of you when it's a lot.</p><div class="jc-opts">${CHECKIN.map(([k, l]) => `<button class="chip" data-act="checkin" data-id="${k}">${l}</button>`).join("")}</div>`}
   </div>`;
 }
 
@@ -1155,17 +1190,17 @@ Object.assign(NOTES, {
   hold: ["Hold it to your phone", ["Only this screen listens for stones, so nothing pairs by accident. Pairing is simulated after ~2 seconds."]],
   paired: ["Paired", ["Pairs to your most urgent task, so the first glow means something."]],
   find: ["Find a stone", ["Tap Find stone and its stone blinks in the jar."]],
-  glow: ["What the glow means", ["Honey = urgent, ice blue = in progress, white = unassigned, off = done. Families can pick their own colors in Settings.", "Light stones are one-time, dark stones are ongoing."]],
+  glow: ["What the glow means", ["Yellow = urgent, ice blue = in progress, white = unassigned, off = done. Families can pick their own colors in Settings.", "Light stones are one-time, dark stones are ongoing."]],
   charge: ["Charging", ["The base powers the jars, so stones charge in a jar or on the base. No moving stones around to charge.", "Only a stone left out (on a table, in a bag) runs down, and the app warns you."]],
   pairRest: ["Pair the rest", ["Optional. Anyone can pair their own stones later."]],
   home: ["Home", ["Urgent first, then the family jars and this week. No section labels, so it reads at a glance.", "The week is a bar chart of how much the family has each day. Tap a bar to see that day's tasks.", "Top right: the jar icon opens the home kit (only if the family has one), the bell opens notifications.", "Only urgent stones carry a mark: a ! in the urgent color, so it never looks like a notification on anything else. Done stones go grey. Each jar says how many are left."]],
-  myjar: ["My jar", ["Your jar on the left, and a weekly check-in on the right: how's your load feeling? \"I need a break\" lets you hand tasks off right there.", "The old progress ring is optional now, under Settings › My jar.", "One list with All, One-time and Ongoing tabs. Urgent tasks sit on top. Tick to mark done."]],
-  task: ["A task", ["Med tasks show their meds from the care page: the dose big and bold, who gave the last one, and when the next is okay.", "Shows who has it, its size, steps, and notes. Hand off or mark done from here.", "Hand-offs are asks, not orders: the other person says yes or no, and everyone sees the answer.", "Every task has a stone. Linking a real stone at home is optional."]],
+  myjar: ["My jar", ["A weekly check-in: how's your load feeling? Private, and each answer does something. \"Stretched thin\" finds someone with room. \"I need a break\" holds new asks until Sunday.", "The old progress ring is optional now, under Settings › My jar.", "One list with All, One-time and Ongoing tabs. Urgent tasks sit on top. Tick to mark done."]],
+  task: ["A task", ["Med tasks show their meds from the care page: the dose big and bold, who gave the last one, and when the next is okay.", "Shows who has it, its size, steps, and notes. Hand off or mark done from here. Pebble sits under the notes with one thing it can do, like writing the ask for you.", "Hand-offs are asks, not orders: the other person says yes or no, and everyone sees the answer.", "Every task has a stone. Linking a real stone at home is optional."]],
   handoff: ["Hand off", ["Ask one person, a few, or everyone at once. The first to say yes takes it, and the rest are told it's covered.", "Families asked for this: \"anyone free Thursday?\" shouldn't mean asking one by one.", "Trusted circle and kids are limited to the tasks they can take."]],
-  newTask: ["Add a task", ["Name, one-time or ongoing, due date, who, remote OK, notes. Saving adds its stone to that person's jar."]],
+  newTask: ["Add a task", ["Name, one-time or ongoing, due date, and stone size (bigger stone, bigger job).", "Who can help: main caregivers, trusted circle, kids. Can be done from anywhere lets remote family take it.", "Saving adds its stone to that person's jar."]],
   newStone: ["Link a real stone", ["Every task already has a stone in the app jar. Linking a real one is optional, from the task's ••• menu."]],
   peopleTab: ["People", ["Everyone's jars and progress, plus the extended circle."]],
-  person: ["A person's tasks, and why", ["Each task says why Pebble suggested that person."]],
+  person: ["A person's tasks, and why", ["What the family should know before asking: room left this week, best time, how to reach them, and good-to-know notes.", "Each task says why Pebble suggested that person. Move one of their tasks to give them less to carry."]],
   settings: ["Settings", ["Family setup, recaps, notifications, and what Pebble can see. Jars, stones and glow live in the home kit.", "Pebble can be turned off completely; it never gives medical advice. The home kit is optional: the app does everything without it."]],
   kit: ["Home kit", ["Everything physical in one place, opened from the jar icon on Home: glow, night hours, jars, the base, and every stone's battery.", "A dot on the icon means a stone is off power.", "A kit has 36 stones: 12 small, 15 medium and 9 large, so each task gets a stone its size."]],
   stones: ["Stones", ["All the stones by where they are: in a jar, on the base, or out and not charging."]],
@@ -1206,7 +1241,7 @@ function appEnter(screen) {
   if (screen === "paired") { const t = firstTask(); if (t && !stoneOf(t)) pairStone(t.id); }
   if (screen === "find") S.app.blink = null;
   if (screen === "notifications") S.app.seenNotes = true;
-  if (screen === "handoff") { S.app.handTo = undefined; S.app.note = ""; }
+  if (screen === "handoff") { S.app.handTo = undefined; S.app.note = ""; S.app.handStep = null; S.app.notePebble = false; }
 }
 
 function tabTo(screen) {
@@ -1344,13 +1379,21 @@ Object.assign(ACTIONS, {
   },
   // A hand-off is a request. The task stays put until they say yes, and everyone sees how it went.
   sendHandoff: () => {
-    const t = curTask(), to = S.app.handTo;
-    if (S.app.note) t.notes = S.app.note;
+    const t = curTask(), to = S.app.handTo, step = t.steps[S.app.handStep], note = S.app.note.trim();
+    if (S.app.notePebble && note && typeof pebLog === "function") pebLog(`Wrote the note asking for help with “${t.n}”`, "You checked it and sent the request");
     back();
+    if (step && to) {
+      step.ask = to;
+      render();
+      toast(`Asked ${to.length > 1 ? namesList(to) : nameOf(to[0])} about “${step.n}”`);
+      const taker = to.find((id) => person(id)?.tier === "main") || to[0];
+      setTimeout(() => { if (step.who) return; step.who = taker; delete step.ask; render(); toast(`${nameOf(taker)} took “${step.n}”`); }, 4000);
+      return;
+    }
     if (!to) { t.who = null; t.handoff = null; render(); toast("It glows white for whoever is free"); return; }
     const able = S.people.filter((p) => p.id !== t.who && canTake(p, t));
     const many = to.length > 1;
-    t.handoff = { to, from: t.who, status: "pending", all: many && able.every((p) => to.includes(p.id)) };
+    t.handoff = { to, from: t.who, status: "pending", all: many && able.every((p) => to.includes(p.id)), note };
     render();
     const stay = t.who === "you" ? "with you" : `with ${nameOf(t.who)}`;
     toast(many ? `Asked ${t.handoff.all ? "everyone" : namesList(to)}. It stays ${stay} until someone says yes.` : `Asked ${nameOf(to[0])}. It stays ${stay} until they say yes.`);
@@ -1390,7 +1433,14 @@ Object.assign(ACTIONS, {
   },
   draftKind: (d) => { draft().kind = d.id; render(); },
   draftWho: (d) => { draft().who = d.who || null; render(); },
-  draftRemote: () => { draft().remote = !draft().remote; render(); },
+  draftRemote: () => { const t = draft(); t.remote = !t.remote; if (!t.remote && person(t.who)?.remote) t.who = null; render(); },
+  draftOpen: (d) => {
+    const t = draft(), on = openTo(t), next = on.includes(d.id) ? on.filter((k) => k !== d.id) : [...on, d.id];
+    if (!next.length) return toast("At least one group needs to be able to help");
+    t.open = OPEN_TIERS.map(([k]) => k).filter((k) => next.includes(k));
+    if (t.who && !canTake(person(t.who), t)) t.who = null;
+    render();
+  },
   editDraftDate: () => { S._cal = null; dateSheet(draft()); },
   saveTask: () => {
     const t = draft();
@@ -1425,9 +1475,11 @@ Object.assign(ACTIONS, {
     render();
     toast(d.id === "on" ? "Stones glow" : d.id === "dim" ? "Stones dimmed" : "Glow off. Colors still show in the app.");
   },
+  showHeld: () => { S.app.heldOpen = true; tabTo("myjar"); },
+  reachOut: (d) => toast(d.id === "call" ? "Opens your phone to call" : "Opens your messages"),
   moveTask: () => {
     const p = person(S.app.person);
-    openSheet(`<h3>Move which task?</h3><div class="sheet-list">${mine(p.id).filter((t) => !t.done).map((t) => `<button data-act="moveThis" data-id="${t.id}">${esc(t.n)}</button>`).join("")}</div>
+    openSheet(`<h3>Which one should move?</h3><p class="small">You'll pick who to ask next. ${p.id === "you" ? "It stays yours" : `It stays with ${esc(p.name)}`} until someone says yes.</p><div class="sheet-list">${mine(p.id).filter((t) => !t.done).map((t) => `<button data-act="moveThis" data-id="${t.id}">${esc(t.n)}</button>`).join("")}</div>
       <button class="btn-primary" data-act="closeSheet">Cancel</button>`);
   },
   moveThis: (d) => { S.app.task = d.id; closeSheet(); go("handoff"); },
@@ -1440,7 +1492,7 @@ Object.assign(ACTIONS, {
     toast(S.pebbleOff ? "Pebble is off. Your tasks stay as they are." : "Pebble is back on");
     if (S.pebbleOff && S.screen === "pebble") { closeSheet(); tabTo("settings"); }
   },
-  checkin: (d) => { S.app.checkin = d.id || null; render(); },
+  checkin: (d) => { S.app.checkin = d.id || null; S.app.heldOpen = false; render(); },
   checkinHand: () => {
     const list = active().filter((t) => t.who === "you");
     openSheet(`<h3>Which one could someone else take?</h3><p class="small">They'll get a request and can say yes or no.</p>

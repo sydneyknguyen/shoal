@@ -42,7 +42,6 @@
 .peb-mic { width: 64px; height: 64px; border-radius: 32px; margin-bottom: 12px; display: grid; place-items: center; background: var(--blue); color: #fff; box-shadow: var(--btn-shadow); }
 .peb-mic .sq { width: 18px; height: 18px; border-radius: 4px; background: #fff; }
 .peb-mic.on { animation: peb-breathe 1.6s ease-in-out infinite; }
-.peb-foot { display: block; margin-top: 8px; }
 
 /* Review */
 .peb-prop { display: flex; gap: 12px; align-items: flex-start; width: 100%; padding: 14px 16px; margin-bottom: 10px; text-align: left; }
@@ -54,16 +53,9 @@
 .peb-done .srow { gap: 12px; }
 
 /* Draft */
-.peb-tones { margin-bottom: 12px; }
-.peb-draft { min-height: 170px; font-size: 15.5px; line-height: 23px; }
-.peb-to { padding: 12px 16px; margin: 12px 0 8px; }
-.peb-to p:not(.eyebrow) { margin: 4px 0 0; font-size: 14.5px; }
-.footer.peb-foot-duo { flex-wrap: wrap; }
-.footer.peb-foot-duo .peb-foot { flex-basis: 100%; margin-top: 2px; }
 
 /* Task help */
-.peb-help { display: flex; flex-wrap: wrap; gap: 10px 12px; align-items: center; padding: 12px 16px; margin-bottom: 12px; }
-.peb-help .ph-btns { flex-basis: 100%; display: flex; gap: 8px; padding-left: 48px; }
+.peb-foot { display: block; margin-top: 8px; }
 .peb-term { display: inline; font: inherit; color: inherit; text-decoration: underline; text-decoration-color: var(--blue); text-decoration-thickness: 1.5px; text-underline-offset: 3px; }
 .peb-term-head { display: flex; gap: 12px; align-items: center; }
 .peb-term-head .eyebrow { margin-bottom: 2px; }
@@ -102,3 +94,31 @@
 .peb-tile .k-lab { margin-top: 12px; }
 .peb-tile .k-note { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .peb-sees { flex-direction: row; align-items: center; justify-content: space-between; padding: 12px 16px; }
+
+/* Pearl: anything Pebble is suggesting or drafting, before you say yes. A near-white fill with a shell-like
+   edge, so it reads apart from the plain white cards. The Pebble figure always rides along, so color isn't the only cue. */
+.peb-notice, .peb-hint, .peb-month, .peb-prop, .peb-skip, .peb-prog, .peb-said {
+  border: 2px solid transparent;
+  background:
+    radial-gradient(110% 80% at 0% 0%, rgba(255, 255, 255, 0.85), transparent 60%) padding-box,
+    linear-gradient(155deg, #fbf5f0 0%, #f0e9fa 52%, #e7f1f5 100%) padding-box,
+    linear-gradient(135deg, #c9b4ee 0%, #f1c9ae 34%, #b3d8e8 66%, #d6bdee 100%) border-box;
+  box-shadow: 0 10px 26px -14px rgba(120, 100, 160, 0.35), 0 1px 0 rgba(255, 255, 255, 0.9) inset;
+}
+.peb-notice .eyebrow, .peb-prog .n { color: #6a5a8c; }
+
+/* Pebble on a task: no card, just Pebble on the page with what it can do. */
+.peb-aside { display: flex; align-items: center; gap: 12px; margin: 18px 4px 8px; }
+.peb-aside .pa-btns { display: flex; flex-wrap: wrap; gap: 8px; }
+.peb-chip { height: 38px; padding: 0 16px; border-radius: 19px; font-size: 14px; font-weight: 600; color: #4b3d72;
+  border: 1.5px solid transparent;
+  background: linear-gradient(155deg, #fbf5f0, #f0e9fa 52%, #e7f1f5) padding-box, linear-gradient(135deg, #c9b4ee, #f1c9ae 34%, #b3d8e8 66%, #d6bdee) border-box;
+  box-shadow: 0 6px 16px -10px rgba(120, 100, 160, 0.5); }
+.peb-chip:active { transform: scale(0.97); }
+
+/* Pebble inside Hand off: who has room, and a note it can write. */
+.peb-pick { margin: 0 0 12px; }
+.peb-pick .linkish { flex-basis: auto; padding-left: 0; }
+.hand-note { display: flex; align-items: center; gap: 8px; }
+.hand-note .peb-chip { margin-left: auto; }
+.peb-chip.sm { height: 30px; padding: 0 12px; font-size: 13px; }

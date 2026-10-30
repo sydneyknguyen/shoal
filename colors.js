@@ -3,7 +3,7 @@
 
 // dark: the ongoing-task colorway. A deeper rim, but the core keeps the state's color so it still reads as lit.
 const PALETTE = {
-  honey: { name: "honey", hi: "#fff5d6", mid: "#f6d27c", lo: "#d9a23a", glow: "rgba(246, 196, 92, 0.6)", dark: ["#ffe9a8", "#d9a23a", "#7a5a1c"] },
+  honey: { name: "yellow", hi: "#fff5d6", mid: "#f6d27c", lo: "#d9a23a", glow: "rgba(246, 196, 92, 0.6)", dark: ["#ffe9a8", "#d9a23a", "#7a5a1c"] },
   orange: { name: "orange", hi: "#ffe9d6", mid: "#f9ad6b", lo: "#e07a2c", glow: "rgba(247, 150, 70, 0.55)", dark: ["#ffd0a6", "#e07a2c", "#7d3f12"] },
   red: { name: "red", hi: "#ffe1dc", mid: "#f28a7b", lo: "#cf4a37", glow: "rgba(236, 100, 84, 0.5)", dark: ["#ffc2b8", "#cf4a37", "#74251b"] },
   pink: { name: "pink", hi: "#ffe6f1", mid: "#f4a6c8", lo: "#d9669a", glow: "rgba(240, 140, 190, 0.5)", dark: ["#ffd0e4", "#d9669a", "#7a2f52"] },
@@ -20,7 +20,7 @@ const stoneColors = () => (S.colors ||= { ...DEFAULT_COLORS });
 let appliedColors = "";
 function applyColors() {
   const c = stoneColors(), key = JSON.stringify(c);
-  STATE.urgent[1] = `glowing ${PALETTE[c.urgent].name}`;
+  STATE.urgent[1] = PALETTE[c.urgent].name;
   STATE.progress[1] = PALETTE[c.progress].name;
   STATE.open[1] = PALETTE[c.open].name;
   if (key === appliedColors) return;

@@ -398,7 +398,7 @@ function hoursOf(t) {
 }
 
 // Trusted circle only gets light tasks; kids and teens only get kid tasks.
-const canTake = (p, t) => (p.tier === "trusted" ? t.w === 1 : p.tier === "kid" ? t.y : true);
+const canTake = (p, t) => (t.open ? t.open.includes(p.tier) : p.tier === "trusted" ? t.w === 1 : p.tier === "kid" ? t.y : true);
 const TIER_NOTE = { main: "Invite sent by text", trusted: "Invite sent by text", kid: "Kid tasks only" };
 
 // Greedy fair split: heaviest first, to whoever has the most room left. Preferences nudge "You" toward or away.
